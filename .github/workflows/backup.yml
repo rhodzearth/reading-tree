@@ -22,3 +22,4 @@ jobs:
         with:
           name: reading-tree-backup
           path: backup.dump
+          retention-days: 90
