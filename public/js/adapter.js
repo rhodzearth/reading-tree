@@ -43,8 +43,10 @@
     authLogin: async function (d) {
       var user = String((d && d.username) || "").trim(), pw = String((d && d.password) || "");
       var e = await sb.rpc("login_email", { p_username: user });
+      if (e.error) throw e.error; // shows "Too many wrong tries..." when locked
       var r = await sb.auth.signInWithPassword({ email: e.data || ("nobody-" + Date.now() + "@" + HIDDEN_DOMAIN), password: pw });
-      if (r.error) throw r.error;
+      if (r.error) { await sb.rpc("login_failed", { p_username: user }); throw r.error; }
+      await sb.rpc("login_ok");
       await sb.rpc("touch_login");
       return { token: MARK, state: await stateNow() };
     },
