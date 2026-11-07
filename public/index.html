@@ -1997,11 +1997,11 @@ setTimeout(function () { $("goLoading").style.display = "none"; toast("This game
 };
 
 $("gameFarm").onclick = function () {
-  if (!appUrl) { toast("Please wait a moment and try again."); return; }
   $("goTitle").textContent = "Opening Reading Farm...";
   $("goLoading").style.display = "flex";
-  setTimeout(function () { $("goLoading").style.display = "none"; toast("This game is coming soon."); }, 400);
+  setTimeout(function () { window.location.href = "farm.html"; }, 150);
 };
+window.addEventListener("pageshow", function () { $("goLoading").style.display = "none"; });
 
 }
 </script>
