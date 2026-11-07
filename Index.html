@@ -1,0 +1,2457 @@
+<!DOCTYPE html>
+<!--
+Index.html - THE PAGE ITSELF (the screens and panels). Its look is in Styles.html and its behavior is in the Js...html files, pasted in below.
+Files: Styles.html | Jstree.html (tree) | JsReader.html (reading panel) | JsReadingCheck.html (reading check + harvest) | JsShop.html (shop)
+JsGifts.html | JsNotes.html (notes + highlights) | JsAccounts.html (login + passwords) | JsPanels.html (About, hide/show)
+JsPreview.html (preview only) | JsStart.html (startup, must stay last). Server side: Main.gs, Settings.gs, Shop.gs, ...
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<base target="_top">
+<title>Reading Tree</title>
+<style>
+/* Styles.html - ALL THE LOOK OF THE PAGE (colors, layout, phone and night-mode rules). Change colors and sizes here. */
+html, body { margin: 0; height: 100%; background: #fbf7ea; }
+body.night, body.night html { background: #14181a; }
+#treewrap { background: #fbf7ea; }
+body.night #treewrap { background: #14181a; }
+#app { display: flex; height: 100vh; }
+#reader { width: 42%; max-width: 620px; min-width: 300px; display: flex; flex-direction: column; background: #fbf7ea; border-right: 1px solid #d9cfae; font-family: Georgia, serif; color: #2b2416; }
+/* ---- reader header: title + jump menu ---- */
+#rhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #e3dac0; background: #f3ecd4; }
+#rtitle { font: 600 17px system-ui, sans-serif; color: #1b5e20; min-width: 0; }
+#jump { max-width: 48%; font-size: 14px; padding: 6px 8px; border-radius: 8px; border: 1px solid #b9ad88; background: #fff; color: #2b2416; }
+/* ---- PROGRESS BAR (step 2) ---- */
+#pbar { padding: 6px 14px 8px; background: #f3ecd4; border-bottom: 1px solid #e3dac0; font: 12px system-ui, sans-serif; color: #1b5e20; }
+#pbar .track { height: 8px; background: #dfe8cf; border-radius: 999px; overflow: hidden; margin-top: 4px; }
+#pbar .fill { height: 100%; width: 0; background: linear-gradient(90deg, #8cc152, #2f7d32); border-radius: 999px; transition: width .4s ease; }
+#rtext { flex: 1; overflow-y: auto; padding: 14px 18px 40px; font-size: 17px; line-height: 1.65; }
+#rtext p { margin: 0 0 .7em; }
+#rtext .book { text-align: center; font-weight: 700; margin: .4em 0 1em; }
+#rtext .chap { font-style: italic; color: #5b5236; border-left: 3px solid #8cc152; padding-left: 10px; margin: 1.1em 0; }
+#rtext .note { font: 14px system-ui, sans-serif; color: #777; }
+#treewrap { position: relative; flex: 1; min-width: 0; }
+svg { display: block; width: 100%; height: 100%; }
+@media (max-width: 800px) { #app { flex-direction: column; } #treewrap { order: -1; height: 25vh; flex: none; } #reader { order: 0; width: 100%; max-width: none; height: 75vh; border-right: 0; border-bottom: 0; border-top: 1px solid #d9cfae; } body.night #reader { border-top-color: #2a3135; } } /* phones: tree on TOP (25%), reading panel below (75%) */
+#ui { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-family: system-ui, sans-serif; }
+#lbl { background: rgba(255,255,255,.88); color: #1b5e20; padding: 4px 12px; border-radius: 999px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+#ui button { background: #2f7d32; color: #fff; border: 0; border-radius: 999px; padding: 10px 18px; font-size: 16px; cursor: pointer; margin-left: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+#ui button:active { background: #1b5e20; }
+/* ---- NIGHT MODE (step 3) ---- */
+#night { border: 1px solid #b9ad88; background: #fff; border-radius: 8px; padding: 5px 9px; font-size: 16px; cursor: pointer; }
+body.night #reader { background: #14181a; color: #d8dcd0; border-right-color: #2a3135; border-bottom-color: #2a3135; }
+body.night #rhead, body.night #pbar { background: #1c2226; border-bottom-color: #2a3135; }
+body.night #rtitle, body.night #pbar { color: #9bd36a; }
+body.night #pbar .track { background: #2c3a2a; }
+body.night #jump, body.night #night, body.night #jump option { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+body.night #rtext .chap { color: #b9b79a; border-left-color: #5c8a3a; }
+body.night #rtext .note { color: #8b9498; }
+/* ---- CELEBRATION (step 4) ---- */
+#leafrain { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 6; }
+.falling-leaf { position: absolute; top: -40px; font-size: 26px; animation: leaf-fall linear forwards; }
+@keyframes leaf-fall { 0% { transform: translate(0, 0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--dx), 110vh) rotate(540deg); opacity: .9; } }
+#party { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(255,255,255,.55); z-index: 5; }
+#party.show { display: flex; }
+#party .card { background: #fff; border-radius: 16px; padding: 22px 26px; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,.25); max-width: 80%; font-family: system-ui, sans-serif; }
+#party h2 { margin: 0 0 6px; color: #1b5e20; font-size: 22px; }
+#party p { margin: 0 0 14px; color: #444; font-size: 15px; }
+#party button { background: #2f7d32; color: #fff; border: 0; border-radius: 999px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+/* ---- LOGIN SCREEN + "who is logged in" chip (accounts) ---- */
+#auth { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; background: #f3f7ee; padding: 16px; overflow-y: auto; }
+#auth .acard { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#auth h1 { margin: 0 0 4px; font-size: 22px; color: #1b5e20; }
+#auth .asub { margin: 0 0 14px; font-size: 13px; color: #555; }
+#auth .atabs { display: flex; gap: 6px; margin-bottom: 12px; }
+#auth .atabs button { flex: 1; padding: 8px; border: 1px solid #b9ad88; background: #fff; color: #333; border-radius: 8px; cursor: pointer; font-size: 14px; }
+#auth .atabs button.on { background: #2f7d32; color: #fff; border-color: #2f7d32; }
+#auth input { display: block; width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px; border: 1px solid #b9ad88; border-radius: 8px; font-size: 16px; }
+#auth .small { font-size: 12px; color: #666; margin: 0 0 8px; }
+#aErr { min-height: 18px; color: #b3261e; font-size: 13px; margin-bottom: 6px; }
+#aGo { width: 100%; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+#aGo:disabled { opacity: .6; }
+#who { background: rgba(255,255,255,.88); color: #1b5e20; padding: 4px 12px; border-radius: 999px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+#who a { color: #1b5e20; }
+/* ---- LAYOUT: controls (name, stage label, Prev/Next) sit at the bottom of the READING panel; the tree stays on the right ---- */
+#ui { position: static; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 14px; background: #f3ecd4; border-top: 1px solid #e3dac0; }
+#ui > div:last-child { flex-basis: 100%; }
+#ui button { margin: 0 8px 0 0; }
+body.night #ui { background: #1c2226; border-top-color: #2a3135; }
+body.night #who, body.night #lbl { background: #263036; color: #e4e8dc; box-shadow: none; }
+body.night #who a { color: #9bd36a; }
+/* ---- HIDE / SHOW READING PANEL ---- */
+#hideRead { border: 1px solid #b9ad88; background: #fff; border-radius: 8px; padding: 5px 9px; font-size: 13px; cursor: pointer; white-space: nowrap; color: #2b2416; }
+#hideRead::after { content: " \25C0"; }
+body.night #hideRead { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+#miniBar { display: none; position: absolute; top: 10px; left: 10px; z-index: 7; align-items: center; flex-wrap: wrap; gap: 8px; font-family: system-ui, sans-serif; }
+#showRead { background: #2f7d32; color: #fff; border: 0; border-radius: 999px; padding: 9px 16px; font-size: 14px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+#miniLbl { background: rgba(255,255,255,.88); color: #1b5e20; padding: 4px 12px; border-radius: 999px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+body.reading-hidden #miniBar { display: flex; }
+body.reading-hidden #reader { display: none; }
+body.reading-hidden #treewrap { flex: 1; height: 100vh; }
+@media (min-width: 801px) { body.reading-hidden #treewrap { flex: none; width: calc(100vw - clamp(300px, 42vw, 620px)); margin: 0 auto; } } /* desktop: keep the tree the same size and just center it */
+@media (max-width: 800px) { #hideRead::after { content: " \25BC"; } }
+/* ---- COUNTRY / CITY DROPDOWNS (create account) ---- */
+#auth select { display: block; width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px; border: 1px solid #b9ad88; border-radius: 8px; font-size: 16px; background: #fff; color: #222; }
+#auth select:disabled { background: #f0f0f0; color: #888; }
+/* ---- CHANGE PASSWORD screen + small message (passwords) ---- */
+#pw { position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#pw .acard { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#pw h1 { margin: 0 0 4px; font-size: 20px; color: #1b5e20; }
+#pw .asub { margin: 0 0 14px; font-size: 13px; color: #555; }
+#pw input { display: block; width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px; border: 1px solid #b9ad88; border-radius: 8px; font-size: 16px; }
+#pwErr { min-height: 18px; color: #b3261e; font-size: 13px; margin-bottom: 6px; }
+#pwGo { width: 100%; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+#pwGo:disabled { opacity: .6; }
+#pwCancel { width: 100%; margin-top: 8px; padding: 9px; background: none; border: 0; color: #555; font-size: 14px; cursor: pointer; }
+#toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 70; background: #1b5e20; color: #fff; padding: 9px 18px; border-radius: 999px; font: 14px system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.3); display: none; }
+/* ---- READING CHECK + FRUIT BASKET ---- */
+#rcheck, #fruitbar { flex-basis: 100%; font: 12px system-ui, sans-serif; color: #1b5e20; }
+#rcheck .track { height: 6px; background: #dfe8cf; border-radius: 999px; overflow: hidden; margin-top: 3px; }
+#rcheck .fill { height: 100%; width: 0; background: #f0b429; border-radius: 999px; transition: width .4s ease; }
+#rcheck a { color: #1b5e20; font-weight: 600; cursor: pointer; text-decoration: underline; }
+#fruitbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+#basket { background: rgba(255,255,255,.88); padding: 3px 10px; border-radius: 999px; box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+#ui #harvest { background: #fff; color: #1b5e20; border: 1px solid #cfd8c0; padding: 6px 14px; font-size: 14px; margin: 0; }
+.fruitdot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 1px solid #cfc9ae; box-shadow: inset -2px -2px 0 #efe9d2; vertical-align: -1px; margin-right: 3px; }
+#myId { color: #6b6b6b; user-select: all; }
+#ui button:disabled { opacity: .45; cursor: not-allowed; }
+body.night #rcheck, body.night #fruitbar { color: #cfe3c0; }
+body.night #rcheck a { color: #9bd36a; }
+body.night #basket { background: #263036; color: #e4e8dc; box-shadow: none; }
+body.night #myId { color: #9aa5a8; }
+/* ---- GIFT FRUITS screen ---- */
+#gift { position: fixed; inset: 0; z-index: 61; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#gift .acard { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#gift h1 { margin: 0 0 4px; font-size: 20px; color: #1b5e20; }
+#gift .asub { margin: 0 0 14px; font-size: 13px; color: #555; }
+#gift input { display: block; width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px; border: 1px solid #b9ad88; border-radius: 8px; font-size: 16px; }
+#giftConfirm { background: #f3f7ee; border-radius: 10px; padding: 12px; margin-bottom: 10px; font-size: 15px; color: #1b5e20; }
+#giftErr { min-height: 18px; color: #b3261e; font-size: 13px; margin-bottom: 6px; }
+#giftGo { width: 100%; padding: 11px; background: #6d28d9; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+#giftGo:disabled { opacity: .6; }
+#giftBack { width: 100%; margin-top: 8px; padding: 9px; background: none; border: 0; color: #555; font-size: 14px; cursor: pointer; }
+#ui #giftBtn { background: #6d28d9; padding: 6px 14px; font-size: 14px; margin: 0; }
+/* ---- ABOUT & PRIVACY panel + consent box ---- */
+#about { position: fixed; inset: 0; z-index: 62; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.97); padding: 16px; overflow-y: auto; }
+#about .acard { width: 100%; max-width: 460px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; color: #333; font-size: 14px; line-height: 1.5; max-height: 90vh; overflow-y: auto; }
+#about h1 { margin: 0 0 8px; font-size: 20px; color: #1b5e20; }
+#about h2 { margin: 14px 0 4px; font-size: 15px; color: #1b5e20; }
+#about p { margin: 0 0 8px; }
+#aboutClose { width: 100%; margin-top: 10px; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+#auth .agree { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: #555; margin: 0 0 8px; }
+#auth .agree input { display: inline-block; width: auto; margin: 2px 4px 0 0; }
+#auth .agree a, #auth .small a { color: #1b5e20; }
+/* ---- NOTES + HIGHLIGHTS ---- */
+#rtext p[data-v] { cursor: pointer; border-radius: 6px; padding: 2px 6px; margin-left: -6px; margin-right: -6px; }
+#rtext p[data-hl] { background: var(--c); }
+.notemark { margin-left: 6px; font-size: 13px; }
+#vp { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-width: 560px; margin: 0 auto; background: #fff; border-radius: 16px 16px 0 0; box-shadow: 0 -4px 24px rgba(0,0,0,.3); padding: 14px 16px 16px; font-family: system-ui, sans-serif; display: none; max-height: 85vh; overflow-y: auto; }
+#vp.open { display: block; }
+#vpHead { font-weight: 600; color: #1b5e20; margin-bottom: 8px; }
+#vpColors { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.sw { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #b9b9b9; background: var(--c); cursor: pointer; position: relative; padding: 0; }
+.sw.on { border-color: #1b5e20; box-shadow: 0 0 0 2px #1b5e20; }
+.sw.lock { opacity: .75; }
+.sw.lock::after { content: "\1F512"; position: absolute; right: -5px; bottom: -5px; font-size: 13px; }
+#vpBuy { display: none; background: #f3f7ee; border-radius: 10px; padding: 10px; margin-bottom: 8px; font-size: 14px; color: #1b5e20; }
+#vpNote { width: 100%; box-sizing: border-box; min-height: 70px; padding: 8px; border: 1px solid #b9ad88; border-radius: 8px; font: 15px system-ui, sans-serif; resize: vertical; }
+#vpBtns { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+#vpBtns button, #vpBuy button { padding: 8px 14px; border-radius: 999px; border: 0; font-size: 14px; cursor: pointer; background: #2f7d32; color: #fff; margin-right: 6px; }
+#vpBtns .alt, #vpBuy .alt { background: #e4e8dc; color: #333; }
+#vpMsg { font-size: 12px; color: #b3261e; margin-top: 6px; min-height: 14px; }
+body.night #vp { background: #1c2226; color: #e4e8dc; }
+body.night #vpHead { color: #9bd36a; }
+body.night #vpNote { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+body.night #vpBuy { background: #263036; color: #cfe3c0; }
+body.night .sw { border-color: #5a6a70; }
+body.night .sw.on { border-color: #9bd36a; box-shadow: 0 0 0 2px #9bd36a; }
+body.night #vpBtns .alt, body.night #vpBuy .alt { background: #3a464c; color: #e4e8dc; }
+
+/* ---- TEXT HIGHLIGHTS (select words, pick a color) ---- */
+#rtext mark.hl { background: var(--c); color: inherit; border-radius: 4px; padding: 1px 0; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+#hlBar { position: fixed; z-index: 45; display: none; background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0,0,0,.28); padding: 8px 10px; font-family: system-ui, sans-serif; max-width: min(92vw, 420px); box-sizing: border-box; }
+#hlBar.open { display: block; }
+#hlBar.dock { left: 0; right: 0; bottom: 0; top: auto; margin: 0 auto; max-width: 560px; width: 100%; border-radius: 16px 16px 0 0; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+#hlColors { display: flex; flex-wrap: wrap; gap: 6px; }
+#hlColors .sw { width: 28px; height: 28px; }
+#hlTools { display: flex; gap: 6px; margin-top: 8px; }
+#hlTools button, #hlBuy button { padding: 7px 12px; border-radius: 999px; border: 0; font-size: 13px; cursor: pointer; background: #2f7d32; color: #fff; margin-right: 6px; }
+#hlTools .alt, #hlBuy .alt { background: #e4e8dc; color: #333; }
+#hlBuy { display: none; background: #f3f7ee; border-radius: 10px; padding: 8px 10px; margin-top: 8px; font-size: 13px; color: #1b5e20; }
+body.night #hlBar { background: #1c2226; color: #e4e8dc; }
+body.night #hlBuy { background: #263036; color: #cfe3c0; }
+body.night #hlTools .alt, body.night #hlBuy .alt { background: #3a464c; color: #e4e8dc; }
+
+/* ---- PHONE LAYOUT: basket + Harvest row at the bottom of the reading panel ---- */
+@media (max-width: 800px) {
+#app { height: 100vh; height: 100dvh; } /* dvh = the real visible height, so nothing hides under the browser bar */
+#treewrap { height: 25vh; height: 25dvh; }
+#reader { height: 75vh; height: 75dvh; min-height: 0; }
+#rtext { min-height: 0; }
+#ui { flex-shrink: 0; gap: 4px 8px; padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 0px)); }
+#lbl { order: 1; font-size: 12px; padding: 3px 10px; }
+#fruitbar { order: 2; display: flex !important; flex-basis: auto; margin-left: auto; gap: 6px; } /* basket + Harvest on the same row as the stage label */
+#rcheck { order: 3; }
+#ui > div:last-child { order: 4; } /* Prev / Finished buttons stay last */
+#basket { font-size: 13px; }
+#ui #harvest { padding: 5px 12px; font-size: 13px; }
+#ui button { padding: 8px 14px; font-size: 14px; }
+}
+
+/* ---- SKY: sun by day, moon and stars by night ---- */
+#sky .daysky { opacity: 1; transition: opacity .6s ease; }
+#sky .nightsky { opacity: 0; transition: opacity .6s ease; }
+body.night #sky .daysky { opacity: 0; }
+body.night #sky .nightsky { opacity: 1; }
+#sky .rays { transform-box: fill-box; transform-origin: center; animation: sunspin 60s linear infinite; }
+@keyframes sunspin { to { transform: rotate(360deg); } }
+#sky .st { fill: #fffbe0; animation: twinkle 3s ease-in-out infinite; }
+@keyframes twinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { #sky .rays, #sky .st { animation: none; } }
+</style>
+</head>
+<body>
+<!-- ===== LOGIN / CREATE ACCOUNT SCREEN (covers the page until a reader logs in) ===== -->
+<div id="auth"><div class="acard">
+<h1>&#127795; Reading Tree</h1>
+<p class="asub">Read the book chapter by chapter and watch your own tree grow. Your progress is saved to your account.</p>
+<div class="atabs"><button id="tabLogin" type="button">Log in</button><button id="tabSignup" type="button">Create account</button></div>
+<input id="aUser" placeholder="Username" autocomplete="username" autocapitalize="none" spellcheck="false">
+<input id="aPass" type="password" placeholder="Password" autocomplete="current-password">
+<div id="signupOnly" style="display:none">
+<select id="aCountry" aria-label="Country"><option value="">Loading countries...</option></select>
+<input id="aCountryOther" placeholder="Type your country" style="display:none">
+<select id="aCity" aria-label="City" disabled><option value="">Choose a country first</option></select>
+<input id="aCityOther" placeholder="Type your city or town" style="display:none">
+<p class="small">We keep your country and city only to know where our readers are. Never share your password with anyone.</p>
+<label class="agree"><input type="checkbox" id="aAgree"><span>I have read the <a href="#" id="aboutLink2">About &amp; privacy notice</a> and I agree.</span></label>
+</div>
+<div id="aErr"></div>
+<button id="aGo" type="button">Log in</button>
+<p class="small" style="margin-top:10px"><a href="#" id="aboutLink">About &amp; privacy</a></p>
+<p class="small" id="demoNote" style="display:none;margin-top:10px">Preview only: accounts made here are test accounts kept in this browser. Tip: a username starting with demo238 begins at the last chapter, so you can try the fruits. In this preview a chapter rests for 1 minute instead of 24 hours.</p>
+</div></div>
+<!-- ===== CHANGE PASSWORD SCREEN (opens from "Change password", or automatically after the owner resets a password) ===== -->
+<div id="pw"><div class="acard">
+<h1>&#128274; <span id="pwTitle">Change password</span></h1>
+<p class="asub" id="pwSub"></p>
+<input id="pwOld" type="password" placeholder="Current password" autocomplete="current-password">
+<input id="pwNew" type="password" placeholder="New password (at least 6 characters)" autocomplete="new-password">
+<input id="pwNew2" type="password" placeholder="Repeat the new password" autocomplete="new-password">
+<div id="pwErr"></div>
+<button id="pwGo" type="button">Save new password</button>
+<button id="pwCancel" type="button">Cancel</button>
+</div></div>
+<!-- ===== GIFT SCREEN (send harvested fruits to another reader by ReaderID) ===== -->
+<div id="gift"><div class="acard">
+<h1>&#127873; Gift fruits</h1>
+<p class="asub" id="giftSub"></p>
+<div id="giftForm">
+<input id="giftTo" placeholder="Reader ID (like R-3F9A1C20BD)" autocapitalize="characters" spellcheck="false">
+<input id="giftAmt" type="number" min="1" step="1" placeholder="How many fruits?">
+</div>
+<div id="giftConfirm" style="display:none"></div>
+<div id="giftErr"></div>
+<button id="giftGo" type="button">Continue</button>
+<button id="giftBack" type="button">Cancel</button>
+</div></div>
+<!-- ===== ABOUT & PRIVACY (independent project notice, what data is kept, no cash value) ===== -->
+<div id="about"><div class="acard">
+<h1>About Reading Tree</h1>
+<h2>An independent project</h2>
+<p>Reading Tree is a personal, independent project. It is not affiliated with, endorsed by, or sponsored by The Church of Jesus Christ of Latter-day Saints or Intellectual Reserve, Inc.</p>
+<h2>The text</h2>
+<p>Scripture verses are shown for personal, non-commercial reading only. Chapter headings, summaries, introductions, footnotes and other study helps are not included.</p>
+<h2>Fruits, tokens and colors</h2>
+<p>Fruits, tokens and highlighter colors are rewards inside this app. They have no cash value and cannot be exchanged for money.</p>
+<h2>Your information</h2>
+<p>We keep your username, a scrambled (hashed) version of your password, your country and city, your reading progress, fruits, tokens and highlighter colors, and the notes and highlights you write. We do not sell your information, show ads, or share it with anyone. The site owner can see this information in the project's Google Sheet. Never share your password.</p>
+<h2>Questions or deleting your data</h2>
+<p id="aboutContact">To correct or delete your information, please contact the site owner.</p>
+<button id="aboutClose" type="button">Close</button>
+</div></div>
+<!-- ===== VERSE NOTE PANEL (tap a verse: private note) + COLOR BAR (appears when you select text) ===== -->
+<div id="vp"><div id="vpHead"></div>
+<textarea id="vpNote" maxlength="500" placeholder="Write a private note about this verse..."></textarea>
+<div id="vpBtns"><button id="vpSave" type="button">Save note</button><button id="vpClear" class="alt" type="button">Remove highlights</button><button id="vpClose" class="alt" type="button">Close</button></div>
+<div id="vpMsg"></div></div>
+
+<div id="hlBar"><div id="hlColors"></div><div id="hlTools"><button id="hlNote" type="button">&#128221; Note</button><button id="hlErase" class="alt" type="button" style="display:none">&#10005; Remove</button></div><div id="hlBuy"></div></div>
+
+<!-- ===== WELCOME DIALOG (shown once after a new account is created) ===== -->
+<div id="welcome"><div class="acard">
+<h1>&#127881; Account created!</h1>
+<p class="asub" id="welcomeSub"></p>
+<div class="setList">
+<button type="button" class="setBtn" id="welcomeTree"><span class="setIco">🌳</span><span class="setTxt">Reading Tree</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn" id="welcomeSecond"><span class="setIco">🎮</span><span class="setTxt">Games</span><span class="setArrow">›</span></button>
+</div>
+</div></div>
+
+
+
+<!-- ===== GAMES DIALOG (opens from Settings > Games) ===== -->
+<div id="gamesModal"><div class="acard">
+<h2 class="setTitle">🎮 Games</h2>
+<div class="setList">
+<button type="button" class="setBtn" id="gameJourney"><span class="setIco">🧭</span><span class="setTxt">Journey</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn" id="gameBricks"><span class="setIco">🧱</span><span class="setTxt">Bricks Games</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn" id="gameFruitdoku"><span class="setIco">🍈</span><span class="setTxt">Fruitdoku</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn" id="gameFarm"><span class="setIco">🌾</span><span class="setTxt">Reading Farm</span><span 
+class="setArrow">›</span></button>
+</div>
+<button id="gamesClose" type="button">Back</button>
+</div></div>
+
+<!-- ===== LANGUAGE DIALOG (opens from Settings > Language) ===== -->
+<div id="langModal"><div class="acard">
+<h2 class="setTitle">🌐 Language</h2>
+<p class="asub">Choose the language of the Book of Mormon text. Tagalog is "Ang Aklat ni Mormon" from the Church website.</p>
+<div class="setList">
+<button type="button" class="setBtn" id="langEng"><span class="setIco" style="font-size:13px;font-weight:700">EN</span><span class="setTxt">English</span><span class="setCheck"></span></button>
+<button type="button" class="setBtn" id="langTgl"><span class="setIco" style="font-size:13px;font-weight:700">TL</span><span class="setTxt">Tagalog</span><span class="setCheck"></span></button>
+</div>
+<div id="langErr"></div>
+<button id="langClose" type="button">Back</button>
+</div></div>
+
+<!-- ===== LOADING DIALOG (shown while a game page is opening) ===== -->
+<div id="goLoading"><div class="acard">
+<div class="goSpin"></div>
+<div class="goTitle" id="goTitle">Opening...</div>
+<div class="goSub">Please wait a moment.</div>
+</div></div>
+
+<!-- ===== CHANGE USERNAME DIALOG (opens from Settings > Change username) ===== -->
+<div id="nameModal"><div class="acard">
+<h1>✏️ Change username</h1>
+<p class="asub" id="nameSub">Loading...</p>
+<div id="nameForm"><input id="nameNew" placeholder="New username (3-20 characters)" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false"></div>
+<div id="nameConfirm" style="display:none"></div>
+<div id="nameErr"></div>
+<button id="nameGo" type="button">Continue</button>
+<button id="nameBack" type="button">Cancel</button>
+</div></div>
+
+<div id="toast"></div>
+<div id="app">
+<!-- ===== READER PANEL (left): chapter title + JUMP menu + chapter text ===== -->
+<section id="reader"><div id="rhead"><div id="rtitle"></div><select id="jump" aria-label="Jump to chapter"></select><button id="night" title="Night mode" aria-label="Night mode">&#127769;</button><button id="hideRead" title="Hide reading panel" aria-label="Hide reading panel">Hide</button><button id="settingsBtn" title="Settings" aria-label="Settings" style="background:none; border:1px solid #b9ad88; border-radius:8px; padding:5px 8px; font-size:15px; cursor:pointer;">⚙️</button></div><div id="pbar"><div id="pbarTxt">0% complete</div><div class="track"><div class="fill" id="pbarFill"></div></div></div><div id="rtext"></div>
+<!-- ===== CONTROLS (bottom of the reading panel): name + Log out, stage label, Prev, Finished/Next ===== -->
+<div id="ui"><div id="lbl">Loading...</div><div id="rcheck"><div id="rcTxt"></div><div class="track"><div class="fill" id="rcFill"></div></div></div><div id="fruitbar"><span id="basket">🪣 0</span><button id="harvest" type="button" style="display:none"><span class="fruitdot"></span> Harvest (<span id="fruitN">0</span>)</button></div><div style="display:none"><button id="prev" type="button"></button><button id="next" type="button"></button></div></div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div id="settingsModal">
+<div class="acard">
+<h2 class="setTitle">⚙️ Settings</h2>
+
+<div class="setProfile">
+<div class="setAvatar">🌳</div>
+<div class="setWho">
+<div id="whoName"></div>
+<div id="myId"></div>
+</div>
+</div>
+
+<div class="setLabel">Account</div>
+<div class="setList">
+<button type="button" class="setBtn" id="chgpw"><span class="setIco">🔑</span><span class="setTxt">Change password</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn" id="chgUser"><span class="setIco">✏️</span><span class="setTxt">Change username</span><span class="setArrow">›</span></button>
+</div>
+
+<div class="setLabel">Reading</div>
+<div class="setList">
+<button type="button" class="setBtn" id="langBtn"><span class="setIco">🌐</span><span class="setTxt">Language</span><span class="setSoon" id="langNow">English</span><span class="setArrow">›</span></button>
+</div>
+
+<div class="setLabel">Fun</div>
+<div class="setList">
+<button type="button" class="setBtn" id="giftBtn"><span class="setIco">🎁</span><span class="setTxt">Gift fruits</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn" id="gamesBtn"><span class="setIco">🎮</span><span class="setTxt">Games</span><span class="setArrow">›</span></button>
+</div>
+
+<div class="setLabel">More</div>
+<div class="setList">
+<button type="button" class="setBtn" id="aboutLink3"><span class="setIco">ℹ️</span><span class="setTxt">About &amp; privacy</span><span class="setArrow">›</span></button>
+<button type="button" class="setBtn setDanger" id="logout"><span class="setIco">🚪</span><span class="setTxt">Log out</span></button>
+</div>
+
+<button id="settingsClose" type="button">Close</button>
+</div>
+</div>
+</section>
+<section id="treewrap">
+<!-- ===== SHOW-READING BAR (only visible while the reading panel is hidden) ===== -->
+<div id="miniBar"><button id="showRead" type="button">&#128214; Show reading panel</button><span id="miniLbl"></span></div>
+<!-- ===== TREE (right side): book, trunk, branches, leaves, fruits are drawn here ===== -->
+<svg id="scene" viewBox="-169 0 1138 640" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="bark" x1="0" y1="0" x2="1" y2="0">
+<stop offset="0" stop-color="#b08a52"/><stop offset=".45" stop-color="#7d5832"/><stop offset="1" stop-color="#4a3020"/>
+</linearGradient>
+</defs>
+<!-- ===== SKY: sun (day) and moon + stars (night), drawn behind the tree ===== -->
+<g id="sky">
+<defs>
+<radialGradient id="sunGlow"><stop offset="0" stop-color="#ffd65a" stop-opacity=".55"/><stop offset="1" stop-color="#ffd65a" stop-opacity="0"/></radialGradient>
+<radialGradient id="sunBody" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff8c4"/><stop offset="1" stop-color="#f9c53f"/></radialGradient>
+<radialGradient id="moonGlow"><stop offset="0" stop-color="#fffbe0" stop-opacity=".35"/><stop offset="1" stop-color="#fffbe0" stop-opacity="0"/></radialGradient>
+</defs>
+
+<g class="daysky" transform="translate(860 90)">
+<circle r="100" fill="url(#sunGlow)"/>
+<g class="rays" stroke="#f6b73c" stroke-width="4" stroke-linecap="round" fill="none"><path d="M44,0L60,0M38.1,22L52,30M22,38.1L30,52M0,44L0,60M-22,38.1L-30,52M-38.1,22L-52,30M-44,0L-60,0M-38.1,-22L-52,-30M-22,-38.1L-30,-52M0,-44L0,-60M22,-38.1L30,-52M38.1,-22L52,-30"/></g>
+<circle r="34" fill="url(#sunBody)"/>
+</g>
+
+<g class="nightsky">
+<g transform="translate(860 90)">
+<circle r="85" fill="url(#moonGlow)"/>
+<path transform="rotate(-25)" d="M0,-40 A40,40 0 0,0 0,40 A60,60 0 0,1 0,-40 Z" fill="#fff8d6" stroke="#f1e6a8" stroke-width="1"/>
+</g>
+<circle class="st" cx="-140" cy="40" r="2" style="animation-delay:0s"/>
+<circle class="st" cx="-100" cy="110" r="1.5" style="animation-delay:.6s"/>
+<circle class="st" cx="-60" cy="30" r="2.2" style="animation-delay:1.2s"/>
+<circle class="st" cx="-20" cy="150" r="1.6" style="animation-delay:.3s"/>
+<circle class="st" cx="10" cy="70" r="2" style="animation-delay:1.8s"/>
+<circle class="st" cx="-120" cy="200" r="1.4" style="animation-delay:.9s"/>
+<circle class="st" cx="-70" cy="260" r="1.8" style="animation-delay:2.1s"/>
+<circle class="st" cx="-150" cy="310" r="1.5" style="animation-delay:1.5s"/>
+<circle class="st" cx="20" cy="310" r="1.3" style="animation-delay:.2s"/>
+<circle class="st" cx="120" cy="18" r="1.8" style="animation-delay:.7s"/>
+<circle class="st" cx="220" cy="30" r="2" style="animation-delay:1.4s"/>
+<circle class="st" cx="320" cy="14" r="1.5" style="animation-delay:.1s"/>
+<circle class="st" cx="480" cy="16" r="2" style="animation-delay:1.1s"/>
+<circle class="st" cx="580" cy="30" r="1.6" style="animation-delay:2.3s"/>
+<circle class="st" cx="680" cy="16" r="1.9" style="animation-delay:.5s"/>
+<circle class="st" cx="760" cy="60" r="1.8" style="animation-delay:1.7s"/>
+<circle class="st" cx="800" cy="150" r="1.5" style="animation-delay:.4s"/>
+<circle class="st" cx="930" cy="40" r="2.2" style="animation-delay:1s"/>
+<circle class="st" cx="940" cy="160" r="1.6" style="animation-delay:2s"/>
+<circle class="st" cx="790" cy="230" r="1.9" style="animation-delay:.8s"/>
+<circle class="st" cx="900" cy="250" r="1.4" style="animation-delay:1.3s"/>
+<circle class="st" cx="850" cy="330" r="1.7" style="animation-delay:.2s"/>
+<circle class="st" cx="940" cy="320" r="1.5" style="animation-delay:1.9s"/>
+<circle class="st" cx="770" cy="310" r="1.3" style="animation-delay:.6s"/>
+<path class="st" transform="translate(-100 60)" style="animation-delay:.9s" d="M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z"/>
+<path class="st" transform="translate(700 50)" style="animation-delay:1.6s" d="M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z"/>
+<path class="st" transform="translate(880 215)" style="animation-delay:.3s" d="M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z"/>
+</g>
+</g>
+
+<!-- ===== GRASS (drawn by the grass script near the bottom of this file) ===== -->
+<style>
+#scene { overflow: visible; }
+#treewrap { overflow: hidden; }
+#grassShade { opacity: 0; transition: opacity .6s ease; }
+body.night #grassShade { opacity: .55; }
+#grass .sway { transform-box: fill-box; transform-origin: 50% 100%; animation: grassSway 6s ease-in-out infinite alternate; }
+@keyframes grassSway { from { transform: skewX(calc(var(--a) * -1)); } to { transform: skewX(var(--a)); } }
+@media (prefers-reduced-motion: reduce) { #grass .sway { animation: none; } }
+</style>
+<g id="grass" pointer-events="none"></g>
+
+<!-- open book -->
+<defs>
+<clipPath id="trunkclip"><path d="M338,532 C372,506 376,470 378,430 L380,396 L420,396 L422,430 C424,470 428,506 462,532 Z"/></clipPath>
+<linearGradient id="pageL" gradientUnits="userSpaceOnUse" x1="135" y1="0" x2="400" y2="0"><stop offset="0" stop-color="#fcf8ea"/><stop offset=".75" stop-color="#f1e8cc"/><stop offset="1" stop-color="#cfc29c"/></linearGradient>
+<linearGradient id="pageR" gradientUnits="userSpaceOnUse" x1="665" y1="0" x2="400" y2="0"><stop offset="0" stop-color="#fcf8ea"/><stop offset=".75" stop-color="#f1e8cc"/><stop offset="1" stop-color="#cfc29c"/></linearGradient>
+</defs>
+<ellipse cx="400" cy="612" rx="310" ry="14" fill="#000" opacity=".14"/>
+<path d="M400,536 Q270,514 125,526 L106,590 Q268,572 400,604 Z" fill="#6b2d22" stroke="#46190f" stroke-width="1.5"/>
+<path d="M400,536 Q530,514 675,526 L694,590 Q532,572 400,604 Z" fill="#6b2d22" stroke="#46190f" stroke-width="1.5"/>
+<g fill="#ece2c4" stroke="#b9ad88" stroke-width=".8">
+<path d="M400,522 Q280,500 150,512 L135,566 Q268,556 400,584 Z" transform="translate(0,9)"/>
+<path d="M400,522 Q280,500 150,512 L135,566 Q268,556 400,584 Z" transform="translate(0,4.5)"/>
+<path d="M400,522 Q520,500 650,512 L665,566 Q532,556 400,584 Z" transform="translate(0,9)"/>
+<path d="M400,522 Q520,500 650,512 L665,566 Q532,556 400,584 Z" transform="translate(0,4.5)"/>
+</g>
+<path d="M400,522 Q280,500 150,512 L135,566 Q268,556 400,584 Z" fill="url(#pageL)" stroke="#b9ad88" stroke-width="1"/>
+<path d="M400,522 Q520,500 650,512 L665,566 Q532,556 400,584 Z" fill="url(#pageR)" stroke="#b9ad88" stroke-width="1"/>
+<g fill="none" stroke="#9a9078" stroke-width="1.1" opacity=".45">
+<path d="M375.6,526.5 L351.0,522.9 L326.2,520.1 L301.3,517.9 L276.1,516.5 L250.8,515.7 L225.4,515.6 L199.7,516.3 L173.9,517.6"/>
+<path d="M375.3,534.4 L350.4,530.7 L325.4,527.7 L300.2,525.5 L274.9,523.9 L249.4,523.0 L223.8,522.9 L198.0,523.4 L172.0,524.6"/>
+<path d="M375.0,542.3 L349.8,538.5 L324.5,535.4 L299.1,533.0 L273.6,531.3 L247.9,530.3 L222.1,530.1 L196.2,530.5 L170.2,531.7"/>
+<path d="M374.7,550.2 L349.2,546.2 L323.7,543.0 L298.1,540.5 L272.3,538.7 L246.5,537.6 L220.5,537.3 L194.5,537.7 L168.3,538.8"/>
+<path d="M374.4,558.1 L348.7,554.0 L322.9,550.6 L297.0,548.0 L271.1,546.1 L245.0,545.0 L218.9,544.5 L192.7,544.8 L166.5,545.9"/>
+<path d="M374.1,566.0 L348.1,561.8 L322.1,558.3 L296.0,555.5 L269.8,553.5 L243.6,552.3 L217.3,551.8 L191.0,552.0 L164.6,552.9"/>
+<path d="M424.4,526.5 L449.0,522.9 L473.8,520.1 L498.7,517.9 L523.9,516.5 L549.2,515.7 L574.6,515.6 L600.3,516.3 L626.1,517.6"/>
+<path d="M424.7,534.4 L449.6,530.7 L474.6,527.7 L499.8,525.5 L525.1,523.9 L550.6,523.0 L576.2,522.9 L602.0,523.4 L628.0,524.6"/>
+<path d="M425.0,542.3 L450.2,538.5 L475.5,535.4 L500.9,533.0 L526.4,531.3 L552.1,530.3 L577.9,530.1 L603.8,530.5 L629.8,531.7"/>
+<path d="M425.3,550.2 L450.8,546.2 L476.3,543.0 L501.9,540.5 L527.7,538.7 L553.5,537.6 L579.5,537.3 L605.5,537.7 L631.7,538.8"/>
+<path d="M425.6,558.1 L451.3,554.0 L477.1,550.6 L503.0,548.0 L528.9,546.1 L555.0,545.0 L581.1,544.5 L607.3,544.8 L633.5,545.9"/>
+<path d="M425.9,566.0 L451.9,561.8 L477.9,558.3 L504.0,555.5 L530.2,553.5 L556.4,552.3 L582.7,551.8 L609.0,552.0 L635.4,552.9"/>
+</g>
+<g id="early"></g>
+<g id="tree">
+<g id="trunk">
+<ellipse cx="400" cy="534" rx="105" ry="11" fill="#000" opacity=".13"/>
+<path d="M338,532 C372,506 376,470 378,430 L380,396 L420,396 L422,430 C424,470 428,506 462,532 Z" fill="url(#bark)"/>
+<g id="bark-lines" clip-path="url(#trunkclip)" fill="none" stroke="#3a2615" stroke-width="1.2" opacity=".35"></g>
+</g>
+<g id="crown">
+<g id="branches" fill="none" stroke-linecap="round"></g>
+<g id="leaves"></g>
+</g>
+</g>
+</svg>
+<!-- ===== CELEBRATION (step 4): leaf rain + message, shown when you finish Moroni 10 ===== -->
+<div id="leafrain"></div>
+<div id="party"><div class="card"><h2 id="partyTitle">&#127881; You finished all 239 chapters!</h2><p id="partyMsg">Your tree is fully grown. Well done!</p><button id="partyClose">Close</button></div></div>
+</section>
+</div>
+
+<script>
+// GRASS: grows realistic clumps of blades behind the tree. Visual only.
+(function () {
+var SWAY = true; // set to false if the grass moving makes a phone feel slow
+var X0 = -400, X1 = 1200, ROWS = 13, VAR = 4;
+var EXTRA = 15; // extra rows reaching the bottom of tall phone screens (reading panel hidden)
+var NSV = "http://www.w3.org/2000/svg", g = document.getElementById("grass");
+if (!g) return;
+var seed = 20261019;
+function r() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+function f(n) { return Math.round(n * 10) / 10; }
+function mk(n, a, p) { var e = document.createElementNS(NSV, n); for (var k in a) e.setAttribute(k, a[k]); (p || g).appendChild(e); return e; }
+
+var defs = mk("defs", {});
+var gg = mk("linearGradient", { id: "grassGround", gradientUnits: "userSpaceOnUse", x1: 0, y1: 458, x2: 0, y2: 1700 }, defs);
+[[0, "#3d7a2c"], [.12, "#2f6a27"], [.6, "#1d4a1e"], [1, "#173c19"]].forEach(function (c) { mk("stop", { offset: c[0], "stop-color": c[1] }, gg); });
+mk("rect", { x: -3000, y: 458, width: 7000, height: 3000, fill: "url(#grassGround)" });
+
+function blade(p, bx, by, h, w, l, fill) {
+var tx = bx + l, ty = by - h;
+mk("path", { d: "M" + f(bx - w / 2) + "," + f(by + 1) + " Q" + f(bx - w * .3 + l * .1) + "," + f(by - h * .6) + " " + f(tx) + "," + f(ty) + " Q" + f(bx + w * .3 + l * .1) + "," + f(by - h * .55) + " " + f(bx + w / 2) + "," + f(by + 1) + "Z", fill: fill }, p);
+}
+
+var v;
+for (var i = 0; i < ROWS; i++) { // colors: dark at the root, sunlit at the tip, a few shades per row
+var tc = i / (ROWS - 1);
+for (v = 0; v < VAR; v++) {
+var hue = 92 + (v - 1.5) * 6 - tc * 8, sat = 42 + tc * 22 + v * 3, lb = 15 + tc * 12, lt = 30 + tc * 24 + v * 3;
+var lg = mk("linearGradient", { id: "gb" + i + "_" + v, x1: 0, y1: 1, x2: 0, y2: 0 }, defs);
+mk("stop", { offset: 0, "stop-color": "hsl(" + hue + "," + sat + "%," + lb + "%)" }, lg);
+mk("stop", { offset: .55, "stop-color": "hsl(" + (hue - 3) + "," + (sat + 6) + "%," + ((lb + lt) / 2) + "%)" }, lg);
+mk("stop", { offset: 1, "stop-color": "hsl(" + (hue - 8) + "," + (sat + 10) + "%," + lt + "%)" }, lg);
+}
+}
+
+for (i = 0; i < ROWS + EXTRA; i++) {
+var t = i / (ROWS - 1), gi = Math.min(i, ROWS - 1), y = 460 + 380 * Math.pow(t, 1.45);
+var xa = t > 1 ? -280 : X0, xb = t > 1 ? 1080 : X1; // the extra rows are only needed on narrow screens, so they stay narrow
+var row = mk("g", {});
+if (SWAY) {
+row.setAttribute("class", "sway");
+row.style.setProperty("--a", (0.5 + 1.3 * Math.min(t, 1.4)).toFixed(2) + "deg");
+row.style.animationDuration = (5 + r() * 3).toFixed(1) + "s";
+row.style.animationDelay = "-" + (r() * 6).toFixed(1) + "s";
+}
+var gap = 34 + t * 26, scale = 10 + 52 * t, x = xa + r() * gap;
+while (x < xb) {
+var n = 3 + Math.floor(r() * 3), lean0 = (r() - .5) * 22 * (.5 + t), k;
+for (k = 0; k < n; k++) {
+var h = scale * (.65 + r() * .75), w = (2.4 + t * 3.2) * (.8 + r() * .5);
+var bx = x + (k - n / 2) * (w * .9 + r() * 2), l = lean0 + (k - (n - 1) / 2) * (h * .16) + (r() - .5) * 6;
+blade(row, bx, y, h, w, l, "url(#gb" + gi + "_" + Math.floor(r() * VAR) + ")");
+}
+x += gap * (.7 + r() * .6);
+}
+}
+mk("rect", { id: "grassShade", x: -3000, y: 430, width: 7000, height: 3300, fill: "#06122a" }); // night darkening
+})();
+</script>
+
+<script>
+// NIGHT STARS: fills the whole sky above the tree with stars (visible in dark mode). Visual only.
+(function () {
+var COUNT = 120; // how many stars (lower it if a phone feels slow)
+var TWINKLE = 0; // share of stars that twinkle (the rest just shine)
+var NSV = "http://www.w3.org/2000/svg", host = document.querySelector("#sky .nightsky");
+if (!host) return;
+var seed = 20261020;
+function r() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+function mk(n, a) { var e = document.createElementNS(NSV, n); for (var k in a) e.setAttribute(k, a[k]); host.appendChild(e); return e; }
+var X0 = -1000, X1 = 1900, Y0 = -1500, Y1 = 430; // sky area: wide, and far above the tree for tall phone screens
+for (var i = 0; i < COUNT; i++) {
+var x = X0 + r() * (X1 - X0), y = Y0 + Math.pow(r(), 0.85) * (Y1 - Y0);
+if (Math.abs(x - 860) < 75 && Math.abs(y - 90) < 75) continue; // keep the moon clear
+var far = y < 0, rad = far ? 2.4 + r() * 2.6 : 1.4 + r() * 1.6; // high stars are drawn bigger so they still show on a small phone screen
+var s = mk("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: rad.toFixed(1) });
+if (r() < TWINKLE) { s.setAttribute("class", "st"); s.style.animationDelay = (r() * 3).toFixed(1) + "s"; s.style.animationDuration = (2.4 + r() * 2.4).toFixed(1) + "s"; }
+else { s.setAttribute("fill", "#fffbe0"); s.setAttribute("opacity", (0.45 + r() * 0.5).toFixed(2)); }
+}
+for (i = 0; i < 6; i++) { // a few bigger four-point sparkles
+var sx = X0 + r() * (X1 - X0), sy = Y0 + r() * (Y1 - 60 - Y0), z = (sy < 0 ? 1.6 : 1) * (0.9 + r() * 0.8);
+if (Math.abs(sx - 860) < 90 && Math.abs(sy - 90) < 90) continue;
+var p = mk("path", { "class": "st", d: "M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z", transform: "translate(" + sx.toFixed(1) + " " + sy.toFixed(1) + ") scale(" + z.toFixed(2) + ")" });
+p.style.animationDelay = (r() * 3).toFixed(1) + "s";
+}
+})();
+</script>
+
+<script>
+// WIND: every ~5 seconds a gust bends the tree and grass and blows a few leaves away. Visual only: no data, no server and no app logic is touched.
+(function () {
+var EVERY = 8; // seconds between gusts
+var JITTER = 2; // random +/- seconds so it feels natural (0 = exactly on time)
+var FIRST = 4; // seconds before the first gust after the page opens
+var STRENGTH = 1; // 0.5 = gentle breeze, 1 = normal, 2 = strong
+var LEAVES = false; // small leaves blowing away with the gust
+var WIND_ON_SMALL = false; // false = no FULL wind on phones or when zoomed in (this is what removes the flicker and the lag)
+var WIND_PHONE_LITE = true; // true = on phones only the tree sways, gently, without the grass. Set false to turn all wind off on phones.
+
+if (!document.body.animate) return;
+if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+var NSV = "http://www.w3.org/2000/svg", byId = function (i) { return document.getElementById(i); };
+var scene = byId("scene"), tree = byId("tree"), crown = byId("crown"), early = byId("early"), grass = byId("grass");
+if (!scene || !tree || !crown) return;
+function base(el) { el.style.transformBox = "fill-box"; el.style.transformOrigin = "50% 100%"; } // bends from the bottom
+
+var cw = document.createElementNS(NSV, "g"); // wrapper so the crown can flex a little more than the trunk
+crown.parentNode.insertBefore(cw, crown); cw.appendChild(crown);
+base(cw); base(tree); if (early) base(early);
+
+var rows = []; // each grass row gets its own wrapper so it can bend on its own
+if (grass) Array.prototype.slice.call(grass.children).forEach(function (el) {
+if (el.tagName.toLowerCase() !== "g") return;
+var w = document.createElementNS(NSV, "g"); grass.insertBefore(w, el); w.appendChild(el); base(w); rows.push(w);
+});
+
+function sway(A) { // lean with the wind, rebound, then settle (negative angle = to the right)
+var m = [0, -1, .35, -.6, .2, -.25, 0], o = [0, .2, .38, .55, .7, .85, 1];
+return m.map(function (v, i) { return { offset: o[i], transform: "skewX(" + (v * A).toFixed(2) + "deg)", easing: "ease-in-out" }; });
+}
+
+function blow() { // a few leaves leave the crown and drift to the right
+if (getComputedStyle(tree).display === "none") return;
+var rc = crown.getBoundingClientRect(), m = scene.getScreenCTM();
+if (!m || rc.width < 20) return;
+var inv = m.inverse(), sw = scene.getBoundingClientRect().width || 1;
+var n = 3 + Math.round(5 * Math.min(1, rc.width / (sw * .7))), cols = ["#4f9a2a", "#6fb23a", "#8cc152", "#3f8a2a"];
+var layer = byId("windLeaves");
+if (!layer) { layer = document.createElementNS(NSV, "g"); layer.setAttribute("id", "windLeaves"); layer.setAttribute("pointer-events", "none"); scene.appendChild(layer); }
+for (var k = 0; k < n; k++) {
+var pt = scene.createSVGPoint(); pt.x = rc.left + Math.random() * rc.width; pt.y = rc.top + rc.height * (.15 + Math.random() * .55);
+var p = pt.matrixTransform(inv), rx = 5 + Math.random() * 3;
+var e = document.createElementNS(NSV, "ellipse");
+e.setAttribute("cx", p.x.toFixed(1)); e.setAttribute("cy", p.y.toFixed(1)); e.setAttribute("rx", rx.toFixed(1)); e.setAttribute("ry", (rx * .55).toFixed(1));
+e.setAttribute("fill", cols[k % cols.length]);
+e.style.transformBox = "fill-box"; e.style.transformOrigin = "50% 50%";
+layer.appendChild(e);
+var dx = 280 + Math.random() * 320, dy = 30 + Math.random() * 170, spin = (Math.random() < .5 ? -1 : 1) * (360 + Math.random() * 360);
+var a = e.animate([
+{ transform: "translate(0px,0px) rotate(0deg)", opacity: 0, offset: 0 },
+{ opacity: 1, offset: .12 },
+{ transform: "translate(" + (dx * .5) + "px," + (dy * .15 - 28) + "px) rotate(" + (spin * .5) + "deg)", opacity: 1, offset: .55 },
+{ transform: "translate(" + dx + "px," + dy + "px) rotate(" + spin + "deg)", opacity: 0, offset: 1 }
+], { duration: 2800 + Math.random() * 1600, delay: Math.random() * 800, easing: "ease-in", fill: "both" });
+a.onfinish = (function (x) { return function () { x.remove(); }; })(e);
+}
+}
+
+var live = [], scrolling = false, scT = 0, waiting = false;
+function track(a) { live.push(a); a.onfinish = a.oncancel = function () { var k = live.indexOf(a); if (k >= 0) live.splice(k, 1); }; return a; }
+function stopGust() { // stops a gust in progress and clears flying leaves, so scrolling gets the whole phone
+live.slice().forEach(function (a) { a.cancel(); });
+var L = byId("windLeaves"); if (L) while (L.firstChild) L.removeChild(L.firstChild);
+}
+
+function gust() {
+var au = byId("auth");
+if (document.hidden || (au && au.style.display === "flex")) return; // no gust while the tab is hidden or the login screen is up
+var small = window.innerWidth <= 800;
+if (small && !WIND_ON_SMALL && !WIND_PHONE_LITE) return; // phone layout: no wind unless the lite wind is on
+if (scrolling) { if (!waiting) { waiting = true; setTimeout(function () { waiting = false; gust(); }, 1500); } return; } // wait until scrolling stops
+var S = small ? STRENGTH * 0.7 : STRENGTH, step = small ? 2 : 1; // phones: gentler sway, every other grass row
+track(tree.animate(sway(1.3 * S), { duration: 3600 }));
+track(cw.animate(sway(1.9 * S), { duration: 3600, delay: 160 }));
+if (early) track(early.animate(sway(5 * S), { duration: 3200 }));
+rows.forEach(function (w, i) {
+if (small && !WIND_ON_SMALL) return; // lite wind on phones: the grass stays still
+if (i % step) return;
+var t = i / Math.max(1, rows.length - 1);
+track(w.animate(sway((2.2 + 5.5 * t) * S), { duration: 3300, delay: i * 50 + Math.random() * 90 }));
+});
+if (LEAVES) blow();
+}
+
+var rt = byId("rtext");
+if (rt) { // scrolling the reading text pauses the wind
+var hit = function () { scrolling = true; clearTimeout(scT); scT = setTimeout(function () { scrolling = false; }, 1200); stopGust(); };
+rt.addEventListener("scroll", hit, { passive: true });
+rt.addEventListener("touchmove", hit, { passive: true });
+rt.addEventListener("wheel", hit, { passive: true });
+}
+
+function loop(first) {
+var s = first ? FIRST : EVERY + (Math.random() * 2 - 1) * JITTER;
+setTimeout(function () { gust(); loop(false); }, s * 1000);
+}
+loop(true);
+})();
+</script>
+
+<script>
+// ############################################################################
+// Jstree.html - THE TREE: drawing, growth stages, the white-tree effect and the celebration
+// Basic helpers ($, el, rnd), then the tree (bark, canopy, branches, leaves), how big it is at each stage (render), unharvested fruits turning leaves white,
+// and the falling-leaves celebration. Loads FIRST because every other file uses the helpers defined here.
+// ############################################################################
+
+// ============================================================
+// BASIC HELPERS
+// Random numbers (so the tree looks the same every time), shortcuts to draw SVG shapes.
+// ============================================================
+var NS = "http://www.w3.org/2000/svg";
+var seed = 11;
+function rnd() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+function el(p, n, a) { var e = document.createElementNS(NS, n); for (var k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; }
+function $(id) { return document.getElementById(id); }
+
+// ============================================================
+// BRANCH SEGMENT HELPER
+// Draws one slightly curved line (used by branches).
+// ============================================================
+
+function seg(g, x, y, x2, y2, w, col) {
+var mx = (x + x2) / 2, my = (y + y2) / 2, dx = x2 - x, dy = y2 - y, bend = (rnd() - .5) * .35;
+return el(g, "path", { d: "M" + x + "," + y + " Q" + (mx - dy * bend) + "," + (my + dx * bend) + " " + x2 + "," + y2, stroke: col, "stroke-width": w });
+}
+
+// ============================================================
+// TREE: TRUNK BARK LINES
+// The thin dark lines on the trunk.
+// ============================================================
+
+var bl = $("bark-lines");
+for (var i = 0; i < 16; i++) {
+var u = i / 15, xb = 342 + 116 * u + (rnd() - .5) * 6, xt = 381 + 38 * u + (rnd() - .5) * 3;
+el(bl, "path", { d: "M" + xb + ",528 Q" + ((xb + xt) / 2 + (rnd() - .5) * 14) + ",460 " + xt + ",400" });
+}
+
+// ============================================================
+// TREE: CANOPY SHAPE + COLORS
+// Size of the leaf crown, the green color palette, and where leaves are allowed to grow.
+// ============================================================
+
+var CX = 400, CY = 235, RX = 345, RY = 190;
+function lim(x) { return CY + 150 + 28 * Math.sin(x * .05) + 18 * Math.sin(x * .13); }
+var pal = [[26, 62, 20], [44, 98, 28], [76, 138, 40], [120, 177, 64], [176, 214, 104]];
+function shade(t) {
+t = Math.max(0, Math.min(.999, t)) * (pal.length - 1);
+var i = Math.floor(t), f = t - i, a = pal[i], b = pal[i + 1];
+return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * f) + "," + Math.round(a[1] + (b[1] - a[1]) * f) + "," + Math.round(a[2] + (b[2] - a[2]) * f) + ")";
+}
+function dome() {
+for (;;) {
+var a = rnd() * 6.283, r = Math.sqrt(rnd());
+var x = CX + Math.cos(a) * RX * r, y = CY + Math.sin(a) * RY * r;
+if (y < lim(x)) return [x, y];
+}
+}
+
+// ============================================================
+// TREE: BRANCHES
+// Builds all branches. Each branch remembers its level so it can grow in later.
+// ============================================================
+
+var br = $("branches"), tips = [], BR = [], D = [], T = [], H = [], F = [];
+function branch(x, y, ang, len, depth, w) {
+var x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+var be = seg(br, x, y, x2, y2, w, "#5c3f26"); be.setAttribute("pathLength", 1); BR.push([be, 4 - depth]);
+if (depth === 0) { tips.push([x2, y2]); return; }
+var n = depth === 1 && rnd() < .5 ? 3 : 2;
+for (var i = 0; i < n; i++) {
+var a = ang + (rnd() - .5) * 1.0 + (i - (n - 1) / 2) * .4;
+a += (-Math.PI / 2 - a) * .06;
+branch(x2, y2, a, len * (.7 + rnd() * .1), depth - 1, Math.max(w * .64, 1));
+}
+}
+[-2.75, -2.3, -1.95, -1.55, -1.2, -0.8, -0.4].forEach(function (a) {
+branch(400 + (rnd() - .5) * 14, 410, a, 105 + rnd() * 25, 4, 13);
+});
+
+// ============================================================
+// TREE: LEAVES
+// Builds the leaves (8000 crown leaves + tip leaves). Change the 8000 for a fuller or lighter crown.
+// ============================================================
+
+var leaves = $("leaves");
+function leaf(x, y, size, t) {
+return el(leaves, "ellipse", { cx: x, cy: y, rx: size, ry: size * .6, fill: shade(t), transform: "rotate(" + ((rnd() * 180) | 0) + " " + x + " " + y + ")" });
+}
+function lit(x, y) {
+return .42 - ((y - CY) / RY) * .3 - ((x - CX) / RX) * .12 + (rnd() - .5) * .5;
+}
+for (var j = 0; j < 5000; j++) {
+var q = dome();
+D.push(leaf(q[0], q[1], 6 + rnd() * 6, lit(q[0], q[1])));
+}
+tips.forEach(function (t) {
+for (var k = 0; k < 26; k++) {
+var x = t[0] + (rnd() - .5) * 70, y = t[1] + (rnd() - .5) * 56;
+T.push(leaf(x, y, 5 + rnd() * 5, lit(x, y)));
+}
+});
+// (bright highlight leaves on the top-left of the crown)
+for (var h = 0; h < 260; h++) {
+var s = dome();
+if (s[1] < CY && s[0] < CX + 80) H.push(leaf(s[0], s[1], 4 + rnd() * 3, .78 + rnd() * .2));
+}
+
+// ============================================================
+// TREE: WHITE FRUITS = THE TREE TURNS WHITE
+// Unharvested fruits gradually cover the leaves: leaf after leaf turns white (scattered, not in a line), until the whole crown is white.
+// Harvesting brings the green back. Change FULL_WHITE_AT to make the tree whiten faster or slower.
+// ============================================================
+var fruits = 0; // fruits on the tree right now (every one is counted, there is no limit)
+var FULL_WHITE_AT = 3000; // unharvested fruits needed to cover every leaf
+var LEAFW = [], ORIGW = [], ORIGRX = [], ORIGRY = [], whiteN = 0, WHITES = ["#ffffff", "#fbfaf2", "#f6f7ee", "#fffef8"];
+(function () {
+var all = D.concat(T, H), idx = [], i, n, tmp;
+for (i = 0; i < all.length; i++) idx.push(i);
+for (i = idx.length - 1; i > 0; i--) { n = Math.floor(rnd() * (i + 1)); tmp = idx[i]; idx[i] = idx[n]; idx[n] = tmp; } // shuffle so the white spreads over the whole crown
+idx.forEach(function (k) { 
+LEAFW.push(all[k]); 
+ORIGW.push(all[k].getAttribute("fill")); 
+ORIGRX.push(all[k].getAttribute("rx"));
+ORIGRY.push(all[k].getAttribute("ry"));
+});
+})();
+function updateFruits() { // turns the right number of leaves white and makes them bigger & rounder
+var target = Math.floor(clamp(fruits / FULL_WHITE_AT) * LEAFW.length), i;
+if (target === whiteN) return;
+if (target > whiteN) {
+for (i = whiteN; i < target; i++) { 
+LEAFW[i].setAttribute("fill", WHITES[i % 4]); 
+LEAFW[i].setAttribute("stroke", "#bcd0a0"); 
+LEAFW[i].setAttribute("stroke-width", "1");
+LEAFW[i].setAttribute("rx", "12"); // Larger size for fruit
+LEAFW[i].setAttribute("ry", "12"); // Equal width/height makes it a distinct round circle
+}
+} else {
+for (i = target; i < whiteN; i++) { 
+LEAFW[i].setAttribute("fill", ORIGW[i]); 
+LEAFW[i].removeAttribute("stroke"); 
+LEAFW[i].removeAttribute("stroke-width");
+LEAFW[i].setAttribute("rx", ORIGRX[i]); // Restore original leaf width
+LEAFW[i].setAttribute("ry", ORIGRY[i]); // Restore original leaf height
+}
+}
+whiteN = target;
+}
+
+// ============================================================
+// GROWTH STAGES (1 = seed ... 239 = full tree)
+// render(stage) shows how big the tree is. drawEarly() draws the seed and sprout (stages 1-40).
+// ============================================================
+
+function clamp(x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+function setN(a, n) { for (var i = 0; i < a.length; i++) a[i].style.display = i < n ? "" : "none"; }
+
+function drawEarly(st) {
+var g = $("early"), gr = Math.min(st, 12);
+el(g, "ellipse", { cx: 400, cy: 533, rx: 6 + gr * .9, ry: 2 + gr * .3, fill: "#6b4a2b" });
+if (st <= 12) {
+var sy = 526 + Math.min(st, 7) * .7;
+el(g, "ellipse", { cx: 400, cy: sy, rx: 5 + st * .12, ry: 3.5 + st * .1, fill: "#7a4a22", stroke: "#4a2c14", "stroke-width": .8 });
+el(g, "ellipse", { cx: 398.5, cy: sy - 1, rx: 1.6, ry: 1, fill: "#b98a55" });
+if (st >= 9) el(g, "path", { d: "M396," + sy + " Q400," + (sy - 4) + " 404," + sy, fill: "none", stroke: "#d9c28a", "stroke-width": 1 });
+if (st >= 4) el(g, "ellipse", { cx: 400, cy: 533, rx: 6 + gr * .9, ry: 2.6 + gr * .3, fill: "#6b4a2b" });
+return;
+}
+var h = (st - 12) * 1.5, bend = (1 - Math.min(1, (st - 12) / 14)) * 12, tx = 400 + bend, ty = 533 - h;
+el(g, "path", { d: "M400,533 Q" + (400 + bend * 1.2) + "," + (533 - h * .7) + " " + tx + "," + ty, fill: "none", stroke: "#8cc152", "stroke-width": 3, "stroke-linecap": "round" });
+if (st >= 22) {
+var cs = Math.min(8, (st - 21) * .5);
+el(g, "ellipse", { cx: tx - cs, cy: ty, rx: cs, ry: cs * .5, fill: "#6fb23a", transform: "rotate(-25 " + tx + " " + ty + ")" });
+el(g, "ellipse", { cx: tx + cs, cy: ty, rx: cs, ry: cs * .5, fill: "#6fb23a", transform: "rotate(25 " + tx + " " + ty + ")" });
+}
+if (st >= 32) {
+var ls = Math.min(7, (st - 31) * .8);
+el(g, "ellipse", { cx: tx - ls * .8, cy: ty - ls * .9, rx: ls, ry: ls * .5, fill: "#4f9a2a", transform: "rotate(-55 " + tx + " " + ty + ")" });
+el(g, "ellipse", { cx: tx + ls * .8, cy: ty - ls * .9, rx: ls, ry: ls * .5, fill: "#4f9a2a", transform: "rotate(55 " + tx + " " + ty + ")" });
+}
+}
+
+function render(st) {
+$("early").innerHTML = "";
+if (st <= 40) { $("tree").style.display = "none"; drawEarly(st); return; }
+$("tree").style.display = "";
+var u = (st - 41) / (CHAPTERS - 41), S = .09 + .91 * Math.pow(u, .85), wf = .35 + .65 * Math.pow(u, .7);
+$("crown").setAttribute("transform", "translate(400 532) scale(" + S + ") translate(-400 -532)");
+$("trunk").setAttribute("transform", "translate(400 532) scale(" + (S * wf) + " " + S + ") translate(-400 -532)");
+BR.forEach(function (b) {
+var p = clamp((u - .15 * b[1]) / .4);
+b[0].style.strokeDasharray = p + " 2";
+b[0].style.display = p > 0 ? "" : "none";
+});
+var f = clamp((u - .05) / .95);
+setN(D, Math.floor(f * D.length));
+setN(T, Math.floor(clamp((u - .65) / .35) * T.length));
+setN(H, Math.floor(clamp((f - .5) / .5) * H.length));
+if (u < .2) {
+var ty = 532 - 130 * S, ls = 6 + u * 25;
+el($("early"), "ellipse", { cx: 400 - ls * .8, cy: ty, rx: ls, ry: ls * .5, fill: "#4f9a2a", transform: "rotate(-35 400 " + ty + ")" });
+el($("early"), "ellipse", { cx: 400 + ls * .8, cy: ty, rx: ls, ry: ls * .5, fill: "#4f9a2a", transform: "rotate(35 400 " + ty + ")" });
+}
+}
+
+// ============================================================
+// CELEBRATION (finishing Moroni 10 = stage 239)
+// celebrate() drops falling leaves and shows the message. Called from rcFinish() when the tree becomes fully grown.
+// ============================================================
+function celebrate(title, msg) {
+$("partyTitle").textContent = title || "\uD83C\uDF89 You finished all 239 chapters!";
+$("partyMsg").textContent = msg || "Your tree is fully grown. Re-read each chapter to grow a white fruit on it.";
+var rain = $("leafrain"), icons = ["\uD83C\uDF43", "\uD83C\uDF42", "\uD83C\uDF3F"]; // leaf emojis
+for (var i = 0; i < 40; i++) {
+var l = document.createElement("span");
+l.className = "falling-leaf";
+l.textContent = icons[i % icons.length];
+l.style.left = (Math.random() * 100) + "%";
+l.style.setProperty("--dx", (Math.random() * 160 - 80) + "px");
+l.style.animationDuration = (4 + Math.random() * 4) + "s";
+l.style.animationDelay = (Math.random() * 2.5) + "s";
+rain.appendChild(l);
+}
+setTimeout(function () { rain.innerHTML = ""; }, 10000); // clean up after the rain
+$("party").classList.add("show");
+}
+$("partyClose").onclick = function () { $("party").classList.remove("show"); };
+</script>
+
+<script>
+// ############################################################################
+// JsReader.html - THE READING PANEL: chapter list, current state, chapter text, jump menu, progress bar, night mode
+// The 239 chapter titles (ITEMS), the reader's state (progress, fruits, tokens), show() which refreshes everything, loading chapter text from the sheet,
+// the jump-to-chapter menu, the green progress bar and the night-mode button.
+// ############################################################################
+
+// ============================================================
+// READING LIST
+// The 239 chapters, 1 Nephi 1 to Moroni 10 (only numbered verses are shown; headings, summaries and front pages are not). Each item has a book name (b) for the jump menu.
+// ============================================================
+
+var CHAPTERS = 239; // chapters in the book (the tree grows over this many stages)
+var ITEMS = [], BASE = "https://www.churchofjesuschrist.org/study/scriptures/bofm/";
+[["1-ne", "1 Nephi", 22], ["2-ne", "2 Nephi", 33], ["jacob", "Jacob", 7], ["enos", "Enos", 1], ["jarom", "Jarom", 1], ["omni", "Omni", 1],
+["w-of-m", "Words of Mormon", 1], ["mosiah", "Mosiah", 29], ["alma", "Alma", 63], ["hel", "Helaman", 16], ["3-ne", "3 Nephi", 30],
+["4-ne", "4 Nephi", 1], ["morm", "Mormon", 9], ["ether", "Ether", 15], ["moro", "Moroni", 10]
+].forEach(function (b) {
+for (var c = 1; c <= b[2]; c++) ITEMS.push({ t: b[1] + " " + c, u: BASE + b[0] + "/" + c + "?lang=eng", b: b[1] });
+});
+
+// ============================================================
+// PROGRESS
+// progress = how many chapters THIS reader has PROVEN they read (0 to 239). Only the server can raise it (reading check, section 11).
+// viewIdx = the chapter on screen (browsing never changes growth). curIdx = the reader's current reading chapter.
+// ============================================================
+
+var progress = 0, tokens = 0, curIdx = 0, curWait = 0, giftLeft = 100, viewIdx = 0, myId = "";
+var LANG = "eng"; // reading language: "eng" or "tgl"
+function hasGas() { return window.google && google.script && google.script.run; } // true when running inside Apps Script
+
+// ============================================================
+// READER (LEFT SIDE)
+// Loads the chapter text from your Google Sheet and shows it. show() refreshes tree + label + reader.
+// ============================================================
+
+var cache = {}, reqId = 0;
+function addP(box, cls, text) {
+var p = document.createElement("p"); if (cls) p.className = cls;
+text.split("\n").forEach(function (line, k) { if (k) p.appendChild(document.createElement("br")); p.appendChild(document.createTextNode(line)); });
+box.appendChild(p);
+}
+function getChap(i, cb) {
+if (cache[i]) return cb(cache[i]);
+var L = LANG;
+call("authChapter", [TOKEN, i, L], function (d) { if (L === LANG) cache[i] = d; cb(d); }, function (m) { cb(null, { message: m }); if (/log in/i.test(m)) logout(); });
+}
+var loadedIdx = -1; // chapter currently on screen (the text is not reloaded when only the fruits change)
+var DEMO_TEXT = [
+"1 This is sample text for the preview. In your real page, each chapter of the book appears here, one verse per paragraph, loaded from your Google Sheet.",
+"2 Read at a steady pace and scroll slowly, so that every paragraph stays on the screen long enough to be read. The reading check watches for exactly that.",
+"3 If you scroll quickly to the bottom, or leave the page open without reading, the check does not move forward, and your tree does not grow.",
+"4 Only your current reading chapter can grow the tree. You may browse other chapters, but they will show that you are only viewing them.",
+"5 When the whole chapter has really been read, the Finished button turns on. Press it, and your tree grows one step.",
+"6 Once the tree is fully grown, every chapter you read properly gives one fruit, which you can harvest into your basket whenever you like."
+];
+function loadReader() {
+var i = viewIdx, box = $("rtext");
+rcTitle();
+if (loadedIdx === i) return;
+loadedIdx = i;
+if (!hasGas()) { // preview: harmless sample text so the reading check can be tried
+box.innerHTML = ""; addP(box, "note", "Preview mode: this is sample text. In your deployed page the chapter comes from your Google Sheet.");
+DEMO_TEXT.forEach(function (x) { addP(box, "", x); });
+box.scrollTop = 0; tagVerses(); loadNotes(i); rcBegin(i); return;
+}
+var my = ++reqId; box.textContent = "Loading...";
+getChap(i, function (d, err) {
+if (my !== reqId) return;
+box.innerHTML = "";
+if (!d) { loadedIdx = -1; addP(box, "note", "Could not load this chapter. Have you imported the book into the sheet? " + (err && err.message ? err.message : "")); return; }
+d.forEach(function (r) {
+if (r.y === "link") { // text not shared here: show a link to the Church website instead
+var lp = document.createElement("p"), la = document.createElement("a");
+la.href = ITEMS[i].u.replace("lang=eng", "lang=" + LANG); la.target = "_blank"; la.rel = "noopener"; la.textContent = "Read this chapter on the Church website \u2197";
+lp.appendChild(la); box.appendChild(lp);
+} else if (r.y === "front") r.t.split("\n\n").forEach(function (x) { addP(box, "", x); });
+else addP(box, r.y, r.t);
+});
+box.scrollTop = 0;
+tagVerses(); loadNotes(i); // mark the verses and show this reader's highlights and notes
+rcBegin(i); // start the reading check for this chapter
+if (i + 1 < CHAPTERS && !cache[i + 1]) getChap(i + 1, function () {});
+if (i > 0 && !cache[i - 1]) getChap(i - 1, function () {});
+});
+}
+
+var lastTreeKey = "", treeTimer = 0;
+function show() {
+var key = progress + "|" + fruits;
+if (key !== lastTreeKey) { // the heavy tree is redrawn a moment later, so swiping and the text never wait for it
+lastTreeKey = key; clearTimeout(treeTimer);
+treeTimer = setTimeout(function () { render(Math.max(1, progress)); updateFruits(); }, 80);
+}
+$("lbl").textContent = progress === CHAPTERS ? "" : progress ? "Stage " + progress + " / " + CHAPTERS + " \u00b7 " + ITEMS[progress - 1].t + " \u2713" : "Stage 0 / " + CHAPTERS + " \u00b7 Not started";
+loadReader();
+syncJump();
+updateBar();
+updateBasket();
+}
+function applyState(st) { // the server's answer is the truth about this reader's growth, fruits and basket
+var nl = st.lang === "tgl" ? "tgl" : "eng";
+if (nl !== LANG) { LANG = nl; cache = {}; NOTES = {}; loadedIdx = -1; } // language changed: forget the other language's text and highlights
+if (typeof paintLang === "function") paintLang();
+progress = st.progress; fruits = st.fruits; tokens = st.tokens || 0; curIdx = st.cur || 0; curWait = st.curWait || 0; giftLeft = st.giftLeft != null ? st.giftLeft : 100; colors = st.colors || ["yellow"]; owned = st.owned || []; hlPrice = st.hlPrice || 50; shopPrices = st.shopPrices || {};
+if (st.id) myId = st.id;
+}
+
+// ============================================================
+// JUMP TO CHAPTER MENU
+// Dropdown in the reader header. Choosing a chapter only lets you LOOK at it; growth is decided by the reading check (section 11).
+// ============================================================
+function buildJump() { // fills the dropdown: one group per book
+var sel = $("jump"), grp = null, last = "";
+ITEMS.forEach(function (it, i) {
+if (it.b !== last) { grp = document.createElement("optgroup"); grp.label = it.b; sel.appendChild(grp); last = it.b; }
+var o = document.createElement("option"); o.value = i; o.textContent = it.t; grp.appendChild(o);
+});
+sel.onchange = function () { jumpTo(parseInt(sel.value, 10)); sel.blur(); focusReader(); }; // jump = just look at that chapter
+}
+function syncJump() { $("jump").value = viewIdx; } // keeps menu in step with Prev/Next
+
+// ============================================================
+// PROGRESS BAR + PERCENT COMPLETE
+// Green bar under the chapter title. progress = chapters finished (0 to 239).
+// ============================================================
+function updateBar() {
+var pct = Math.floor(progress / CHAPTERS * 100); // 100% only at the very end
+$("pbarFill").style.width = (progress / CHAPTERS * 100) + "%";
+$("pbarTxt").textContent = pct + "% complete \u00b7 " + progress + " of " + CHAPTERS + " chapters" + (progress === CHAPTERS ? " \u00b7 full tree" : "");
+}
+
+// ============================================================
+// NIGHT MODE (reading panel)
+// Moon button in the reader header. Adds/removes the "night" class on <body>.
+// Choice is saved in this reader's account (follows them to every device); the browser copy is only a quick fallback.
+// ============================================================
+function applyNight(on) { // only changes how the page looks
+document.body.classList.toggle("night", on);
+$("night").textContent = on ? "\u2600\uFE0F" : "\uD83C\uDF19"; // sun when night is on, moon when off
+try { localStorage.setItem("treeNight", on ? "1" : "0"); } catch (e) {}
+}
+function setNight(on) { // button press: change look + save to this reader's account
+applyNight(on);
+persist();
+}
+function initNight() { // the saved choice is loaded when the reader logs in (see startApp)
+$("night").onclick = function () { setNight(!document.body.classList.contains("night")); };
+}
+</script>
+
+<script>
+// ############################################################################
+// JsReadingCheck.html - THE READING CHECK and HARVEST: what makes a chapter count
+// Tracks real reading (time + verses on screen), decides what the Finished/Prev/Next buttons do, asks the server to count the chapter,
+// and harvests fruits from the tree into the basket.
+// ############################################################################
+
+// ============================================================
+// READING CHECK + HARVEST
+// The tree grows only when the reader's CURRENT reading chapter is read properly. Browsing (Prev, jump menu) never changes growth.
+// The check needs BOTH: enough real reading time for the chapter's length, and every verse on screen long enough to be read.
+// Time only counts while the page is visible and the reader is active (scrolling or touching). The server double-checks the clock.
+// After the tree is fully grown, each chapter read properly gives one fruit for every verse in it, and the same chapter can give again after 24 hours. Harvest moves fruits into the basket.
+// ============================================================
+var RC = { idx: -1, ready: false, failed: false, eligible: false, verified: false, need: 0, wait: 0, reward: 1, active: 0, paras: [], needP: [], seen: [], lastAct: 0, lastSave: 0 };
+var RCSAVE = {}, IDLE_SEC = 120, RC_KEEP_HOURS = 12, RC_JUST = -1; // RC_JUST = chapter that was just completed on this screen
+var RC_SEC_PER_WORD = 0.22; // seconds each word must stay on screen. Bigger = slower gold rail (0.2 is about 300 words a minute)
+function rcMark() { RC.lastAct = Date.now(); }
+function wordsOf(p) { var t = p.textContent.trim(); return t ? t.split(/\s+/).length : 0; }
+
+// ---------- remembering progress (so a closed window does not reset it) ----------
+function rcKey(i) { return "rcp3_" + (myId || "x") + "_" + i; }
+function rcStore(i) { // saves the time read and how long each verse was on screen
+  if (i < 0 || !RC.paras.length) return;
+  var o = { a: Math.round(RC.active * 10) / 10, t: Date.now(), f: rcFracs() };
+  RCSAVE[i] = o; RC.lastSave = Date.now();
+  try { localStorage.setItem(rcKey(i), JSON.stringify(o)); } catch (e) {}
+}
+function rcLoad(i) {
+  var o = RCSAVE[i];
+  if (!o) { try { o = JSON.parse(localStorage.getItem(rcKey(i)) || "null"); } catch (e) { o = null; } }
+  if (!o || !o.f || Date.now() - o.t > RC_KEEP_HOURS * 3600000) return null;
+  return o;
+}
+function rcDrop(i) { delete RCSAVE[i]; try { localStorage.removeItem(rcKey(i)); } catch (e) {} }
+function rcFlush() { if (RC.ready && RC.eligible && RC.idx >= 0) { rcStore(RC.idx); rcSync(); } }
+function rcSave() { rcFlush(); } // called when you leave a chapter with Prev / Next / Jump
+
+// ---------- the vertical rail ----------
+function rcFirstOpen() { for (var k = 0; k < RC.paras.length; k++) if (RC.seen[k] < RC.needP[k]) return k; return -1; } // first verse not read enough yet
+function rcPaint() { // fills each verse's piece of the rail (top to bottom) and puts the dot where you stopped
+  var on = RC.ready && RC.eligible, cur = on ? rcFirstOpen() : -1, k, p, v;
+  for (k = 0; k < RC.paras.length; k++) {
+    p = RC.paras[k];
+    if (!on) { if (p._rc != null) { p.classList.remove("rc", "rc-cur"); p.style.removeProperty("--rp"); p._rc = null; } continue; }
+    v = Math.round(Math.min(1, RC.seen[k] / RC.needP[k]) * 50) / 50;
+    if (p._rc !== v) { p._rc = v; p.classList.add("rc"); p.style.setProperty("--rp", v); }
+    p.classList.toggle("rc-cur", k === cur);
+  }
+}
+function rcGoto(k, instant) { // scrolls the text so verse k is near the top
+  var p = RC.paras[k], box = $("rtext"); if (!p) return;
+  var top = Math.max(0, box.scrollTop + p.getBoundingClientRect().top - box.getBoundingClientRect().top - 24);
+  if (box.scrollTo) box.scrollTo({ top: top, behavior: instant ? "auto" : "smooth" }); else box.scrollTop = top;
+}
+function rcInView(p) { var vr = $("rtext").getBoundingClientRect(), r = p.getBoundingClientRect(); return r.bottom > vr.top && r.top < vr.bottom; }
+
+// ---------- starting a chapter ----------
+function rcBegin(i) { // a chapter is on screen: collect its verses, restore saved progress, ask the server if it counts
+  var ps = $("rtext").querySelectorAll("p:not(.note)"), k;
+  RC_JUST = -1; RC.finishing = false; RC.tries = 0;
+  RC.idx = i; RC.ready = false; RC.failed = false; RC.eligible = false; RC.verified = false; RC.need = 0; RC.wait = 0; RC.reward = 1; RC.active = 0; RC.paras = []; RC.needP = []; RC.seen = [];
+  for (k = 0; k < ps.length; k++) { RC.paras.push(ps[k]); RC.needP.push(Math.max(1.5, wordsOf(ps[k]) * RC_SEC_PER_WORD)); RC.seen.push(0); }
+  var sv = rcLoad(i);
+  if (sv && sv.f.length === RC.seen.length) { RC.active = sv.a || 0; for (k = 0; k < sv.f.length; k++) RC.seen[k] = sv.f[k] * RC.needP[k]; }
+  rcMark(); rcPaint(); rcUI();
+  RC.goneTo = -1;
+  var o0 = rcFirstOpen();
+  if (sv && o0 > 0) { RC.goneTo = o0; rcGoto(o0, true); } // jump at once to where you stopped, without waiting for the server
+  rcStart(i, 0);
+}
+function rcStart(i, tries) {
+  RC.failed = false;
+  call("authStart", [TOKEN, i], function (r) {
+    if (RC.idx !== i) return;
+    RC.ready = true; RC.failed = false; RC.eligible = !!r.eligible; RC.need = r.need || 0; RC.wait = r.wait || 0; RC.reward = r.reward || 1; RC.doneRound = !!r.doneRound;
+    if (RC.eligible) {
+      var el = r.elapsed || 0, n = RC.paras.length, k;
+      if (r.cp && n) { // the server remembers how far this reader got (maybe on another device): continue from the furthest point
+        var cv = Math.min(n, Math.max(0, parseInt(r.cp.v, 10) || 0)), cf = Math.max(0, Math.min(1, Number(r.cp.p) || 0));
+        if (cv + (cv < n ? cf : 0) > rcScoreOf(rcFracs()) + 0.001) {
+          for (k = 0; k < n; k++) RC.seen[k] = k < cv ? RC.needP[k] : (k === cv ? cf * RC.needP[k] : 0);
+          RC.active = Math.max(RC.active, Number(r.cp.a) || 0);
+        }
+      }
+      if (RC.active > el + 2) RC.active = el; // never claim more reading time than the server has seen pass
+      RC.verified = false;
+      var o = rcFirstOpen();
+      if (o > 0 && o !== RC.goneTo) rcGoto(o, true); // only jump if the server knows a different spot than the one already shown
+    } else { rcDrop(i); RC.active = 0; for (var k = 0; k < RC.seen.length; k++) RC.seen[k] = 0; }
+    rcPaint(); rcUI();
+  }, function (m) {
+    if (/log in/i.test(m)) { logout(); return; }
+    if (RC.idx !== i) return;
+    if (tries < 3) setTimeout(function () { if (RC.idx === i && !RC.ready) rcStart(i, tries + 1); }, 1500 * (tries + 1)); // try again by itself
+    else { RC.failed = true; rcUI(); }
+  });
+}
+
+function rcCounts(p, vr) { // is this verse on screen enough to be read? (at least half of it, or half the screen for a very long verse)
+  var r = p.getBoundingClientRect(), vis = Math.min(r.bottom, vr.bottom) - Math.max(r.top, vr.top);
+  return vis > 0 && vis >= Math.min(r.height, vr.height) * 0.5;
+}
+function rcOpenWhere(o) { // where is the verse that still needs reading? "here", "above", "below" (just ahead, normal) or "far"
+  var p = RC.paras[o], vr = $("rtext").getBoundingClientRect(), r = p.getBoundingClientRect();
+  if (rcCounts(p, vr)) return "here";
+  if (r.top < vr.top) return "above";
+  return r.top > vr.bottom + vr.height ? "far" : "below";
+}
+
+function rcFracs() { return RC.seen.map(function (x, k) { return Math.round(Math.min(1, x / RC.needP[k]) * 1000) / 1000; }); } // how much of each verse is done (0 to 1)
+function rcScoreOf(fr) { var k = 0; while (k < fr.length && fr[k] >= 1) k++; return k + (k < fr.length ? fr[k] : 0); } // verses finished + part of the next one
+function rcSync() { // sends "where I am" to the server so any other device can continue from here
+  if (!RC.ready || !RC.eligible || RC.idx < 0 || !RC.paras.length) return;
+  var fr = rcFracs(), v = 0; while (v < fr.length && fr[v] >= 1) v++;
+  RC.lastSync = Date.now();
+  call("authCheckpoint", [TOKEN, RC.idx, v, v < fr.length ? fr[v] : 0, Math.round(RC.active)], function () {}, function (m) { if (/log in/i.test(m)) logout(); });
+}
+
+function rcStats() { // verses are read in order, so progress is how much of the total reading time has been earned
+  var n = RC.paras.length, k, got = 0, tot = 0, done = 0;
+  for (k = 0; k < n; k++) { tot += RC.needP[k]; got += Math.min(RC.seen[k], RC.needP[k]); if (RC.seen[k] >= RC.needP[k]) done++; }
+  var cov = n ? done / n : 0, last = n ? RC.seen[n - 1] >= RC.needP[n - 1] : false;
+  var pct = Math.min(tot ? got / tot : 0, RC.need ? RC.active / RC.need : 0, 1);
+  if (cov < 1) pct = Math.min(pct, 0.99);
+  return { cov: cov, last: last, pct: pct };
+}
+function rcTick() { // runs twice a second (same rules as before: verse must be on screen long enough, page visible, reader active)
+  if (!RC.ready || !RC.eligible || RC.verified) return;
+  if (document.visibilityState !== "visible" || Date.now() - RC.lastAct > IDLE_SEC * 1000) { rcUI(true); return; }
+  var vr = $("rtext").getBoundingClientRect();
+  if (vr.height <= 0) return; // reading panel hidden: nothing is being read
+  RC.active += 0.5;
+  var o = rcFirstOpen(); // only the first unfinished verse earns time, and only while it is on screen
+  if (o >= 0 && rcCounts(RC.paras[o], vr)) RC.seen[o] += 0.5;
+  if (Date.now() - RC.lastSave > 3000) rcStore(RC.idx);
+  if (Date.now() - RC.lastSync > 15000) rcSync();
+  rcPaint(); rcUI(false);
+}
+function fmtWait(sec) { // 5 hours 12 minutes -> "5h 12m"
+  var h = Math.floor(sec / 3600), m = Math.ceil((sec % 3600) / 60);
+  if (m === 60) { h += 1; m = 0; }
+  return h > 0 ? h + "h " + m + "m" : Math.max(1, m) + "m";
+}
+function rcTitle() { $("rtitle").textContent = ""; }
+function rcUI(paused) {
+  rcTitle();
+  var s = rcStats(), t = $("rcTxt"), a, jr = $("rcJumpRow");
+  if (RC.ready && RC.eligible && !RC.verified && RC.active >= RC.need && s.cov >= 1) { RC.verified = true; rcStore(RC.idx); rcAutoFinish(); } // rail reached the bottom: count it automatically
+  t.textContent = ""; jr.style.display = "none";
+  var pill = $("rcPill"); if (pill) pill.style.display = "none";
+  if (!RC.ready) {
+    if (RC.failed) {
+      t.appendChild(document.createTextNode("\u26A0 Could not check this chapter. "));
+      a = document.createElement("a"); a.textContent = "Try again"; a.onclick = function () { rcStart(RC.idx, 0); rcUI(); }; t.appendChild(a);
+    } else t.textContent = "Checking this chapter...";
+    $("rcFill").style.width = "0%"; return;
+  }
+  if (RC_JUST === RC.idx) { t.textContent = "\u2713 Chapter complete \u00b7 swipe left for the next chapter"; $("rcFill").style.width = "100%"; return; }
+  if (!RC.eligible) {
+    if (progress === CHAPTERS) t.appendChild(document.createTextNode((RC.doneRound ? "\u2713 This chapter already gave its fruits this round. " : "\uD83D\uDC41 Viewing only. ") + "Your current chapter: " + ITEMS[curIdx].t + " "));
+    else t.appendChild(document.createTextNode("\uD83D\uDC41 Viewing only. Your tree grows when you read: " + ITEMS[curIdx].t + " "));
+    a = document.createElement("a"); a.textContent = "Go there"; a.onclick = function () { view(curIdx); }; t.appendChild(a);
+    $("rcFill").style.width = "0%"; return;
+  }
+  var prize = progress === CHAPTERS ? " \u00b7 reward: " + RC.reward + " fruit" + (RC.reward === 1 ? "" : "s") : "";
+  if (RC.verified) { t.textContent = "\u2713 Reading complete" + prize; $("rcFill").style.width = "100%"; return; }
+  var pct = Math.floor(s.pct * 100), o = rcFirstOpen();
+  t.textContent = "\uD83D\uDCD6 Reading check: " + pct + "%" + prize + (paused === true ? " \u00b7 paused - scroll or tap to continue" : "");
+  if (o >= 0 && RC.paras[o]) {
+    var where = rcOpenWhere(o);
+    if (where === "above" || where === "far") {
+      var vn = RC.paras[o].getAttribute("data-v") || (o + 1), arrow = where === "above" ? "\u21A5 " : "\u21A7 ";
+      $("rcJump").textContent = arrow + "Go to verse " + vn + " (where you stopped)";
+      jr.style.display = "";
+      if (pill) { pill.textContent = arrow + "Your reading is waiting at verse " + vn + " \u2013 tap to continue"; pill.style.top = ($("rtext").offsetTop + 10) + "px"; pill.style.display = "block"; }
+    }
+  }
+  $("rcFill").style.width = pct + "%";
+}
+function rcAutoFinish() { // called once when the rail reaches the bottom
+  if (RC.finishing) return;
+  RC.finishing = true;
+  var i = RC.idx;
+  setTimeout(function () { if (RC.idx === i && RC.ready && RC.eligible && RC.verified) rcFinish(); else RC.finishing = false; }, 400);
+}
+function rcFinish() { // ask the server to count this chapter (stays on the same chapter; the reader swipes when ready)
+  var s = rcStats(), i = RC.idx;
+  call("authComplete", [TOKEN, i, { active: Math.round(RC.active), covered: Math.round(s.cov * 100) / 100 }], function (r) {
+    var wasFull = progress === CHAPTERS;
+    RC.finishing = false; rcDrop(i); applyState(r.state);
+    if (RC.idx === i) { RC.eligible = false; RC.verified = false; RC_JUST = i; rcPaint(); }
+    show(); rcUI();
+    if (r.result.grew && progress === CHAPTERS && !wasFull) celebrate();
+    else if (r.result.roundDone) { celebrate("\uD83C\uDF89 Round " + (r.state.round - 1) + " complete!", "You read the whole book again. Round " + r.state.round + " begins now: every chapter can give fruits once more."); }
+    else if (r.result.fruit) toast("\u26AA " + (r.result.fruits || 1) + " fruit" + ((r.result.fruits || 1) === 1 ? "" : "s") + " grew on your tree!");
+    else if (r.result.grew) toast("\uD83C\uDF31 Your tree grew!");
+  }, function (m) {
+    if (/log in/i.test(m)) { logout(); return; }
+    if (/open the chapter/i.test(m)) { RC.finishing = false; RC.verified = false; RC.ready = false; rcUI(); rcStart(i, 0); return; }
+    if (/not your current/i.test(m)) {
+      RC.finishing = false;
+      call("authState", [TOKEN], function (st) { applyState(st); if (RC.idx === i) { RC.eligible = false; RC.verified = false; rcPaint(); } show(); rcUI(); }, function () {});
+      return;
+    }
+    RC.tries = (RC.tries || 0) + 1;
+    if (RC.tries <= 3) setTimeout(function () { RC.finishing = false; if (RC.idx === i && RC.verified) rcAutoFinish(); }, 6000); // try again by itself a few times
+    else { RC.finishing = false; toast(m); }
+  });
+}
+function view(i) { rcSave(); closeVerse(); viewIdx = Math.max(0, Math.min(CHAPTERS - 1, i)); show(); } // look at a chapter (never changes growth)
+function prevStep() { goChapter(viewIdx - 1, -1); }
+function nextStep() { goChapter(viewIdx + 1, 1); } // used by the arrow-right key; browsing never changes growth
+function jumpTo(i) { view(i); }
+function initReadingCheck() {
+  setInterval(rcTick, 500);
+  ["scroll", "wheel", "touchstart", "touchmove", "mousemove", "pointerdown", "keydown"].forEach(function (ev) { $("rtext").addEventListener(ev, rcMark, { passive: true }); });
+  ["mousemove", "keydown", "touchstart", "pointerdown"].forEach(function (ev) { document.addEventListener(ev, rcMark, { passive: true }); }); // activity anywhere on the page counts
+  // the "go to where I stopped" link lives outside rcTxt so it is not rebuilt twice a second (clicks would be lost)
+  var row = document.createElement("div"); row.id = "rcJumpRow"; row.style.display = "none";
+  var a = document.createElement("a"); a.id = "rcJump"; a.onclick = function () { var o = rcFirstOpen(); if (o >= 0) rcGoto(o, false); };
+  row.appendChild(a); $("rcheck").insertBefore(row, $("rcheck").querySelector(".track"));
+  var pl = document.createElement("button"); pl.id = "rcPill"; pl.type = "button"; // big gold button shown when the unfinished verse is off screen
+  pl.onclick = function () { var o = rcFirstOpen(); if (o >= 0) rcGoto(o, false); };
+  $("reader").appendChild(pl);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") rcFlush(); });
+  window.addEventListener("pagehide", rcFlush);
+  window.addEventListener("beforeunload", rcFlush);
+}
+
+function updateBasket() { // basket count, Harvest button and the reader's ID
+$("basket").textContent = "\uD83E\uDDFA " + tokens;
+$("fruitN").textContent = fruits;
+$("harvest").style.display = fruits > 0 ? "" : "none";
+$("myId").textContent = myId ? "ID: " + myId : "";
+}
+function harvestFly(count) { // ANIMATION ONLY: white fruits glow, rise and fly from the tree into the basket. It never changes any data.
+try {
+if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+if (!document.body.animate) return;
+var tgtEl = $("basket"), tr = tgtEl.getBoundingClientRect(), tx, ty, k;
+if (!tr.width) { tgtEl = $("showRead"); tr = tgtEl.getBoundingClientRect(); } // reading panel hidden: fly to the "Show reading panel" button
+if (tr.width) { tx = tr.left + tr.width / 2; ty = tr.top + tr.height / 2; } else { tx = window.innerWidth / 2; ty = window.innerHeight - 30; }
+
+var n = Math.min(whiteN, LEAFW.length), pick = [], cand = [], rc;
+for (k = 0; k < Math.min(n, 90); k++) pick.push(LEAFW[Math.floor(Math.random() * n)]); // a random sample of the white fruits on the tree
+pick.forEach(function (el) {
+rc = el.getBoundingClientRect();
+if (rc.width > 0 && rc.right > 0 && rc.left < window.innerWidth && rc.bottom > 0 && rc.top < window.innerHeight) cand.push(rc);
+});
+cand = cand.slice(0, 36); // at most 36 flying fruits, so it stays smooth on phones
+if (!cand.length) { // fallback: start from the middle of the tree
+var sr = $("scene").getBoundingClientRect();
+for (k = 0; k < 12; k++) cand.push({ left: sr.left + sr.width * (.3 + Math.random() * .4), top: sr.top + sr.height * (.15 + Math.random() * .35), width: 12, height: 12 });
+}
+
+var layer = document.createElement("div"), done = 0, total = cand.length, SZ = 16;
+layer.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:80;overflow:hidden";
+document.body.appendChild(layer);
+setTimeout(function () { if (layer.parentNode) layer.remove(); }, 4000); // safety clean-up
+
+cand.forEach(function (r) {
+var sx = r.left + r.width / 2 - SZ / 2, sy = r.top + r.height / 2 - SZ / 2;
+var f = document.createElement("div");
+f.style.cssText = "position:absolute;left:" + sx + "px;top:" + sy + "px;width:" + SZ + "px;height:" + SZ + "px;border-radius:50%;opacity:0;background:radial-gradient(circle at 35% 30%,#fff,#f6f7ee 60%,#dfe6cc);box-shadow:0 0 10px 3px rgba(255,255,255,.9),0 0 2px 1px #bcd0a0";
+layer.appendChild(f);
+var dx = tx - sx - SZ / 2, dy = ty - sy - SZ / 2, arc = -(60 + Math.random() * 80), side = (Math.random() - .5) * 120;
+var a = f.animate([
+{ transform: "translate(0,0) scale(.6)", opacity: 0, offset: 0 },
+{ transform: "translate(" + (side * .3) + "px," + (arc * .5) + "px) scale(1.25)", opacity: 1, offset: .2 },
+{ transform: "translate(" + (dx * .55 + side) + "px," + (dy * .5 + arc) + "px) scale(1.1)", opacity: 1, offset: .6 },
+{ transform: "translate(" + dx + "px," + dy + "px) scale(.35)", opacity: .95, offset: 1 }
+], { duration: 900 + Math.random() * 400, delay: Math.random() * 650, easing: "cubic-bezier(.45,.05,.55,.95)", fill: "both" });
+a.onfinish = function () {
+f.remove(); done++;
+tgtEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.22)" }, { transform: "scale(1)" }], { duration: 220 }); // the basket pops each time a fruit lands
+if (done === total) {
+layer.remove();
+var p = document.createElement("div");
+p.textContent = "+" + count;
+p.style.cssText = "position:fixed;left:" + tx + "px;top:" + (ty - 10) + "px;font:700 16px system-ui,sans-serif;color:#1b5e20;background:rgba(255,255,255,.95);padding:2px 10px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;z-index:81";
+document.body.appendChild(p);
+p.animate([
+{ opacity: 0, transform: "translate(-50%,0)" },
+{ opacity: 1, transform: "translate(-50%,-18px)", offset: .25 },
+{ opacity: 0, transform: "translate(-50%,-44px)" }
+], { duration: 1100, easing: "ease-out" }).onfinish = function () { p.remove(); };
+}
+};
+});
+} catch (e) {} // an animation problem must never stop a harvest
+}
+
+function harvest() { // move every fruit on the tree into the basket
+$("harvest").disabled = true;
+harvestFly(fruits); // the pretty part: fruits fly from the tree to the basket
+call("authHarvest", [TOKEN], function (r) {
+$("harvest").disabled = false; applyState(r.state); show();
+toast("\u26AA Harvested " + r.harvested + " fruit" + (r.harvested === 1 ? "" : "s") + " into your basket");
+}, function (m) { $("harvest").disabled = false; toast(m); if (/log in/i.test(m)) logout(); });
+}
+</script>
+
+<script>
+// ############################################################################
+// JsShop.html - THE SHOP: spend fruits from the basket (generic, add new things to buy here)
+// shopAsk() shows the price and asks; shopBuy() calls the server (Shop.gs). Highlighter colors use it now; any new item can use the same two functions.
+// ############################################################################
+
+// ============================================================
+// SHOP (spend fruits from the basket on things like highlighter colors)
+// Every purchase goes through shopAsk() (shows the price and asks) and shopBuy() (the server function authBuyItem in Shop.gs).
+// TO ADD SOMETHING NEW TO BUY LATER: add it to SHOP_ITEMS in Shop.gs, then call
+// shopAsk(someBoxElement, "Item name", "item-id", function () { ...what to do after it is bought... })
+// from the screen of your new feature. The reader's owned items are in owned[], prices in shopPrices{} (both come from the server).
+// ============================================================
+var colors = ["yellow"], owned = [], hlPrice = 50, shopPrices = {}; // what this reader owns (filled in by applyState)
+function shopPriceOf(id) { return shopPrices[id] || hlPrice; }
+function ownsItem(id) { return owned.indexOf(id) >= 0; }
+function shopAsk(box, name, id, afterBuy) { // shows "Unlock X for N fruits?" inside box (or explains why it is not possible yet)
+var price = shopPriceOf(id);
+box.textContent = ""; box.style.display = "block";
+if (tokens < price) {
+box.appendChild(document.createTextNode("\uD83D\uDD12 " + name + " costs " + price + " fruits. Your basket has " + tokens + ". Harvest more fruit from your tree to unlock it. "));
+var ok = document.createElement("button"); ok.className = "alt"; ok.textContent = "OK"; ok.onclick = function () { box.style.display = "none"; }; box.appendChild(ok); return;
+}
+box.appendChild(document.createTextNode("Unlock " + name + " for " + price + " fruits? Your basket: " + tokens + ". "));
+var yes = document.createElement("button"); yes.textContent = "Unlock"; yes.onclick = function () { shopBuy(id, name, box, afterBuy); };
+var no = document.createElement("button"); no.className = "alt"; no.textContent = "Not now"; no.onclick = function () { box.style.display = "none"; };
+box.appendChild(yes); box.appendChild(no);
+}
+// ====== EXACT REPLACEMENT FOR shopBuy in JsShop.html ======
+
+function shopBuy(id, name, box, afterBuy) { 
+// 3. Loading notification
+box.textContent = "Purchasing " + name + "...";
+box.style.display = "block";
+toast("🛍️ Purchasing " + name + "...");
+
+call("authBuyItem", [TOKEN, id], function (r) {
+var price = shopPriceOf(id);
+applyState(r.state); 
+show(); 
+box.style.display = "none";
+toast("🎨 Unlocked " + name + " (-" + price + " fruits)");
+if (afterBuy) afterBuy();
+}, function (m) { 
+box.textContent = m; 
+box.style.display = "block"; 
+toast("Purchase failed: " + m);
+if (/log in/i.test(m)) logout(); 
+});
+}
+</script>
+
+<script>
+// ############################################################################
+// JsGifts.html - GIFTS: send harvested fruits to another reader by ReaderID
+// The Gift screen (step 1: ID + amount, step 2: confirm the username). The rules and the daily limit are enforced by the server (Gifts.gs).
+// ############################################################################
+
+// ============================================================
+// GIFTS (send harvested fruits to another reader by ReaderID)
+// 🎁 Gift button next to Harvest. Step 1: type the ReaderID and an amount. Step 2: confirm the username, then send.
+// Gifts come only from the basket (tokens), up to the daily limit set in Code.gs (GIFT_DAILY_LIMIT). Gifts cannot be undone.
+// Server functions: authLookup() and authGift() in Code.gs.
+// ============================================================
+var giftStep = 1, giftTarget = null;
+function giftReset() { // back to step 1 with fresh numbers
+giftStep = 1; giftTarget = null;
+var most = Math.max(0, Math.min(tokens, giftLeft));
+$("giftSub").textContent = "Your basket: " + tokens + " fruits. You can gift up to " + most + " now (" + giftLeft + " left of today's limit). Your ID is " + (myId || "?") + " - share it so others can gift you.";
+$("giftForm").style.display = ""; $("giftConfirm").style.display = "none"; $("giftErr").textContent = "";
+$("giftGo").textContent = "Continue"; $("giftGo").disabled = false; $("giftBack").textContent = "Cancel";
+}
+function openGift() { 
+closeSettings(); // Auto-close settings modal when opening gift box
+giftReset(); 
+$("giftTo").value = ""; 
+$("giftAmt").value = ""; 
+$("gift").style.display = "flex"; 
+}
+function closeGift() { $("gift").style.display = "none"; }
+function giftGo() {
+var err = $("giftErr");
+if (giftStep === 1) {
+var to = $("giftTo").value.trim().toUpperCase(), n = Number($("giftAmt").value);
+if (!to) { err.textContent = "Please type the Reader ID of the person you want to gift."; return; }
+if (!(n >= 1) || n % 1 !== 0) { err.textContent = "Please enter a whole number of fruits, 1 or more."; return; }
+if (n > tokens) { err.textContent = "You only have " + tokens + " fruits in your basket. Harvest your tree first."; return; }
+if (n > giftLeft) { err.textContent = "The daily limit allows " + giftLeft + " more fruits today."; return; }
+$("giftGo").disabled = true; err.textContent = "Checking the ID...";
+call("authLookup", [TOKEN, to], function (r) {
+giftTarget = { id: r.id, username: r.username, n: n }; giftStep = 2;
+$("giftForm").style.display = "none"; $("giftConfirm").style.display = "";
+$("giftConfirm").textContent = "Send " + n + " fruit" + (n === 1 ? "" : "s") + " to " + r.username + " (" + r.id + ")? A gift cannot be undone.";
+$("giftGo").textContent = "Send gift"; $("giftGo").disabled = false; $("giftBack").textContent = "Back"; err.textContent = "";
+}, function (m) { $("giftGo").disabled = false; err.textContent = m; if (/log in/i.test(m)) { closeGift(); logout(); } });
+} else {
+$("giftGo").disabled = true; err.textContent = "Sending...";
+call("authGift", [TOKEN, giftTarget.id, giftTarget.n], function (r) {
+applyState(r.state); show(); closeGift();
+toast("\uD83C\uDF81 Sent " + r.gifted + " fruit" + (r.gifted === 1 ? "" : "s") + " to " + r.to);
+}, function (m) { $("giftGo").disabled = false; err.textContent = m; if (/log in/i.test(m)) { closeGift(); logout(); } });
+}
+}
+function giftBack() { if (giftStep === 2) giftReset(); else closeGift(); }
+function initGift() {
+$("giftBtn").onclick = openGift;
+$("giftGo").onclick = giftGo;
+$("giftBack").onclick = giftBack;
+$("gift").addEventListener("keydown", function (e) { if (e.key === "Enter") giftGo(); });
+}
+</script>
+
+<script>
+// ############################################################################
+// JsNotes.html - NOTES AND TEXT HIGHLIGHTS: select words to highlight them, tap a verse for a private note
+// Select text -> a color bar appears (floating on desktop, docked at the bottom on phones). Locked colors are bought through the shop (JsShop.html).
+// ############################################################################
+var HL = [
+{ id: "yellow", name: "Sunshine", day: "#fff176", night: "#66580a" }, { id: "mint", name: "Mint", day: "#b9f6ca", night: "#14573a" },
+{ id: "sky", name: "Sky", day: "#b3e5fc", night: "#174d73" }, { id: "rose", name: "Rose", day: "#f8bbd0", night: "#6e2145" },
+{ id: "peach", name: "Peach", day: "#ffcc80", night: "#704000" }, { id: "lavender", name: "Lavender", day: "#d1c4e9", night: "#48347a" },
+{ id: "coral", name: "Coral", day: "#ffab91", night: "#7a2e1b" }, { id: "lime", name: "Lime", day: "#e6ee9c", night: "#4c590a" },
+{ id: "aqua", name: "Aqua", day: "#b2ebf2", night: "#0c555c" }, { id: "sand", name: "Sand", day: "#e6d5b8", night: "#55442b" },
+{ id: "slate", name: "Slate", day: "#cfd8dc", night: "#3b4a55" }, { id: "ruby", name: "Ruby", day: "#ef9a9a", night: "#702424" }
+];
+var RANGE_MAX = 40; // most highlighted pieces in one verse (same number as Notes.gs)
+var NOTES = {}, vpCtx = null; // NOTES[chapter][verse] = { c: old whole-verse color, n: note, r: [{ s, e, c }] }
+var SEL = null, selTimer = null, barDown = false, dragging = false, skipClick = false;
+
+function hlOf(id) { for (var k = 0; k < HL.length; k++) if (HL[k].id === id) return HL[k]; return null; }
+
+function tagVerses() { // marks each verse paragraph with its verse number and remembers its plain text
+$("rtext").querySelectorAll("p:not(.note)").forEach(function (p) {
+var m = /^(\d+)\s/.exec(p.textContent);
+if (m) { p.setAttribute("data-v", m[1]); p._txt = p.textContent; }
+});
+}
+function lenOf(p) { return p._txt != null ? p._txt.length : p.textContent.length; }
+function entryOf(ch, v) { return (NOTES[ch] && NOTES[ch][v]) || { c: "", n: "", r: [] }; }
+
+// ---------- highlight pieces ----------
+function rangesOf(e, len) { // the pieces of a verse; an old whole-verse color counts as one piece covering everything
+var r = e && e.r ? e.r.slice() : [];
+if (e && e.c && !r.length) r = [{ s: 0, e: len, c: e.c }];
+return r;
+}
+function cutRange(list, s, e) { // removes [s, e) from every piece (splitting where needed)
+var out = [];
+list.forEach(function (x) {
+if (x.e <= s || x.s >= e) { out.push(x); return; }
+if (x.s < s) out.push({ s: x.s, e: s, c: x.c });
+if (x.e > e) out.push({ s: e, e: x.e, c: x.c });
+});
+return out;
+}
+function tidy(list) { // sorted, and touching pieces of the same color joined
+list.sort(function (a, b) { return a.s - b.s; });
+var out = [];
+list.forEach(function (x) {
+var l = out[out.length - 1];
+if (l && l.c === x.c && x.s <= l.e) l.e = Math.max(l.e, x.e); else out.push({ s: x.s, e: x.e, c: x.c });
+});
+return out;
+}
+
+function paintVerse(p, e) { // rebuilds one verse: plain text + colored <mark> pieces + the note mark
+var txt = p._txt != null ? p._txt : p.textContent, r = tidy(rangesOf(e, txt.length)), pos = 0;
+p.removeAttribute("data-hl");
+p.textContent = "";
+r.forEach(function (x) {
+var s = Math.max(pos, Math.min(txt.length, x.s)), en = Math.min(txt.length, x.e);
+if (en <= s) return;
+if (s > pos) p.appendChild(document.createTextNode(txt.slice(pos, s)));
+var m = document.createElement("mark"); m.className = "hl"; m.setAttribute("data-hl", x.c); m.textContent = txt.slice(s, en); p.appendChild(m);
+pos = en;
+});
+if (pos < txt.length) p.appendChild(document.createTextNode(txt.slice(pos)));
+if (e && e.n) { var s2 = document.createElement("span"); s2.className = "notemark"; s2.textContent = "\uD83D\uDCDD"; p.appendChild(s2); }
+}
+function applyNotes(ch) {
+var m = NOTES[ch] || {};
+$("rtext").querySelectorAll("p[data-v]").forEach(function (p) { paintVerse(p, m[p.getAttribute("data-v")]); });
+}
+function loadNotes(ch) { // this reader's highlights and notes for the chapter on screen
+if (NOTES[ch]) { applyNotes(ch); return; }
+var L = LANG;
+call("authNotes", [TOKEN, ch, L], function (list) {
+if (L !== LANG) return; // the language was changed while loading
+var m = {}; (list || []).forEach(function (x) { m[x.v] = { c: x.c, n: x.n, r: x.r || [] }; });
+NOTES[ch] = m; if (viewIdx === ch) applyNotes(ch);
+}, function (msg) { if (/log in/i.test(msg)) logout(); });
+}
+
+// ---------- saving ----------
+function putEntry(ch, v, p, c, n, r) { // updates the screen at once, then saves in the background
+NOTES[ch] = NOTES[ch] || {};
+if (!c && !n && !r.length) delete NOTES[ch][v]; else NOTES[ch][v] = { c: c, n: n, r: r };
+if (viewIdx === ch && p) paintVerse(p, NOTES[ch][v]);
+toast("\uD83D\uDCBE Saving...");
+call("authSaveNote", [TOKEN, ch, v, c, n, JSON.stringify(r), LANG], function () {
+toast("\u2713 Saved");
+}, function (m) {
+toast("Error saving: " + m);
+if (/log in/i.test(m)) { logout(); return; }
+delete NOTES[ch]; if (viewIdx === ch) loadNotes(ch); // put the screen back to what the server really has
+});
+}
+
+// ---------- reading the selection ----------
+function verseOf(node) { var el = node && (node.nodeType === 1 ? node : node.parentNode); return el && el.closest ? el.closest("p[data-v]") : null; }
+function offsetIn(p, node, off) { var r = document.createRange(); r.selectNodeContents(p); r.setEnd(node, off); return r.toString().length; }
+
+function readSel() { // the selected words as pieces of verses, or null
+var sel = window.getSelection ? window.getSelection() : null;
+if (!TOKEN || !sel || !sel.rangeCount || sel.isCollapsed || String(sel).trim() === "") return null;
+var rg = sel.getRangeAt(0), box = $("rtext");
+if (!box.contains(rg.commonAncestorContainer)) return null;
+var pa = verseOf(rg.startContainer), pb = verseOf(rg.endContainer), segs = [];
+box.querySelectorAll("p[data-v]").forEach(function (p) {
+if (!rg.intersectsNode(p)) return;
+var txt = p._txt != null ? p._txt : p.textContent, len = txt.length;
+var s = p === pa ? offsetIn(p, rg.startContainer, rg.startOffset) : 0, e = p === pb ? offsetIn(p, rg.endContainer, rg.endOffset) : len;
+e = Math.min(e, len);
+while (s < e && /\s/.test(txt.charAt(s))) s++; // do not highlight spaces at the edges
+while (e > s && /\s/.test(txt.charAt(e - 1))) e--;
+if (e > s) segs.push({ p: p, v: Number(p.getAttribute("data-v")), s: s, e: e });
+});
+return segs.length ? { ch: viewIdx, segs: segs, rect: rg.getBoundingClientRect() } : null;
+}
+
+// ---------- the color bar ----------
+function paintSwatches() { // which colors are locked
+$("hlColors").querySelectorAll(".sw").forEach(function (b) {
+var id = b.getAttribute("data-c");
+b.classList.toggle("lock", colors.indexOf(id) < 0);
+b.title = hlOf(id).name + (id === "yellow" ? " (free)" : colors.indexOf(id) >= 0 ? " (owned)" : " (" + shopPriceOf(id) + " fruits)");
+});
+}
+function hideBar() { $("hlBar").classList.remove("open"); $("hlBuy").style.display = "none"; SEL = null; }
+function clearSel() { var s = window.getSelection && window.getSelection(); if (s && s.removeAllRanges) s.removeAllRanges(); hideBar(); }
+
+function showBar() {
+if (dragging) return;
+var info = readSel();
+if (!info) { if (!barDown && $("hlBuy").style.display !== "block") hideBar(); return; }
+SEL = info;
+var bar = $("hlBar");
+paintSwatches();
+var any = info.segs.some(function (g) { return rangesOf(entryOf(info.ch, g.v), lenOf(g.p)).some(function (x) { return x.s < g.e && x.e > g.s; }); });
+$("hlErase").style.display = any ? "" : "none";
+bar.classList.add("open");
+if (window.innerWidth > 800) { // desktop: float above the selection
+bar.classList.remove("dock");
+var w = bar.offsetWidth, h = bar.offsetHeight, rc = info.rect;
+var left = Math.max(8, Math.min(window.innerWidth - w - 8, rc.left + rc.width / 2 - w / 2)), top = rc.top - h - 10;
+if (top < 8) top = rc.bottom + 10;
+bar.style.left = left + "px"; bar.style.top = top + "px"; bar.style.bottom = "auto";
+} else { // phone: dock at the bottom of the screen
+bar.classList.add("dock"); bar.style.left = ""; bar.style.top = ""; bar.style.bottom = "";
+}
+}
+function queueSel() { clearTimeout(selTimer); selTimer = setTimeout(showBar, 250); }
+
+function applyColor(id, info) { // highlight the selected words with this color
+info = info || SEL; if (!info) return;
+if (colors.indexOf(id) < 0) { // locked color: ask to buy it, then apply
+shopAsk($("hlBuy"), hlOf(id).name, id, function () { paintSwatches(); applyColor(id, info); });
+return;
+}
+if (info.segs.length > 8) { toast("Please select up to 8 verses at once."); return; }
+info.segs.forEach(function (g) {
+var e = entryOf(info.ch, g.v), r = cutRange(rangesOf(e, lenOf(g.p)), g.s, g.e);
+r.push({ s: g.s, e: g.e, c: id });
+putEntry(info.ch, g.v, g.p, "", e.n || "", tidy(r).slice(0, RANGE_MAX));
+});
+clearSel();
+}
+function eraseSel() { // remove the highlight from the selected words only
+var info = SEL; if (!info) return;
+if (info.segs.length > 8) { toast("Please select up to 8 verses at once."); return; }
+info.segs.forEach(function (g) {
+var e = entryOf(info.ch, g.v), before = rangesOf(e, lenOf(g.p)), after = cutRange(before, g.s, g.e);
+if (JSON.stringify(before) === JSON.stringify(after)) return; // nothing was highlighted here
+putEntry(info.ch, g.v, g.p, "", e.n || "", tidy(after));
+});
+clearSel();
+}
+
+// ---------- the note panel (tap a verse) ----------
+function closeVerse() { vpCtx = null; $("vp").classList.remove("open"); }
+function openVerse(p) {
+var ch = viewIdx, v = Number(p.getAttribute("data-v")), e = entryOf(ch, v);
+vpCtx = { ch: ch, v: v, p: p };
+$("vpHead").textContent = ITEMS[ch].t + ":" + v;
+$("vpNote").value = e.n || "";
+$("vpMsg").textContent = "";
+$("vp").classList.add("open");
+}
+
+function initNotes() {
+var css = "";
+HL.forEach(function (c) { // one rule per color: a day shade and a night shade, plus one swatch button in the color bar
+css += '[data-hl="' + c.id + '"], .sw[data-c="' + c.id + '"] { --c: ' + c.day + '; } body.night [data-hl="' + c.id + '"], body.night .sw[data-c="' + c.id + '"] { --c: ' + c.night + '; }\n';
+var b = document.createElement("button"); b.type = "button"; b.className = "sw"; b.setAttribute("data-c", c.id); b.title = c.name + (c.id === "yellow" ? " (free)" : " (" + 50 + " fruits)");
+b.onclick = function () { applyColor(c.id); };
+$("hlColors").appendChild(b);
+});
+var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
+
+$("hlErase").onclick = eraseSel;
+$("hlNote").onclick = function () { var info = SEL; if (!info) return; var p = info.segs[0].p; clearSel(); openVerse(p); };
+$("hlBar").addEventListener("mousedown", function (e) { e.preventDefault(); }); // keeps the selection while pressing a button on desktop
+
+$("vpSave").onclick = function () {
+if (!vpCtx) return; var x = vpCtx, e = entryOf(x.ch, x.v), note = $("vpNote").value;
+closeVerse(); putEntry(x.ch, x.v, x.p, "", note, rangesOf(e, lenOf(x.p)));
+};
+$("vpClear").onclick = function () { // removes ALL highlights of this verse (the note stays)
+if (!vpCtx) return; var x = vpCtx, note = $("vpNote").value;
+closeVerse(); putEntry(x.ch, x.v, x.p, "", note, []);
+};
+$("vpClose").onclick = closeVerse;
+
+document.addEventListener("selectionchange", queueSel);
+document.addEventListener("pointerdown", function (e) {
+if ($("hlBar").contains(e.target)) { barDown = true; return; }
+barDown = false; skipClick = $("hlBar").classList.contains("open"); // a tap that only dismisses the bar should not open the note panel
+if (vpCtx && !$("vp").contains(e.target)) { closeVerse(); skipClick = true; } // tap outside the note panel closes it (and does not open another one)
+if (e.pointerType === "mouse" && $("rtext").contains(e.target)) dragging = true;
+hideBar();
+});
+document.addEventListener("pointerup", function () {
+dragging = false; queueSel();
+setTimeout(function () { barDown = false; skipClick = false; }, 400);
+});
+document.addEventListener("pointercancel", function () { dragging = false; queueSel(); });
+$("rtext").addEventListener("scroll", function () { if (SEL) queueSel(); }, { passive: true });
+
+$("rtext").addEventListener("click", function (e) { // tapping a verse (not while selecting text) opens the note panel
+if (skipClick) { skipClick = false; return; }
+var p = e.target && e.target.closest ? e.target.closest("p[data-v]") : null;
+if (!p || !TOKEN) return;
+if (window.getSelection && String(window.getSelection()) !== "") return;
+openVerse(p);
+});
+}
+</script>
+
+<script>
+// ############################################################################
+// JsAccounts.html - ACCOUNTS: login, create account, log out, change password, country and city dropdowns
+// call() is the one function that talks to the server (Code files). persist() saves night mode. Also the sign-up country/city dropdowns and the change-password screen.
+// ############################################################################
+
+// ============================================================
+// ACCOUNTS (LOGIN / CREATE ACCOUNT / LOG OUT)
+// Each reader has their own row in the "Readers" sheet. TOKEN proves who is logged in (kept in this browser for 30 days).
+// call() talks to Code.gs. persist() saves THIS reader's night mode (growth and fruits are saved by the server itself).
+// In the preview (no Apps Script) test accounts are kept in this browser only.
+// ============================================================
+var TOKEN = "", mode = "login", saveTimer = null;
+function tokenSet(t) { TOKEN = t || ""; try { if (t) localStorage.setItem("readerToken", t); else localStorage.removeItem("readerToken"); } catch (e) {} }
+function call(name, args, ok, bad) { // runs a function from Code.gs (or the preview fake)
+if (!hasGas()) return demoCall(name, args, ok, bad);
+var r = google.script.run.withSuccessHandler(ok).withFailureHandler(function (e) { bad(e && e.message ? e.message : String(e)); });
+r[name].apply(r, args);
+}
+function persist() { // saves this reader's state 0.4 s after the last change
+if (!TOKEN) return;
+clearTimeout(saveTimer);
+saveTimer = setTimeout(function () {
+call("authSave", [TOKEN, { night: document.body.classList.contains("night") }], function () {}, function (m) { if (/log in/i.test(m)) logout(); });
+}, 400);
+}
+function startApp(st) { // a reader is logged in: load THEIR saved state
+$("auth").style.display = "none";
+$("whoName").textContent = "Reader: " + st.username;
+applyState(st); viewIdx = st.cur || 0; loadedIdx = -1; RCSAVE = {}; applyNight(st.night); show();
+if (st.mustChange) openPw(true); else { pendingPw = ""; focusReader(); } // the owner reset this password: force a new one
+}
+// ====== EXACT REPLACEMENT FOR logout in JsAccounts.html ======
+
+function logout() {
+tokenSet(""); cache = {}; NOTES = {}; colors = ["yellow"]; owned = []; closeVerse(); progress = 0; fruits = 0; tokens = 0; curIdx = 0; curWait = 0; viewIdx = 0; loadedIdx = -1; RCSAVE = {}; RC.ready = false; RC.eligible = false;
+$("rtext").textContent = ""; 
+// Restore visibility of auth form elements that were hidden during token loading
+$("aUser").style.display = "";
+$("aPass").style.display = "";
+$("aGo").style.display = "";
+var tabsEl = document.querySelector("#auth .atabs");
+if (tabsEl) tabsEl.style.display = "";
+$("aErr").textContent = "";
+$("auth").style.display = "flex"; 
+setMode("login"); // Keeps original setMode("login") logic intact
+}
+function setMode(m) { // switches the form between Log in and Create account
+mode = m;
+$("signupOnly").style.display = m === "signup" ? "" : "none";
+$("tabLogin").className = m === "login" ? "on" : ""; $("tabSignup").className = m === "signup" ? "on" : "";
+$("aGo").textContent = m === "login" ? "Log in" : "Create account";
+$("aPass").setAttribute("autocomplete", m === "login" ? "current-password" : "new-password");
+$("aErr").textContent = "";
+}
+function authGo() { // Log in / Create account button
+var d = { username: $("aUser").value, password: $("aPass").value, country: pick("aCountry", "aCountryOther"), city: pick("aCity", "aCityOther"), agree: $("aAgree").checked };
+$("aGo").disabled = true; $("aErr").textContent = "Please wait...";
+call(mode === "login" ? "authLogin" : "authSignup", [d], function (r) {
+$("aGo").disabled = false; $("aPass").value = ""; $("aErr").textContent = ""; tokenSet(r.token); pendingPw = d.password;
+if (mode === "signup") showWelcome(r.state); else startApp(r.state); // new accounts see the welcome dialog first
+}, function (m) { $("aGo").disabled = false; $("aErr").textContent = m; });
+}
+
+function showWelcome(st) { // dialog after a successful sign-up; the Reading Tree button opens the app
+$("welcomeSub").textContent = "Welcome, " + st.username + "! Your Reader ID is " + st.id + ".";
+$("welcome").style.display = "flex";
+$("welcomeTree").onclick = function () { $("welcome").style.display = "none"; startApp(st); };
+}
+// ====== EXACT REPLACEMENT FOR initAuth in JsAccounts.html ======
+
+function initAuth() { // wires the login screen, resumes a saved login if there is one
+$("tabLogin").onclick = function () { setMode("login"); };
+$("tabSignup").onclick = function () { setMode("signup"); };
+$("aGo").onclick = authGo;
+$("auth").addEventListener("keydown", function (e) { if (e.key === "Enter") authGo(); });
+$("logout").onclick = function (e) { e.preventDefault(); logout(); };
+if (!hasGas()) $("demoNote").style.display = "";
+setMode("login");
+var t = ""; 
+try { t = localStorage.getItem("readerToken") || ""; } catch (e) {}
+if (t) { 
+// Token exists: show auth overlay with a loading message while verifying
+$("auth").style.display = "flex";
+$("aUser").style.display = "none";
+$("aPass").style.display = "none";
+$("aGo").style.display = "none";
+var tabsEl = document.querySelector("#auth .atabs");
+if (tabsEl) tabsEl.style.display = "none";
+$("aErr").textContent = "Loading your reading tree...";
+
+TOKEN = t; 
+call("authState", [t], startApp, function () { 
+tokenSet(""); 
+// If token verification fails, restore the login form inputs
+$("aUser").style.display = "";
+$("aPass").style.display = "";
+$("aGo").style.display = "";
+if (tabsEl) tabsEl.style.display = "";
+$("aErr").textContent = "";
+$("auth").style.display = "flex";
+}); 
+} else {
+// No saved token found, show login screen immediately
+$("auth").style.display = "flex";
+}
+}
+
+// ============================================================
+// PASSWORDS (change your password; forced new password after the owner resets it)
+// "Change password" link in the name chip opens the screen. After an owner reset, the screen opens by itself at login.
+// The server function is authChangePassword() in Code.gs.
+// ============================================================
+var pendingPw = "", pwForced = false;
+function toast(msg) { // small message at the bottom of the screen
+$("toast").textContent = msg; $("toast").style.display = "block";
+setTimeout(function () { $("toast").style.display = "none"; }, 3500);
+}
+function openPw(forced) {
+pwForced = forced;
+var needOld = !(forced && pendingPw); // after a reset we already know the temporary password they just typed
+$("pwTitle").textContent = forced ? "Choose a new password" : "Change password";
+$("pwSub").textContent = forced ? "Your password was reset by the site owner. Please choose a new password to continue." : "Choose a new password for your account.";
+$("pwOld").style.display = needOld ? "" : "none";
+$("pwCancel").textContent = forced ? "Log out instead" : "Cancel"; // a way out, so this screen can never trap a reader
+$("pwCancel").style.display = "";
+$("pwOld").value = ""; $("pwNew").value = ""; $("pwNew2").value = ""; $("pwErr").textContent = ""; $("pwGo").disabled = false;
+$("pw").style.display = "flex";
+}
+function closePw() { $("pw").style.display = "none"; $("pwOld").value = ""; $("pwNew").value = ""; $("pwNew2").value = ""; }
+function pwGo() {
+var oldPw = $("pwOld").style.display === "none" ? pendingPw : $("pwOld").value, n1 = $("pwNew").value, n2 = $("pwNew2").value;
+if (n1.length < 6) { $("pwErr").textContent = "The new password must be at least 6 characters."; return; }
+if (n1 !== n2) { $("pwErr").textContent = "The two new passwords do not match."; return; }
+$("pwGo").disabled = true; $("pwErr").textContent = "Please wait...";
+call("authChangePassword", [TOKEN, oldPw, n1], function (r) {
+if (r && r.token) tokenSet(r.token); // keep this device logged in with the fresh token
+pendingPw = ""; closePw(); toast("\u2713 Password changed");
+}, function (m) { $("pwGo").disabled = false; $("pwErr").textContent = m; if (/log in/i.test(m)) { closePw(); logout(); } });
+}
+function initPassword() {
+$("chgpw").onclick = function (e) { e.preventDefault(); openPw(false); };
+$("pwGo").onclick = pwGo;
+$("pwCancel").onclick = function () { if (pwForced) { closePw(); logout(); } else closePw(); }; // forced screen: "Log out instead"
+$("pw").addEventListener("keydown", function (e) { if (e.key === "Enter") pwGo(); });
+}
+
+// ============================================================
+// PLACES DROPDOWNS (create account: country list, then the cities of that country)
+// Lists come from the "Places" tab of your sheet through getCountries() / getCities() in Code.gs.
+// "Other (type it)" lets a reader type a place that is not in the list.
+// ============================================================
+function fillSelect(sel, items, placeholder, withOther) { // rebuilds a dropdown: placeholder, the items, then "Other"
+sel.innerHTML = "";
+var first = document.createElement("option"); first.value = ""; first.textContent = placeholder; sel.appendChild(first);
+items.forEach(function (t) { var o = document.createElement("option"); o.value = t; o.textContent = t; sel.appendChild(o); });
+if (withOther) { var x = document.createElement("option"); x.value = "__other__"; x.textContent = "Other (type it)"; sel.appendChild(x); }
+}
+function pick(selId, otherId) { // the chosen value, or what was typed under "Other"
+var v = $(selId).value;
+return v === "__other__" ? $(otherId).value : v;
+}
+function onCity() { $("aCityOther").style.display = $("aCity").value === "__other__" ? "" : "none"; }
+function onCountry() { // a country was chosen: load its cities
+var v = $("aCountry").value, cs = $("aCity");
+$("aCountryOther").style.display = v === "__other__" ? "" : "none";
+if (v === "__other__") { fillSelect(cs, [], "Type your city below", true); cs.value = "__other__"; cs.disabled = true; onCity(); return; }
+if (!v) { fillSelect(cs, [], "Choose a country first", false); cs.disabled = true; onCity(); return; }
+fillSelect(cs, [], "Loading cities...", false); cs.disabled = true;
+function done(list) { fillSelect(cs, list || [], "Select your city", true); cs.disabled = false; onCity(); }
+call("getCities", [v], done, function () { done([]); });
+}
+function initPlaces() {
+$("aCountry").onchange = onCountry;
+$("aCity").onchange = onCity;
+function done(list) {
+fillSelect($("aCountry"), list || [], "Select your country", true);
+if (!list || !list.length) $("aCountry").value = "__other__"; // no list available: let the reader type it
+onCountry();
+}
+call("getCountries", [], done, function () { done([]); });
+}
+</script>
+
+<script>
+// ############################################################################
+// JsPanels.html - SMALL PANELS: About & privacy, and Hide/Show reading panel
+// The About & privacy notice (put your contact in CONTACT) and the button that hides the reading panel so the tree fills the screen.
+// ############################################################################
+
+// ============================================================
+// ABOUT & PRIVACY (independent-project notice, what is kept about readers, no cash value)
+// Opens from the login screen, the sign-up box and the name chip. Put a way to reach you in CONTACT (for example an email address).
+// ============================================================
+var CONTACT = ""; // e.g. "yourname@gmail.com". Leave empty to show only "contact the site owner".
+function openAbout(e) { if (e) e.preventDefault(); $("about").style.display = "flex"; }
+function closeAbout() { $("about").style.display = "none"; }
+function initAbout() {
+["aboutLink", "aboutLink2", "aboutLink3"].forEach(function (id) { $(id).onclick = openAbout; });
+$("aboutClose").onclick = closeAbout;
+if (CONTACT) $("aboutContact").textContent = "To correct or delete your information, please contact the site owner: " + CONTACT;
+}
+
+// ============================================================
+// HIDE / SHOW READING PANEL
+// "Hide" button (reader header) hides the reading panel so the tree fills the screen, centered and bigger.
+// "Show reading panel" (top of the tree) brings it back. The choice is remembered in this browser.
+// ============================================================
+function setReadingHidden(on) {
+document.body.classList.toggle("reading-hidden", on);
+try { localStorage.setItem("treeHideReader", on ? "1" : "0"); } catch (e) {}
+}
+function initReadingToggle() {
+$("hideRead").onclick = function () { setReadingHidden(true); };
+$("showRead").onclick = function () { setReadingHidden(false); };
+function mirror() { $("miniLbl").textContent = $("lbl").textContent; } // copies the stage label onto the tree while the panel is hidden
+new MutationObserver(mirror).observe($("lbl"), { childList: true, characterData: true, subtree: true });
+mirror();
+var on = false;
+try { on = localStorage.getItem("treeHideReader") === "1"; } catch (e) {}
+setReadingHidden(on);
+}
+
+// ============================================================
+// SETTINGS MODAL
+// ============================================================
+function openSettings(e) { if (e) e.preventDefault(); $("settingsModal").style.display = "flex"; }
+function closeSettings() { $("settingsModal").style.display = "none"; }
+function initSettings() {
+$("settingsBtn").onclick = openSettings;
+$("settingsClose").onclick = closeSettings;
+// Auto-close settings modal when clicking links inside it
+$("chgpw").addEventListener("click", closeSettings);
+$("aboutLink3").addEventListener("click", closeSettings);
+$("logout").addEventListener("click", closeSettings);
+// Games dialog: opens from Settings or from the Welcome dialog; Back returns to where you came from
+var gamesFrom = "settings";
+$("gamesBtn").onclick = function () { gamesFrom = "settings"; closeSettings(); $("gamesModal").style.display = "flex"; };
+$("welcomeSecond").onclick = function () { gamesFrom = "welcome"; $("welcome").style.display = "none"; $("gamesModal").style.display = "flex"; };
+$("gamesClose").onclick = function () {
+$("gamesModal").style.display = "none";
+if (gamesFrom === "welcome") $("welcome").style.display = "flex"; else openSettings();
+};
+// Journey game: opens the second page in this same tab, already logged in with your reader name
+var appUrl = "";
+call("getAppUrl", [], function (u) { appUrl = u; }, function () {});
+$("gameJourney").onclick = function () {
+if (!appUrl) { toast("Please wait a moment and try again."); return; }
+try { localStorage.setItem("ARCHERO_LAST_USER", $("whoName").textContent.replace(/^Reader:\s*/, "")); } catch (e) {}
+$("goTitle").textContent = "Opening Journey...";
+$("goLoading").style.display = "flex"; // show the loading dialog right away
+setTimeout(function () { window.open(appUrl + "?page=journey", "_top"); }, 120); // short pause so the dialog is drawn first
+};
+// If the reader comes back with the Back button, hide the loading dialog again
+window.addEventListener("pageshow", function () { $("goLoading").style.display = "none"; });
+
+// Bricks games: opens the third page in this same tab
+$("gameBricks").onclick = function () {
+if (!appUrl) { toast("Please wait a moment and try again."); return; }
+$("goTitle").textContent = "Opening Bricks Games...";
+$("goLoading").style.display = "flex"; // same loading dialog as Journey
+setTimeout(function () { window.open(appUrl + "?page=bricks", "_top"); }, 120);
+};
+
+// Fruitdoku: opens the fourth page in this same tab
+$("gameFruitdoku").onclick = function () {
+if (!appUrl) { toast("Please wait a moment and try again."); return; }
+$("goTitle").textContent = "Opening Fruitdoku...";
+$("goLoading").style.display = "flex"; // same loading dialog as the other games
+setTimeout(function () { window.open(appUrl + "?page=fruitdoku", "_top"); }, 120);
+};
+
+$("gameFarm").onclick = function () {
+  if (!appUrl) { toast("Please wait a moment and try again."); return; }
+  $("goTitle").textContent = "Opening Reading Farm...";
+  $("goLoading").style.display = "flex";
+  setTimeout(function () { window.open(appUrl + "?page=farm", "_top"); }, 120);
+};
+
+}
+</script>
+
+<script>
+// ############################################################################
+// JsPreview.html - PREVIEW ONLY: a fake server so the page can be tried outside Apps Script
+// Used only when the page is NOT running inside Apps Script (for example in a preview). In your deployed web app it is never used,
+// so you may keep it or delete it. Cut this file out and you lose only the preview feature.
+// ############################################################################
+
+function demoCall(name, a, ok, bad) { // PREVIEW ONLY: a fake server so the screens can be tried
+setTimeout(function () {
+try {
+var db = JSON.parse(localStorage.getItem("demoReaders") || "{}"), d = a[0] || {}, key = String(d.username || "").trim().toLowerCase(), u;
+function who(t) { var x = db[String(t).replace("demo:", "")]; if (!x) throw new Error("Please log in again."); return x; }
+function put() { localStorage.setItem("demoReaders", JSON.stringify(db)); }
+var CD = 60000; // the preview uses a 1 minute rest instead of 24 hours so it can be tried quickly
+function stOf(x) {
+var p = x.progress || 0, cur = p, curWait = 0, ready = "", i, left, best = 0, bestLeft = Infinity, pos = x.pos >= 0 ? x.pos : 0;
+for (i = 0; i < CHAPTERS; i++) { left = x.stamps && x.stamps[i] ? x.stamps[i] + CD - Date.now() : 0; ready += left <= 0 ? "1" : "0"; }
+if (p === CHAPTERS) { // continue from the bookmark, in book order, at the first chapter that is ready
+for (var k = 0; k < CHAPTERS; k++) { i = (pos + k) % CHAPTERS; left = x.stamps && x.stamps[i] ? x.stamps[i] + CD - Date.now() : 0; if (left <= 0) { best = i; bestLeft = 0; break; } if (left < bestLeft) { bestLeft = left; best = i; } }
+cur = best; curWait = bestLeft > 0 ? Math.ceil(bestLeft / 1000) : 0;
+}
+return { id: "R-DEMO" + String(x.username).slice(0, 4).toUpperCase(), username: x.username, progress: p, fruits: x.fruits || 0, tokens: x.tokens || 0, round: 1, ready: ready, cur: cur, curWait: curWait, giftLeft: 100 - (x.giftDay === new Date().toISOString().slice(0, 10) ? (x.giftUsed || 0) : 0), night: !!x.night, mustChange: !!x.mustChange, colors: ["yellow"].concat(x.colors || []), owned: (x.colors || []).slice(), hlPrice: 50, shopPrices: { mint: 50, sky: 50, rose: 50, peach: 50, lavender: 50, coral: 50, lime: 50, aqua: 50, sand: 50, slate: 50, ruby: 50 } };
+}
+function elig(x, i) { return (x.progress || 0) < CHAPTERS ? i === (x.progress || 0) : !(x.stamps && x.stamps[i] && Date.now() < x.stamps[i] + CD); }
+if (name === "authSignup") {
+if (!/^[A-Za-z0-9_.-]{3,20}$/.test(String(d.username).trim())) throw new Error("Username must be 3-20 characters: letters, numbers, dot, dash or underscore.");
+if (String(d.password).length < 6) throw new Error("Password must be at least 6 characters.");
+if (d.agree !== true) throw new Error("Please tick the box to accept the About & privacy notice.");
+if (!d.country || !d.city) throw new Error("Please enter your country and city.");
+if (db[key]) throw new Error("Username already exists. Please try creating again with a different username.");
+db[key] = { username: String(d.username).trim(), pw: d.password, progress: key.indexOf("demo238") === 0 ? 238 : 0, fruits: 0, tokens: 0, stamps: {}, night: false }; put();
+return ok({ token: "demo:" + key, state: stOf(db[key]) });
+}
+if (name === "authLogin") { u = db[key]; if (!u || u.pw !== d.password) throw new Error("Wrong username or password."); return ok({ token: "demo:" + key, state: stOf(u) }); }
+if (name === "authState") return ok(stOf(who(a[0])));
+if (name === "authSave") { u = who(a[0]); u.night = a[1].night; put(); return ok(true); }
+if (name === "authStart") { // the preview uses a 12 second chapter so the check can be tried quickly
+u = who(a[0]); var i = a[1], e = elig(u, i);
+if (e && (!u.sess || u.sess.i !== i)) { u.sess = { i: i, t0: Date.now() }; put(); }
+var w = (!e && (u.progress || 0) === CHAPTERS && u.stamps && u.stamps[i]) ? Math.max(0, Math.ceil((u.stamps[i] + CD - Date.now()) / 1000)) : 0;
+return ok({ eligible: e, need: 12, words: 100, wait: w, reward: 6 });
+}
+if (name === "authComplete") {
+u = who(a[0]); var j = a[1];
+if (!elig(u, j)) throw new Error("This chapter is not your current reading chapter, so it cannot grow your tree.");
+if (!u.sess || u.sess.i !== j) throw new Error("Please open the chapter and read it first.");
+var left = Math.ceil(12 - (Date.now() - u.sess.t0) / 1000);
+if (left > 0) throw new Error("Please keep reading - about " + left + " more seconds are needed on this chapter.");
+var res = { grew: false, fruit: false, roundDone: false };
+if ((u.progress || 0) < CHAPTERS) { u.progress = (u.progress || 0) + 1; res.grew = true; }
+else { u.stamps = u.stamps || {}; u.stamps[j] = Date.now(); u.fruits = (u.fruits || 0) + 6; res.fruit = true; res.fruits = 6; u.pos = (j + 1) % CHAPTERS; }
+u.sess = null; put(); return ok({ state: stOf(u), result: res });
+}
+if (name === "authSetLanguage") { u = who(a[0]); u.lang = a[1]; put(); var sx = stOf(u); sx.lang = u.lang; return ok({ state: sx }); }
+if (name === "authHarvest") {
+u = who(a[0]); if (!(u.fruits > 0)) throw new Error("There are no fruits to harvest yet.");
+var n = u.fruits; u.tokens = (u.tokens || 0) + n; u.fruits = 0; put(); return ok({ state: stOf(u), harvested: n });
+}
+if (name === "authChapter") { who(a[0]); return ok([]); }
+if (name === "authNotes") { u = who(a[0]); var nm = (u.notes && u.notes[a[1]]) || {}; return ok(Object.keys(nm).map(function (v) { return { v: Number(v), c: nm[v].c, n: nm[v].n }; })); }
+if (name === "authSaveNote") {
+u = who(a[0]); var cc = String(a[3] || ""), nn = String(a[4] || "").trim();
+if (cc && stOf(u).colors.indexOf(cc) < 0) throw new Error("You have not unlocked that color yet.");
+if (nn.length > 500) throw new Error("A note can have up to 500 characters.");
+u.notes = u.notes || {}; var cm = u.notes[a[1]] = u.notes[a[1]] || {};
+if (!cc && !nn) delete cm[a[2]]; else cm[a[2]] = { c: cc, n: nn };
+put(); return ok({ v: Number(a[2]), c: cc, n: nn });
+}
+if (name === "authBuyColor" || name === "authBuyItem") {
+u = who(a[0]); var cid = String(a[1] || "");
+if (["mint", "sky", "rose", "peach", "lavender", "coral", "lime", "aqua", "sand", "slate", "ruby"].indexOf(cid) < 0) throw new Error("That color is not for sale.");
+if (stOf(u).colors.indexOf(cid) >= 0) throw new Error("You already own that color.");
+if ((u.tokens || 0) < 50) throw new Error("A color costs 50 fruits. You have " + (u.tokens || 0) + " in your basket.");
+u.tokens -= 50; u.colors = (u.colors || []).concat(cid); put(); return ok({ state: stOf(u) });
+}
+if (name === "authLookup") {
+u = who(a[0]); var tid = String(a[1] || "").trim().toUpperCase(), found = null;
+for (var kk in db) if (stOf(db[kk]).id === tid) found = db[kk];
+if (!found) throw new Error("No reader has that ID. Please check it and try again.");
+if (found === u) throw new Error("That is your own ID. Please enter another reader's ID.");
+return ok({ id: tid, username: found.username });
+}
+if (name === "authGift") {
+u = who(a[0]); var gid = String(a[1] || "").trim().toUpperCase(), amt = Number(a[2]), rec = null, gk;
+for (gk in db) if (stOf(db[gk]).id === gid) rec = db[gk];
+if (!(amt >= 1) || amt % 1 !== 0) throw new Error("Please enter a whole number of fruits, 1 or more.");
+if (!rec) throw new Error("No reader has that ID.");
+if (rec === u) throw new Error("You cannot gift fruits to yourself.");
+if (amt > (u.tokens || 0)) throw new Error("You only have " + (u.tokens || 0) + " fruits in your basket.");
+var day = new Date().toISOString().slice(0, 10), usedToday = u.giftDay === day ? u.giftUsed : 0;
+if (amt > 100 - usedToday) throw new Error("The daily gift limit is 100 fruits. You can gift " + (100 - usedToday) + " more today.");
+u.tokens -= amt; rec.tokens = (rec.tokens || 0) + amt; u.giftDay = day; u.giftUsed = usedToday + amt; put();
+return ok({ state: stOf(u), gifted: amt, to: rec.username });
+}
+if (name === "authChangePassword") { u = who(a[0]); if (u.pw !== a[1]) throw new Error("Your current password is not correct."); if (String(a[2]).length < 6) throw new Error("The new password must be at least 6 characters."); u.pw = a[2]; u.mustChange = false; put(); return ok(true); }
+if (name === "getCountries") return ok(["Japan", "Philippines", "United States"]);
+if (name === "getCities") return ok(({ "Philippines": ["Cebu City", "Davao City", "Manila", "Quezon City"], "United States": ["Los Angeles", "New York", "Salt Lake City"], "Japan": ["Osaka", "Tokyo"] })[a[0]] || []);
+} catch (e) { bad(e.message); }
+}, 60);
+}
+</script>
+
+<script>
+// ############################################################################
+// JsStart.html - STARTUP: connects the buttons and starts the page (loads LAST)
+// Calls every init function in the right order, shows the login screen or resumes a saved login. If you add a new feature file, call its init function here.
+// ############################################################################
+
+// ============================================================
+// BUTTONS + STARTUP
+// Prev / Next buttons, arrow keys, then show the login screen (or resume a saved login). The reader's state loads in startApp().
+// ============================================================
+buildJump();
+initNight();
+initReadingToggle();
+$("prev").onclick = prevStep;
+$("next").onclick = nextStep;
+$("harvest").onclick = harvest;
+initReadingCheck(); // start the reading-check timer
+function focusReader() { // asks the browser to send keyboard presses to this page, so no click is needed
+  try {
+    window.focus();
+    var b = $("rtext");
+    if (b) { b.setAttribute("tabindex", "-1"); b.style.outline = "none"; b.focus({ preventScroll: true }); }
+  } catch (e) {}
+}
+function modalOpen() { // true while a pop-up (settings, gift, login...) is on screen, so the arrow keys leave it alone
+  var ids = ["auth", "pw", "gift", "about", "welcome", "settingsModal", "gamesModal", "langModal", "goLoading", "nameModal"], k, m;
+  for (k = 0; k < ids.length; k++) { m = $(ids[k]); if (m && m.style.display && m.style.display !== "none") return true; }
+  return $("vp").classList.contains("open");
+}
+window.addEventListener("keydown", function (e) {
+  if (!TOKEN || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || modalOpen()) return; // ignore while typing or when a pop-up is open
+  var k = e.key;
+  if (k === "ArrowLeft") { e.preventDefault(); prevStep(); }
+  else if (k === "ArrowRight") { e.preventDefault(); nextStep(); }
+  else if (k === "ArrowUp" || k === "ArrowDown") { // scroll the chapter text up or down
+    e.preventDefault();
+    var box = $("rtext");
+    if (box) box.scrollBy({ top: k === "ArrowDown" ? 80 : -80 });
+  }
+});
+window.addEventListener("load", focusReader);
+document.addEventListener("pointermove", focusReader, { once: true }); // the first mouse movement over the page also tries to take focus
+initAuth(); // show the login screen, or resume a saved login
+initPlaces(); // fill the country dropdown for the Create-account form
+initPassword(); // wire the change-password screen
+initGift(); // wire the gift screen
+initAbout(); // wire the About & privacy screen
+initSettings(); // wire the settings modal
+initNotes(); // wire the verse panel (notes + highlights)
+</script>
+
+<style>
+  #reader { position: relative; }
+#rcPill { position: absolute; left: 50%; transform: translateX(-50%); z-index: 30; display: none; max-width: 92%; padding: 9px 16px; border: 0; border-radius: 999px; background: #f0b429; color: #3a2a00; font: 600 14px system-ui, sans-serif; box-shadow: 0 3px 12px rgba(0,0,0,.35); cursor: pointer; }
+
+  /* ---- WELCOME DIALOG ---- */
+#welcome { position: fixed; inset: 0; z-index: 65; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#welcome .acard { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#welcome h1 { margin: 0 0 4px; font-size: 22px; color: #1b5e20; }
+#welcome .asub { margin: 0 0 14px; font-size: 13px; color: #555; overflow-wrap: anywhere; }
+body.night #welcome { background: rgba(20,24,26,.96); }
+body.night #welcome .acard { background: #1c2226; color: #e4e8dc; }
+body.night #welcome h1 { color: #9bd36a; }
+body.night #welcome .asub { color: #9aa5a8; }
+
+/* ---- SETTINGS MODAL ---- */
+#settingsModal { position: fixed; inset: 0; z-index: 63; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#settingsModal .acard { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+body.night #settingsModal { background: rgba(20,24,26,.96); }
+body.night #settingsModal .acard { background: #1c2226; color: #e4e8dc; }
+body.night #settingsModal hr { border-top-color: #2a3135; }
+
+/* ---- SPEED PATCH ---- */
+/* ---- SETTINGS: organized button list ---- */
+#settingsModal .acard { max-width: 380px; }
+.setTitle { margin: 0 0 14px; font-size: 20px; color: #1b5e20; }
+.setProfile { display: flex; align-items: center; gap: 12px; background: #f3f7ee; border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+.setAvatar { width: 42px; height: 42px; border-radius: 50%; background: #dfe8cf; display: flex; align-items: center; justify-content: center; font-size: 22px; flex: none; }
+.setWho { min-width: 0; }
+#whoName { font-weight: 600; font-size: 15px; color: #1b5e20; overflow-wrap: anywhere; }
+#myId { font-size: 12px; color: #6b6b6b; user-select: all; margin-top: 2px; overflow-wrap: anywhere; }
+.setLabel { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #8a8a7a; margin: 14px 2px 6px; }
+.setList { display: flex; flex-direction: column; gap: 6px; }
+.setBtn { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 12px 14px; background: #fff; border: 1px solid #d9e2cc; border-radius: 12px; font: 15px system-ui, sans-serif; color: #2b2416; text-align: left; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,.06); transition: background .15s, transform .05s; }
+.setBtn:hover:not(:disabled) { background: #f3f7ee; }
+.setBtn:active:not(:disabled) { transform: scale(.98); }
+.setBtn:disabled { opacity: .55; cursor: not-allowed; box-shadow: none; background: #f6f6f0; }
+.setIco { font-size: 18px; width: 24px; text-align: center; flex: none; }
+.setTxt { flex: 1; }
+.setArrow { color: #9aa58a; font-size: 20px; line-height: 1; }
+.setSoon { font-size: 11px; font-weight: 600; background: #e4e8dc; color: #5b5236; padding: 2px 8px; border-radius: 999px; }
+.setDanger { color: #b3261e; border-color: #f0c9c5; margin-top: 4px; }
+.setDanger:hover:not(:disabled) { background: #fdeceb; }
+#settingsClose { width: 100%; margin-top: 16px; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+
+body.night .setProfile { background: #263036; }
+body.night .setAvatar { background: #2c3a2a; }
+body.night #whoName { color: #9bd36a; }
+body.night #myId { color: #9aa5a8; }
+body.night .setTitle { color: #9bd36a; }
+body.night .setLabel { color: #8b9498; }
+body.night .setBtn { background: #263036; border-color: #3a464c; color: #e4e8dc; box-shadow: none; }
+body.night .setBtn:hover:not(:disabled) { background: #2f3b41; }
+body.night .setBtn:disabled { background: #20282c; }
+body.night .setSoon { background: #3a464c; color: #cfd6c8; }
+body.night .setDanger { color: #ff8a80; border-color: #5a3a3a; }
+body.night .setDanger:hover:not(:disabled) { background: #3a2626; }
+#sky .daysky, #sky .nightsky, #grassShade { transition: none; } /* no 0.6s fade that repaints the whole picture */
+#sky .st { animation-play-state: paused; } /* stars only twinkle at night */
+body.night #sky .st { animation-play-state: running; }
+#sky .rays { animation: none; } /* sun rays stop spinning */
+#grass .sway { animation: none; } /* the grass no longer sways non-stop (the wind gusts still work) */
+#treewrap { contain: layout paint; } /* picture repaints stay inside the tree area */
+#rtext { contain: layout paint; overscroll-behavior: contain; } /* text scrolling is isolated from the picture */
+
+
+/* ---- GAMES DIALOG ---- */
+#gamesModal { position: fixed; inset: 0; z-index: 64; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#gamesModal .acard { width: 100%; max-width: 380px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#gamesClose { width: 100%; margin-top: 16px; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+body.night #gamesModal { background: rgba(20,24,26,.96); }
+body.night #gamesModal .acard { background: #1c2226; color: #e4e8dc; }
+
+
+/* ---- LOADING DIALOG ---- */
+#goLoading { position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; }
+#goLoading .acard { width: 100%; max-width: 300px; background: #fff; border-radius: 16px; padding: 26px 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; text-align: center; }
+.goSpin { width: 42px; height: 42px; margin: 0 auto 14px; border: 4px solid #dfe8cf; border-top-color: #2f7d32; border-radius: 50%; animation: goSpin .8s linear infinite; }
+@keyframes goSpin { to { transform: rotate(360deg); } }
+.goTitle { font-size: 17px; font-weight: 600; color: #1b5e20; }
+.goSub { font-size: 13px; color: #666; margin-top: 4px; }
+body.night #goLoading { background: rgba(20,24,26,.96); }
+body.night #goLoading .acard { background: #1c2226; color: #e4e8dc; }
+body.night .goSpin { border-color: #2c3a2a; border-top-color: #9bd36a; }
+body.night .goTitle { color: #9bd36a; }
+body.night .goSub { color: #9aa5a8; }
+@media (prefers-reduced-motion: reduce) { .goSpin { animation-duration: 2.5s; } }
+
+
+/* ---- CHANGE USERNAME DIALOG ---- */
+#nameModal { position: fixed; inset: 0; z-index: 66; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#nameModal .acard { width: 100%; max-width: 360px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#nameModal h1 { margin: 0 0 4px; font-size: 20px; color: #1b5e20; }
+#nameModal .asub { margin: 0 0 14px; font-size: 13px; color: #555; overflow-wrap: anywhere; }
+#nameModal input { display: block; width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px; border: 1px solid #b9ad88; border-radius: 8px; font-size: 16px; }
+#nameConfirm { background: #f3f7ee; border-radius: 10px; padding: 12px; margin-bottom: 10px; font-size: 15px; color: #1b5e20; overflow-wrap: anywhere; }
+#nameErr { min-height: 18px; color: #b3261e; font-size: 13px; margin-bottom: 6px; }
+#nameGo { width: 100%; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+#nameGo:disabled { opacity: .6; cursor: not-allowed; }
+#nameBack { width: 100%; margin-top: 8px; padding: 9px; background: none; border: 0; color: #555; font-size: 14px; cursor: pointer; }
+body.night #nameModal { background: rgba(20,24,26,.96); }
+body.night #nameModal .acard { background: #1c2226; color: #e4e8dc; }
+body.night #nameModal h1 { color: #9bd36a; }
+body.night #nameModal .asub, body.night #nameBack { color: #9aa5a8; }
+body.night #nameModal input { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+body.night #nameConfirm { background: #263036; color: #cfe3c0; }
+
+/* ---- VERTICAL READING RAIL: one gold segment per verse, fills top to bottom; the dot = where you stopped ---- */
+#rtext { padding-left: 22px; --rail: transparent; }
+body.night #rtext { --rail: transparent; }
+#rtext p.rc { position: relative; }
+#rtext p.rc::before { content: ""; position: absolute; left: -10px; top: 0; width: 1px; height: calc(100% + .7em); pointer-events: none; opacity: .28;
+  background: linear-gradient(to bottom, #f0b429 0, #f0b429 calc(var(--rp, 0) * 100%), var(--rail) calc(var(--rp, 0) * 100%), var(--rail) 100%); }
+#rtext p.rc-cur::after { display: none; }
+#rcheck .track { display: none; } /* the old horizontal bar is replaced by the rail */
+#rcJumpRow { margin-top: 3px; }
+
+/* ---- LANGUAGE DIALOG ---- */
+#langModal { position: fixed; inset: 0; z-index: 64; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#langModal .acard { width: 100%; max-width: 380px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+#langModal .asub { margin: 0 0 12px; font-size: 13px; color: #555; }
+#langErr { min-height: 18px; color: #b3261e; font-size: 13px; margin-top: 8px; }
+#langClose { width: 100%; margin-top: 12px; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+.setBtn.on { border-color: #2f7d32; background: #f3f7ee; }
+.setCheck { color: #2f7d32; font-weight: 700; font-size: 18px; width: 20px; text-align: center; }
+body.night #langModal { background: rgba(20,24,26,.96); }
+body.night #langModal .acard { background: #1c2226; color: #e4e8dc; }
+body.night #langModal .asub { color: #9aa5a8; }
+body.night .setBtn.on { background: #2f3b41; border-color: #9bd36a; }
+body.night .setCheck { color: #9bd36a; }
+
+#lbl:empty, #miniLbl:empty { display: none; } /* no empty bubble when the label has no text */
+
+</style>
+
+<script>
+// ===== CHANGE USERNAME: Settings > Change username (step 1: type the new name, step 2: confirm) =====
+var nmStep = 1, nmInfo = null, nmWanted = "";
+function nmCurrent() { return $("whoName").textContent.replace(/^Reader:\s*/, ""); }
+function nmDays(sec) { var d = Math.ceil(sec / 86400); return d + " day" + (d === 1 ? "" : "s"); }
+function nmClose() { $("nameModal").style.display = "none"; }
+function nmOpen() {
+  closeSettings();
+  nmStep = 1; nmInfo = null; nmWanted = "";
+  $("nameForm").style.display = ""; $("nameConfirm").style.display = "none";
+  $("nameNew").value = ""; $("nameErr").textContent = "";
+  $("nameSub").textContent = "Loading...";
+  $("nameGo").textContent = "Continue"; $("nameGo").disabled = true; $("nameBack").textContent = "Cancel";
+  $("nameModal").style.display = "flex";
+  call("authNameInfo", [TOKEN], function (r) {
+    nmInfo = r;
+    var t = "Current username: " + nmCurrent() + ". ";
+    if (r.wait > 0) t += "You can change it again in " + nmDays(r.wait) + ".";
+    else if (r.free) t += "Your first change is free. After that, each change costs " + 200 + " White Fruit and you must wait 6 months between changes.";
+    else t += "This change costs " + r.cost + " White Fruit (your basket: " + tokens + "). After it, you must wait 6 months to change again.";
+    $("nameSub").textContent = t;
+    $("nameGo").disabled = r.wait > 0;
+    if (r.wait <= 0 && r.cost > tokens) { $("nameErr").textContent = "Your basket has only " + tokens + " fruits. Harvest more to change your username."; $("nameGo").disabled = true; }
+  }, function (m) { $("nameSub").textContent = m; if (/log in/i.test(m)) { nmClose(); logout(); } });
+}
+function nmGo() {
+  var err = $("nameErr");
+  if (!nmInfo) return;
+  if (nmStep === 1) {
+    var n = $("nameNew").value.trim();
+    if (!/^[A-Za-z0-9_.-]{3,20}$/.test(n)) { err.textContent = "Username must be 3-20 characters: letters, numbers, dot, dash or underscore."; return; }
+    if (n === nmCurrent()) { err.textContent = "That is already your username."; return; }
+    if (nmInfo.cost > tokens) { err.textContent = "This change costs " + nmInfo.cost + " fruits. Your basket has " + tokens + "."; return; }
+    nmWanted = n; nmStep = 2; err.textContent = "";
+    $("nameForm").style.display = "none"; $("nameConfirm").style.display = "";
+    $("nameConfirm").textContent = nmInfo.cost > 0
+      ? "Change your username to \"" + n + "\" for " + nmInfo.cost + " White Fruit? You can change it again in 6 months."
+      : "Change your username to \"" + n + "\"? This first change is free. Later changes cost 200 White Fruit and need a 6 month wait.";
+    $("nameGo").textContent = "Confirm"; $("nameBack").textContent = "Back";
+  } else {
+    $("nameGo").disabled = true; err.textContent = "Saving...";
+    call("authChangeUsername", [TOKEN, nmWanted], function (r) {
+      applyState(r.state);
+      $("whoName").textContent = "Reader: " + r.state.username;
+      show(); nmClose();
+      toast("\u2713 Username changed to " + r.state.username);
+    }, function (m) {
+      $("nameGo").disabled = false; err.textContent = m;
+      if (/log in/i.test(m)) { nmClose(); logout(); }
+    });
+  }
+}
+function nmBack() {
+  if (nmStep === 2) { // back to typing the name
+    nmStep = 1; $("nameForm").style.display = ""; $("nameConfirm").style.display = "none";
+    $("nameGo").textContent = "Continue"; $("nameBack").textContent = "Cancel"; $("nameErr").textContent = "";
+  } else { nmClose(); openSettings(); }
+}
+$("chgUser").onclick = nmOpen;
+$("nameGo").onclick = nmGo;
+$("nameBack").onclick = nmBack;
+$("nameModal").addEventListener("keydown", function (e) { if (e.key === "Enter" && !$("nameGo").disabled) nmGo(); });
+</script>
+
+<script>
+// ===== LANGUAGE: Settings > Language (English / Tagalog) =====
+function paintLang() { // ticks the chosen language and shows it on the Settings button
+  var e = $("langEng"), t = $("langTgl");
+  if (!e || !t) return;
+  e.classList.toggle("on", LANG === "eng"); t.classList.toggle("on", LANG === "tgl");
+  e.querySelector(".setCheck").textContent = LANG === "eng" ? "\u2713" : "";
+  t.querySelector(".setCheck").textContent = LANG === "tgl" ? "\u2713" : "";
+  $("langNow").textContent = LANG === "tgl" ? "Tagalog" : "English";
+}
+function openLang() { closeSettings(); $("langErr").textContent = ""; paintLang(); $("langModal").style.display = "flex"; }
+function closeLang() { $("langModal").style.display = "none"; }
+function pickLang(l) {
+  if (l === LANG) { closeLang(); return; }
+  var err = $("langErr"); err.textContent = "Please wait...";
+  $("langEng").disabled = true; $("langTgl").disabled = true;
+  try { rcSave(); } catch (e) {} // keep the reading progress of the chapter on screen
+  call("authSetLanguage", [TOKEN, l], function (r) {
+    $("langEng").disabled = false; $("langTgl").disabled = false;
+    applyState(r.state); show(); closeLang();
+    toast(l === "tgl" ? "Language: Tagalog" : "Language: English");
+  }, function (m) {
+    $("langEng").disabled = false; $("langTgl").disabled = false; err.textContent = m;
+    if (/log in/i.test(m)) { closeLang(); logout(); }
+  });
+}
+$("langBtn").onclick = openLang;
+$("langEng").onclick = function () { pickLang("eng"); };
+$("langTgl").onclick = function () { pickLang("tgl"); };
+$("langClose").onclick = function () { closeLang(); openSettings(); };
+paintLang();
+var SWIPE_RIGHT_IS_NEXT = false; // false = swipe LEFT goes to the next chapter, swipe RIGHT goes back. Set true to flip.
+var SWIPE_MIN_X = 40;            // how far (in pixels) the finger must move sideways
+var SWIPE_MAX_MS = 1500;         // slowest swipe that still counts (the old limit was 1000)
+var swipeBusy = false, swipeTimer = 0;
+
+function initSwipe() {
+  if (window.__swipeReady) return; // never attach twice
+  window.__swipeReady = true;
+  var box = $("rtext"), x0 = 0, y0 = 0, t0 = 0, track = false;
+  box.style.touchAction = "pan-y pinch-zoom";
+  box.addEventListener("touchstart", function (e) {
+    if (e.touches.length !== 1) { track = false; return; }
+    var t = e.touches[0];
+    x0 = t.clientX; y0 = t.clientY; t0 = Date.now(); track = true;
+  }, { passive: true });
+  box.addEventListener("touchcancel", function () { track = false; }, { passive: true });
+  box.addEventListener("touchend", function (e) {
+    if (!track) return;
+    track = false;
+    var t = e.changedTouches && e.changedTouches[0];
+    if (!t || !TOKEN) return;
+    var dx = t.clientX - x0, dy = t.clientY - y0, ms = Date.now() - t0;
+    if (Math.abs(dx) < SWIPE_MIN_X || Math.abs(dy) > Math.abs(dx) || ms > SWIPE_MAX_MS) return; // too short, mostly vertical, or too slow
+    if (window.getSelection && String(window.getSelection()) !== "") return; // not while selecting text to highlight
+    var next = SWIPE_RIGHT_IS_NEXT ? dx > 0 : dx < 0;
+    goChapter(viewIdx + (next ? 1 : -1), next ? 1 : -1);
+  }, { passive: true });
+}
+
+function goChapter(i, dir) { // dir: 1 = going forward, -1 = going back
+  i = Math.max(0, Math.min(CHAPTERS - 1, i));
+  if (i === viewIdx || swipeBusy) return;
+  var box = $("rtext");
+  if (!box.animate || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) { view(i); return; }
+  swipeBusy = true;
+  clearTimeout(swipeTimer);
+  swipeTimer = setTimeout(function () { // safety: whatever happens, unlock and clean up
+    swipeBusy = false;
+    if (box.getAnimations) box.getAnimations().forEach(function (a) { a.cancel(); });
+  }, 700);
+  var out = box.animate(
+    [{ transform: "translateX(0)", opacity: 1 }, { transform: "translateX(" + (-dir * 40) + "px)", opacity: 0 }],
+    { duration: 110, easing: "ease-in", fill: "forwards" });
+  var moved = false;
+  function step2() {
+    if (moved) return;
+    moved = true;
+    try { view(i); } catch (err) {} // even if something fails, the text is shown again below
+    out.cancel();
+    var inn = box.animate(
+      [{ transform: "translateX(" + (dir * 40) + "px)", opacity: 0 }, { transform: "translateX(0)", opacity: 1 }],
+      { duration: 180, easing: "cubic-bezier(.2,.8,.2,1)" });
+    inn.onfinish = inn.oncancel = function () { swipeBusy = false; clearTimeout(swipeTimer); };
+  }
+  out.onfinish = step2;
+  setTimeout(step2, 250); // if the animation never finishes (a laggy phone), continue anyway
+}
+
+initSwipe(); // starts the swipe feature
+
+</script>
+
+</body>
+
+</html>
