@@ -136,6 +136,14 @@ body.night{--gl:rgba(18,26,30,.6);--gl2:rgba(40,52,58,.5)}
 #vHead .btn.alt:active{transform:scale(.92)}
 #vCoins{background:var(--gl)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.35);font-size:13px}
 html,body{touch-action:pan-x pan-y;overscroll-behavior:none}
+/* top bar: keep all icon buttons on one row, whatever the name length */
+#idBar{flex-wrap:nowrap;gap:4px}
+#idBar .btn,#idBar #iTok{flex:0 0 auto}
+#idBar .pill{min-width:0;flex:0 1 auto;padding:3px 6px;font-size:min(11px,3vw)}
+#idBar #iUser{max-width:32vw}
+#idBar #iId{max-width:34vw}
+.hr{gap:5px}
+.hr .btn{padding:5px 8px}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
