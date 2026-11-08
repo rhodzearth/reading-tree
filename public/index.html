@@ -2027,10 +2027,9 @@ setTimeout(function () { $("goLoading").style.display = "none"; toast("This game
 
 // Fruitdoku: opens the fourth page in this same tab
 $("gameFruitdoku").onclick = function () {
-if (!appUrl) { toast("Please wait a moment and try again."); return; }
-$("goTitle").textContent = "Opening Fruitdoku...";
-$("goLoading").style.display = "flex"; // same loading dialog as the other games
-setTimeout(function () { $("goLoading").style.display = "none"; toast("This game is coming soon."); }, 400);
+  $("goTitle").textContent = "Opening Fruitdoku...";
+  $("goLoading").style.display = "flex";
+  setTimeout(function () { window.location.href = "fruitdoku.html"; }, 150);
 };
 
 $("gameFarm").onclick = function () {

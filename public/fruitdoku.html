@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>Fruitdoku – White Fruit Logic Puzzle</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#fff6ef;--bg2:#ffe3de;--ink:#6a3d45;--ink2:#a47f84;--line:#ecd3ce;--accent:#e8607a;--bad:#e5484d;--ok:#3fae7a;--shadow:0 8px 22px rgba(120,60,70,.14)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{font-family:'Nunito','Trebuchet MS',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:700;color:var(--ink);background:linear-gradient(180deg,var(--bg1),var(--bg2));background-attachment:fixed;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button{font-family:inherit;color:inherit;cursor:pointer}
+.defs{position:absolute;width:0;height:0;overflow:hidden}
+#app{max-width:480px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.screen{display:none;flex:1;flex-direction:column;padding:12px 16px 0;animation:fade .25s ease}
+.screen.active{display:flex}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* top bar */
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bar h2{margin:0;font-size:20px;font-weight:900;text-align:center;flex:1}
+.icon-btn{width:42px;height:42px;border-radius:50%;border:0;background:#fff;color:var(--ink);display:grid;place-items:center;box-shadow:0 3px 10px rgba(120,60,70,.14)}
+.icon-btn svg{width:22px;height:22px}
+.icon-btn:active{transform:scale(.92)}
+
+/* status */
+.status{display:flex;justify-content:center;gap:12px;margin:12px 0 10px}
+.pill{background:#fff;border-radius:999px;padding:5px 14px;display:flex;align-items:center;gap:8px;box-shadow:0 3px 10px rgba(120,60,70,.12);font-weight:900;font-size:18px;min-height:40px}
+.pill svg.fruit{width:28px;height:28px}
+.hearts{gap:4px}
+.hearts svg{width:24px;height:24px;color:#ee4056}
+.hearts svg.off{color:#e6d6d6}
+.hearts svg.lost{animation:beat .5s}
+@keyframes beat{0%{transform:scale(1.5)}100%{transform:scale(1)}}
+
+/* energy bar */
+.who{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;background:#fff;border-radius:18px;padding:8px 14px;box-shadow:0 3px 10px rgba(120,60,70,.12);margin:0 8px 8px;font-weight:900;font-size:14px}
+.who .nm{font-size:16px}
+.who .id{font-size:12px;color:var(--ink2);font-weight:800;-webkit-user-select:text;user-select:text}
+.who .tk{color:#3fae7a}
+.energy{display:flex;align-items:center;gap:8px;background:#fff;border-radius:999px;padding:6px 12px;box-shadow:0 3px 10px rgba(120,60,70,.12);margin:0 0 10px;font-weight:900;font-size:14px}
+.energy .bolt{width:20px;height:20px;color:#f5a623;flex:none}
+.energy .bolt svg{width:100%;height:100%;display:block}
+.energy .track{flex:1;height:12px;background:#f3e4e0;border-radius:999px;overflow:hidden}
+.energy .fill{height:100%;background:linear-gradient(90deg,#ffd45e,#f5a623);border-radius:999px;transition:width .4s}
+.energy .num{min-width:42px;text-align:right}
+.energy .tm{font-size:12px;color:var(--ink2);font-weight:800;white-space:nowrap}
+#h-energy{margin:0 8px 14px}
+
+/* rule chips */
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:#fff;border-radius:16px;padding:6px;box-shadow:0 3px 10px rgba(120,60,70,.1)}
+.chip{border:2px solid transparent;background:#fff8f5;border-radius:12px;padding:8px 4px;font-size:12px;font-weight:800;line-height:1.2;text-align:center;color:var(--ink);min-height:44px}
+.chip.active{border-color:#8f5a62;background:#fff}
+.chip.bad{border-color:var(--bad);color:var(--bad);animation:shake .4s}
+
+/* board */
+.board-wrap{display:flex;justify-content:center;margin:12px 0 4px}
+.board{--n:5;--gap:4px;width:min(100%,calc(100vh - 424px));width:min(100%,calc(100dvh - 424px));min-width:270px;aspect-ratio:1/1;display:grid;grid-template-columns:repeat(var(--n),1fr);grid-template-rows:repeat(var(--n),1fr);gap:var(--gap);padding:8px;background:#fff;border-radius:22px;box-shadow:var(--shadow)}
+.cell{position:relative;border:0;padding:0;border-radius:18%;display:flex;align-items:center;justify-content:center;transition:transform .08s;min-width:0;min-height:0}
+.cell:active{transform:scale(.93)}
+.cell:focus-visible{outline:3px solid #8f5a62;outline-offset:1px;z-index:3}
+.cell svg.fruit{width:84%;height:84%;filter:drop-shadow(0 2px 2px rgba(70,35,35,.3));pointer-events:none}
+.cell svg.xm{width:58%;height:58%;opacity:.96;pointer-events:none;filter:drop-shadow(0 1px 1px rgba(70,35,35,.18))}
+.cell .ltr{position:absolute;top:3px;left:5px;font-size:10px;font-weight:900;color:rgba(60,30,30,.5);pointer-events:none}
+.cell.pop svg.fruit{animation:pop .38s cubic-bezier(.3,1.6,.5,1)}
+.cell.pop svg.xm{animation:fadein .2s}
+.cell.shake{animation:shake .4s}
+.cell.hint{animation:glow 1s ease-in-out infinite;z-index:2}
+.board.won .cell svg.fruit{animation:hop .7s ease both}
+@keyframes pop{0%{transform:scale(.2)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+@keyframes fadein{from{opacity:0;transform:scale(.6)}to{opacity:.96;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.95),0 0 0 0 rgba(232,96,122,.0)}50%{box-shadow:0 0 0 4px rgba(255,255,255,.95),0 0 16px 8px rgba(232,96,122,.75)}}
+@keyframes hop{0%{transform:translateY(0)}35%{transform:translateY(-28%) scale(1.1)}70%{transform:translateY(0) scale(.96)}100%{transform:none}}
+
+.msg{min-height:44px;margin:6px 4px 2px;text-align:center;font-size:14px;line-height:1.3;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.msg.bad{color:var(--bad)}
+.msg.hint{color:#b0476a}
+
+/* toolbar */
+.toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+.tool{position:relative;border:0;background:#fff;border-radius:16px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:800;box-shadow:0 3px 10px rgba(120,60,70,.12)}
+.tool svg{width:24px;height:24px}
+.tool:active{transform:scale(.95)}
+.tool:disabled{opacity:.45}
+.badge{position:absolute;top:-6px;right:8px;min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#fff;font-size:12px;display:grid;place-items:center;padding:0 5px}
+.badge.zero{background:#c9b7b9}
+
+/* wave */
+.wave{position:relative;height:60px;margin:auto -16px 0;flex:none}
+.wave .bg{position:absolute;inset:0;width:100%;height:100%}
+.wave .peek{position:absolute;left:50%;top:-26px;width:60px;height:60px;transform:translateX(-50%)}
+.wave .peek svg{width:100%;height:100%;filter:drop-shadow(0 -1px 2px rgba(70,35,35,.18))}
+
+/* home */
+.home-top{display:flex;justify-content:flex-end}
+.logo{text-align:center;margin:10px 0 18px}
+.logo-fruits{display:flex;justify-content:center;gap:2px;height:84px;align-items:flex-end}
+.logo-fruits svg{width:68px;height:68px;filter:drop-shadow(0 4px 4px rgba(70,35,35,.22));animation:bob 2.6s ease-in-out infinite}
+.logo-fruits svg:nth-child(2){width:84px;height:84px;animation-delay:.3s}
+.logo-fruits svg:nth-child(3){animation-delay:.6s}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.logo h1{margin:6px 0 0;font-size:44px;font-weight:900;letter-spacing:.5px;color:#7a3f4c}
+.logo p{margin:2px 0 0;color:var(--ink2);font-size:15px}
+.menu{display:flex;flex-direction:column;gap:12px;padding:0 8px}
+.btn{border:0;border-radius:18px;padding:14px 18px;font-size:17px;font-weight:900;background:#fff;color:var(--ink);box-shadow:0 4px 0 var(--line),0 8px 18px rgba(120,60,70,.1);display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--line)}
+.btn.primary{background:linear-gradient(180deg,#ff8da3,#e8607a);color:#fff;box-shadow:0 4px 0 #c3405a,0 8px 18px rgba(232,96,122,.3);font-size:20px;padding:16px}
+.btn.danger{color:var(--bad)}
+.btn small{font-size:12px;font-weight:800;color:var(--ink2)}
+.btn .dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.home-foot{text-align:center;margin:18px 0 22px;font-size:14px;color:var(--ink2)}
+
+/* levels */
+.lvl-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:16px 0 20px}
+.lvl{border:0;background:#fff;border-radius:16px;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:1px;box-shadow:0 3px 10px rgba(120,60,70,.12);min-height:74px}
+.lvl .num{font-size:20px;font-weight:900;height:26px;display:flex;align-items:center}
+.lvl .num svg{width:18px;height:18px}
+.lvl .sz{font-size:10px;color:var(--ink2);font-weight:800}
+.lvl.locked{background:#f6ebe8;color:#c2a9ab;box-shadow:none}
+.lvl.current{outline:3px solid var(--accent)}
+.stars{display:flex;gap:1px}
+.stars svg{width:13px;height:13px;color:#e9d9d6}
+.stars svg.on{color:#ffb92e}
+.stars.big svg{width:44px;height:44px}
+.lvl-hint{text-align:center;color:var(--ink2);font-size:13px;margin-bottom:12px}
+
+/* modal */
+#modal-root{display:none}
+#modal-root.open{display:block}
+.overlay{position:fixed;inset:0;background:rgba(90,45,52,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{position:relative;background:#fff;border-radius:26px;padding:22px 20px 18px;max-width:420px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 50px rgba(60,20,30,.4);animation:modalIn .25s ease;-webkit-user-select:none;user-select:none}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.modal h3{margin:0 0 8px;text-align:center;font-size:24px;font-weight:900}
+.modal h4{margin:16px 0 4px;font-size:16px;font-weight:900;color:#8a4a58}
+.modal p,.modal li{font-size:14.5px;line-height:1.45;font-weight:700}
+.modal ul,.modal ol{padding-left:20px;margin:6px 0}
+.modal .sub{text-align:center;color:var(--ink2);margin:8px 0 14px}
+.mcol{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.mrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.modal .stars{justify-content:center;margin:6px 0}
+.mini{display:grid;grid-template-columns:repeat(3,44px);gap:3px;justify-content:center;margin:10px auto 4px}
+.mini div{width:44px;height:44px;border-radius:9px;background:#ffd9e2;display:grid;place-items:center}
+.mini div svg{width:30px;height:30px}
+.mini .c{background:#b5e1a0}
+.cap{text-align:center;color:var(--ink2);font-size:13px!important;margin:2px 0 0}
+details{background:#fff8f5;border-radius:12px;padding:8px 12px;margin:8px 0}
+summary{font-weight:900;cursor:pointer}
+.set-lab{font-weight:900;margin:4px 0 8px}
+.fruit-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}
+.fp{border:2px solid var(--line);background:#fff8f5;border-radius:14px;padding:6px 2px 4px;display:flex;flex-direction:column;align-items:center;font-size:10px;font-weight:800;gap:2px}
+.fp svg{width:38px;height:38px}
+.fp.sel{border-color:#8f5a62;background:#fff}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;border-top:1px solid #f3e4e0;font-size:15px}
+.row small{display:block;color:var(--ink2);font-size:12px;font-weight:700}
+.row input{display:none}
+.sw{flex:none;width:46px;height:28px;border-radius:14px;background:#e5d4d2;position:relative;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.row input:checked+.sw{background:var(--ok)}
+.row input:checked+.sw::after{transform:translateX(18px)}
+.loading{text-align:center;padding:12px 0}
+.spin{width:38px;height:38px;border-radius:50%;border:5px solid #f3d9d9;border-top-color:var(--accent);margin:0 auto 12px;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:26px}
+.cf{position:absolute;top:-44px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(560px) rotate(300deg);opacity:.9}}
+
+#toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:#5a3239;color:#fff;padding:10px 16px;border-radius:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:60;max-width:90vw;font-size:14px;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* loading modal (same look as the other games) */
+#goLoading{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(243,247,238,.96);padding:16px}
+#goLoading .gocard{width:100%;max-width:300px;background:#fff;border-radius:16px;padding:26px 22px;box-shadow:0 6px 24px rgba(0,0,0,.2);text-align:center}
+.goSpin{width:42px;height:42px;margin:0 auto 14px;border:4px solid #dfe8cf;border-top-color:#2f7d32;border-radius:50%;animation:goSpin .8s linear infinite}
+@keyframes goSpin{to{transform:rotate(360deg)}}
+.goTitle{font-size:17px;font-weight:700;color:#1b5e20}
+.goSub{font-size:13px;color:#666;margin-top:4px;font-weight:600}
+@media (prefers-reduced-motion:reduce){.goSpin{animation-duration:2.5s!important}}
+@media (max-width:360px){.chip{font-size:11px}.tool{font-size:11px}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ White fruit artwork (SVG symbols) ============ -->
+<svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+<defs>
+  <radialGradient id="gLychee" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#fcf9f2"/><stop offset="1" stop-color="#e6dfcf"/></radialGradient>
+  <radialGradient id="gCoco" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e6eef0"/></radialGradient>
+  <linearGradient id="gPear" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#efe9cf"/></linearGradient>
+  <radialGradient id="gPeach" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fffefc"/><stop offset=".6" stop-color="#fff2e8"/><stop offset="1" stop-color="#f5d8c7"/></radialGradient>
+
+  <g id="face">
+    <circle cx="-10" cy="0" r="3.4" fill="#3b2c2c"/><circle cx="10" cy="0" r="3.4" fill="#3b2c2c"/>
+    <circle cx="-9" cy="-1.2" r="1.1" fill="#fff"/><circle cx="11" cy="-1.2" r="1.1" fill="#fff"/>
+    <ellipse cx="-17" cy="6" rx="4.6" ry="3" fill="#ff9fb2" opacity=".65"/><ellipse cx="17" cy="6" rx="4.6" ry="3" fill="#ff9fb2" opacity=".65"/>
+    <path d="M-4.5 5.5 Q0 10.5 4.5 5.5" fill="none" stroke="#3b2c2c" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+
+  <symbol id="fr-lychee" viewBox="0 0 100 100">
+    <path d="M50 24 C47 15 53 9 61 10" fill="none" stroke="#8b6a3e" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M54 19 C60 7 76 8 80 15 C72 24 62 25 54 19Z" fill="#7ccf7a"/>
+    <circle cx="50" cy="57" r="35" fill="url(#gLychee)" stroke="#e2d9c6" stroke-width="2.2"/>
+    <ellipse cx="34" cy="40" rx="9" ry="5" fill="#fff" opacity=".9" transform="rotate(-38 34 40)"/>
+    <use href="#face" transform="translate(50 62)"/>
+  </symbol>
+
+  <symbol id="fr-coconut" viewBox="0 0 100 100">
+    <circle cx="50" cy="54" r="38" fill="#80552f"/>
+    <path d="M50 18v5M50 85v-5M14 54h5M86 54h-5M24 28l4 4M76 28l-4 4M24 80l4-4M76 80l-4-4" stroke="#5a3a1d" stroke-width="2" stroke-linecap="round" opacity=".55" fill="none"/>
+    <circle cx="50" cy="54" r="31" fill="#fffdf7"/>
+    <circle cx="50" cy="54" r="25" fill="url(#gCoco)"/>
+    <ellipse cx="36" cy="40" rx="8" ry="4.5" fill="#fff" opacity=".95" transform="rotate(-38 36 40)"/>
+    <use href="#face" transform="translate(50 58)"/>
+  </symbol>
+
+  <symbol id="fr-pear" viewBox="0 0 100 100">
+    <path d="M50 20 C58 20 59 31 62 40 C66 50 78 56 78 71 C78 85 66 93 50 93 C34 93 22 85 22 71 C22 56 34 50 38 40 C41 31 42 20 50 20Z" fill="url(#gPear)" stroke="#e3dcc2" stroke-width="2.2"/>
+    <path d="M50 21 C50 14 53 9 58 6" fill="none" stroke="#8b6a3e" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M53 13 C60 3 74 5 77 11 C70 19 60 19 53 13Z" fill="#7ccf7a"/>
+    <ellipse cx="32" cy="60" rx="4.5" ry="9" fill="#fff" opacity=".85" transform="rotate(12 32 60)"/>
+    <use href="#face" transform="translate(52 70)"/>
+  </symbol>
+
+  <symbol id="fr-dragon" viewBox="0 0 100 100">
+    <g fill="#6fcf7e">
+      <path d="M18 38 C8 36 4 27 7 19 C15 22 20 29 18 38Z"/><path d="M82 38 C92 36 96 27 93 19 C85 22 80 29 82 38Z"/>
+      <path d="M16 62 C6 62 1 54 3 46 C12 48 18 54 16 62Z"/><path d="M84 62 C94 62 99 54 97 46 C88 48 82 54 84 62Z"/>
+      <path d="M44 20 C38 14 37 8 40 4 C46 7 49 13 44 20Z"/><path d="M56 20 C62 14 63 8 60 4 C54 7 51 13 56 20Z"/>
+    </g>
+    <ellipse cx="50" cy="56" rx="35" ry="38" fill="#ec4f8c"/>
+    <ellipse cx="50" cy="56" rx="29" ry="32" fill="#fffefb"/>
+    <g fill="#2d2630"><circle cx="38" cy="34" r="1.6"/><circle cx="55" cy="30" r="1.6"/><circle cx="67" cy="40" r="1.6"/><circle cx="30" cy="50" r="1.6"/><circle cx="72" cy="58" r="1.6"/><circle cx="31" cy="74" r="1.6"/><circle cx="47" cy="84" r="1.6"/><circle cx="64" cy="78" r="1.6"/><circle cx="46" cy="40" r="1.6"/></g>
+    <use href="#face" transform="translate(50 60)"/>
+  </symbol>
+
+  <symbol id="fr-peach" viewBox="0 0 100 100">
+    <path d="M50 27 C58 14 80 18 86 40 C92 62 76 92 50 92 C24 92 8 62 14 40 C20 18 42 14 50 27Z" fill="url(#gPeach)" stroke="#f0d3c3" stroke-width="2.2"/>
+    <path d="M50 27 C47 34 47 40 49 46" fill="none" stroke="#efcdbd" stroke-width="2.4" stroke-linecap="round"/>
+    <ellipse cx="74" cy="44" rx="10" ry="8" fill="#ffc2cd" opacity=".45"/>
+    <path d="M50 27 C50 20 52 14 56 11" fill="none" stroke="#8b6a3e" stroke-width="3.2" stroke-linecap="round"/>
+    <path d="M53 18 C61 7 76 9 79 15 C72 23 61 24 53 18Z" fill="#7ccf7a"/>
+    <ellipse cx="30" cy="44" rx="7" ry="4" fill="#fff" opacity=".9" transform="rotate(-40 30 44)"/>
+    <use href="#face" transform="translate(50 64)"/>
+  </symbol>
+</defs>
+</svg>
+
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <section id="screen-home" class="screen">
+    <div class="home-top"><button class="icon-btn" id="home-settings" aria-label="Settings"></button></div>
+    <div class="logo">
+      <div class="logo-fruits" id="logo-fruits"></div>
+      <h1>Fruitdoku</h1>
+      <p>A white-fruit logic puzzle</p>
+    </div>
+    <div class="who" id="h-who" style="display:none"></div>
+    <div class="energy" id="h-energy"></div>
+    <div class="menu">
+      <button class="btn primary" id="btn-play">Play <span id="play-level"></span></button>
+      <button class="btn" id="btn-levels">Levels</button>
+      <button class="btn" id="btn-daily">Daily Challenge <small id="daily-sub"></small></button>
+      <button class="btn" id="btn-help">How to Play</button>
+      <button class="btn" id="btn-exit">🌳 Back to Reading Tree</button>
+    </div>
+    <div class="home-foot" id="home-stats"></div>
+    <div class="wave" aria-hidden="true">
+      <svg class="bg" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 26 C60 4 120 6 200 24 S340 44 400 14 V60 H0Z" fill="#bfe3f4"/></svg>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL SELECT ============ -->
+  <section id="screen-levels" class="screen">
+    <header class="bar">
+      <button class="icon-btn" id="lv-back" aria-label="Back"></button>
+      <h2>Levels</h2>
+      <span style="width:42px"></span>
+    </header>
+    <div class="lvl-grid" id="lvl-grid"></div>
+    <div class="lvl-hint">Finish a level to unlock the next one. Earn up to 3 stars per level.</div>
+    <div class="wave" aria-hidden="true">
+      <svg class="bg" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 26 C60 4 120 6 200 24 S340 44 400 14 V60 H0Z" fill="#bfe3f4"/></svg>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section id="screen-game" class="screen">
+    <header class="bar">
+      <button class="icon-btn" id="g-back" aria-label="Back"></button>
+      <h2 id="g-title">Level 1</h2>
+      <button class="icon-btn" id="g-settings" aria-label="Settings"></button>
+    </header>
+    <div class="status">
+      <div class="pill" id="g-count" aria-live="polite"></div>
+      <div class="pill hearts" id="g-hearts" aria-label="Hearts"></div>
+    </div>
+    <div class="energy" id="g-energy"></div>
+    <div class="chips" id="g-chips">
+      <button class="chip" data-r="0">1 Fruit per color</button>
+      <button class="chip" data-r="1">1 Fruit per column &amp; row</button>
+      <button class="chip" data-r="2">Fruits cannot touch</button>
+    </div>
+    <div class="board-wrap"><div class="board" id="board" role="grid" aria-label="Puzzle board"></div></div>
+    <div class="msg" id="g-msg" aria-live="polite"></div>
+    <div class="toolbar">
+      <button class="tool" id="t-undo"></button>
+      <button class="tool" id="t-hint"></button>
+      <button class="tool" id="t-mode"></button>
+      <button class="tool" id="t-restart"></button>
+    </div>
+    <div class="wave" aria-hidden="true">
+      <svg class="bg" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 26 C60 4 120 6 200 24 S340 44 400 14 V60 H0Z" fill="#bfe3f4"/></svg>
+      <div class="peek" id="g-peek"></div>
+    </div>
+  </section>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast" role="status"></div>
+
+<!-- loading modal: shown while Reading Tree is opening -->
+<div id="goLoading"><div class="gocard">
+<div class="goSpin"></div>
+<div class="goTitle">Opening Reading Tree...</div>
+<div class="goSub">Please wait a moment.</div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="fruitdoku_adapter.js"></script>
+<script>
+(function(){
+'use strict';
+
+/* ==== ENGINE START ==== */
+function hashSeed(str){
+  let h=1779033703^str.length;
+  for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=(h<<13)|(h>>>19);}
+  h=Math.imul(h^(h>>>16),2246822507);h=Math.imul(h^(h>>>13),3266489909);h^=h>>>16;
+  return h>>>0;
+}
+function mulberry32(a){
+  return function(){a|=0;a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
+}
+function shuffle(arr,rng){
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));const t=arr[i];arr[i]=arr[j];arr[j]=t;}
+  return arr;
+}
+/* A random full placement: one per row & column, no two touching (also diagonally). */
+function randomSolution(n,rng){
+  const sol=new Array(n),used=new Array(n).fill(false);
+  function dfs(r){
+    if(r===n)return true;
+    const cols=shuffle(Array.from({length:n},function(_,i){return i;}),rng);
+    for(let k=0;k<cols.length;k++){
+      const c=cols[k];
+      if(used[c])continue;
+      if(r>0&&Math.abs(c-sol[r-1])<2)continue;
+      used[c]=true;sol[r]=c;
+      if(dfs(r+1))return true;
+      used[c]=false;
+    }
+    return false;
+  }
+  return dfs(0)?sol:null;
+}
+/* Grow n connected colored regions, each starting from one solution cell. */
+function growRegions(n,sol,rng,balanced){
+  const N=n*n,reg=new Array(N).fill(-1);
+  for(let r=0;r<n;r++)reg[r*n+sol[r]]=r;
+  let remaining=N-n;
+  const DR=[-1,1,0,0],DC=[0,0,-1,1];
+  while(remaining>0){
+    const pairs=[];
+    for(let i=0;i<N;i++){
+      if(reg[i]!==-1)continue;
+      const r=(i/n)|0,c=i%n;
+      for(let d=0;d<4;d++){
+        const rr=r+DR[d],cc=c+DC[d];
+        if(rr<0||cc<0||rr>=n||cc>=n)continue;
+        const g=reg[rr*n+cc];
+        if(g>=0)pairs.push(i*16+g);
+      }
+    }
+    let pick;
+    if(balanced){
+      const present=[],seen=new Array(n).fill(false);
+      for(let k=0;k<pairs.length;k++){const g=pairs[k]&15;if(!seen[g]){seen[g]=true;present.push(g);}}
+      const g=present[Math.floor(rng()*present.length)];
+      const own=pairs.filter(function(p){return (p&15)===g;});
+      pick=own[Math.floor(rng()*own.length)];
+    }else{
+      pick=pairs[Math.floor(rng()*pairs.length)];
+    }
+    reg[pick>>4]=pick&15;
+    remaining--;
+  }
+  return reg;
+}
+/* Count solutions (stops at `limit`). */
+function countSolutions(n,reg,limit){
+  let count=0;
+  const colUsed=new Array(n).fill(false),regUsed=new Array(n).fill(false);
+  function dfs(r,prev){
+    if(r===n){count++;return count>=limit;}
+    for(let c=0;c<n;c++){
+      if(colUsed[c])continue;
+      if(prev>=0&&Math.abs(c-prev)<2)continue;
+      const g=reg[r*n+c];
+      if(regUsed[g])continue;
+      colUsed[c]=true;regUsed[g]=true;
+      const stop=dfs(r+1,c);
+      colUsed[c]=false;regUsed[g]=false;
+      if(stop)return true;
+    }
+    return false;
+  }
+  dfs(0,-1);
+  return count;
+}
+/* Random puzzle with exactly one solution. Returns {n,reg,sol} or null. */
+function generatePuzzle(n,rng,maxTries){
+  maxTries=maxTries||3000;
+  for(let t=0;t<maxTries;t++){
+    const sol=randomSolution(n,rng);
+    if(!sol)continue;
+    const reg=growRegions(n,sol,rng,rng()<0.5);
+    if(countSolutions(n,reg,2)===1){
+      const perm=shuffle(Array.from({length:n},function(_,i){return i;}),rng);
+      return {n:n,reg:reg.map(function(g){return perm[g];}),sol:sol};
+    }
+  }
+  return null;
+}
+/* ==== ENGINE END ==== */
+
+/* ============ Level data (pre-generated, each has exactly one solution) ============ */
+const RAW_LEVELS=[[5,"0013400133111331123312222","41302"],[5,"0001100004200043044433444","42031"],[5,"0002200022000213331144311","31420"],[5,"3333333422344421442211000","14203"],[5,"4444424100220002223022333","02413"],[5,"4400344103441002200022222","42031"],[5,"3340033100311113111122111","24031"],[5,"2222123331333340333433444","14203"],[5,"0113431134333343333333322","02413"],[5,"2201122001400114003340033","14203"],[6,"340000340000330000332515322555355555","130425"],[6,"411155455555445555335555333200333000","204135"],[6,"002222002223542223555523555111111111","031524"],[6,"555551555541555544255344000334000333","524031"],[6,"331111331114221111221111200111000055","153024"],[6,"344444334444344200112205111000111000","203514"],[6,"111144111111311001332000332000555000","530241"],[6,"443323443333443333044333001155011111","413052"],[6,"555521555522555522355552000442000442","524031"],[6,"033225333225333222442222444111444111","052413"],[6,"000222002222112333111114111544111444","024135"],[6,"000411003411444411224441222255222255","025314"],[6,"005555355554333114333111333322333222","025314"],[6,"223333422222411120411120111111111155","315024"],[6,"111111114115334005344444444444424444","253041"],[6,"430050430000330000333300333112331122","403152"],[7,"1111666111136611113665111046550000055000005520000","6415302"],[7,"1123333113333311333334443333004006300000550000555","2041536"],[7,"6333000333300030000002202205222225522222451122255","0246351"],[7,"5511000551111055444446554444625444366644436664443","5304162"],[7,"1112222111122211114221111446153333303333330033333","5246130"],[7,"4466222446622245662224466222666620233333113333311","0413526"],[7,"4444222444422264441226644422600444260033350003335","5140263"],[7,"4110005111000511600551166555166655566662236666222","0315264"],[7,"3344455334445544444054444111444411164221116222111","6152403"],[7,"2226664222611402221140221114003314400331450331145","3140526"],[7,"4440022444002244402264400326110333615133161111111","5062413"],[7,"3351000331100011114401114440222446022244662444666","2036415"],[7,"4442222444222244422051155555355555535555553355556","4251306"],[7,"4555333665333366633336611332111112211111221111102","0241635"],[7,"2333334333444433111441110004000000600000660000556","0251364"],[7,"3366666333666633365664336550111122011112201111200","3140526"],[7,"2155555215555511555501166500000000044400000000003","0413526"],[7,"6666611666661602266660006664556664455556445553444","6420513"],[7,"6646222666622255551225552222555202255000020000003","2041536"],[7,"3333662333336603336660115566005555505555554455555","6352041"],[7,"6332500633550066355006633344661334461144441114444","3642051"],[7,"6555222155222211122221112432111443211144401114440","0241536"],[7,"0000311600035564000554440055444005522555552225555","6403152"],[7,"3000005333335533333653333366133366611146661224666","4625031"],[8,"4007777744007777770577717777777177771111777711127777336277773362","20315746"],[8,"6552211155522111555221115333440153334400333344003333377733337777","03174625"],[8,"6773333377733444777744447772544472224444222241142222111122221110","03146257"],[8,"3333334433333544333335556666331166623311660003117600111176601111","47513620"],[8,"4444433344422333414222224022222200222222222226662222266722252277","26140573"],[8,"7733333377036000470000054700005547002255444445554444455544441115","24135706"],[8,"1111444411114444111113336110033366660333566600075660077756200777","53641702"],[8,"6665553377754433115554431155443311444433444444404444440044442440","20361574"],[8,"7777333177773333747733334444332244463332455666666666666660666666","75360241"],[8,"5553377155522711555277115777777177777711677774106777000067777000","41372506"],[8,"7444442277444425444433154443311544333115113311110111161100111666","61372405"],[8,"2223331122333311224333112744333577777333673333336330033333330033","16273504"],[8,"2555444455544444555544445574434465776611666666116666666166606661","06152473"],[8,"2222255412222544111122771111127736111227331112223001122230000222","57461302"],[8,"7777777544777777444477772446003322663333266666666666666611666666","75246031"],[8,"3333511733335111333331114333366144333666420366662223666622222666","74630251"],[8,"5522222245222244442274444444444344444463444100634444000344400000","02416375"],[8,"2556666655555666555555615555511105557714033333140333333300333333","05264731"],[8,"5555223355552233665222346666233361622322610222226102722260007222","60731524"],[8,"4440077744400000444000003000000630010006355500003555000035552000","61573024"],[8,"3333555533335555333351114433111647331166472222062222220622222222","42507163"],[8,"0000666500002655000000554000005540700011007111110331111103311111","64730251"],[8,"3551500035555000555000004450000044400000444222064442220742222777","30251746"],[8,"5555552200555555000455350011333500011111001111167776666677766666","75360241"],[8,"5555040655500006555000065550000655511106777711163377111177721111","57164203"],[8,"6663444466634444663374446633550065555500555555002555000022000010","51427306"],[8,"7773322677733233777333337777334477773344777534441705504410000044","75146302"],[8,"2225555622222556222005552222255422225544232244447331444477711444","57426130"],[8,"3222220033020000300000000000100000001160770001647770044477775544","30246175"],[8,"5555517755552112555222225552222233522222033642220336622233662222","75261403"],[8,"0222255511225555114255554444445544444455444337554444477644447776","03162475"],[8,"0000001540000111444001114444771132277711322777116627771166777771","74630251"],[9,"000000018000000211000002211000002222577422222577662666777622666333666666333366666","847530261"],[9,"777444888777744668777744448277777758222277777222211771330111111330001111000001111","864751302"],[9,"222227777222277777661111444688111443000001443000004443000005553000005553000005333","140257368"],[9,"000557777010000777000008777033388777033388777033387777663887744663337777633377722","413526807"],[9,"883770000333711400333711440336614440131114440111114444111111444111555222111555552","130286475"],[9,"333444422333334422333355222733322222777322222776622222766666228166666200166666600","524613807"],[9,"222222333022222333022273333625573333666644333666644413666661111666661111666668111","304286175"],[9,"440033333441000333211088333222088336222003333222000077222050777200000777000007777","025861473"],[9,"822220000888222200582222222888822212888422212888423112888433111888663333887773333","860735142"],[9,"200411111200011111222111111222111111226555111255555333555777388555777788557777788","317024685"],[9,"888843333888888833885855533555555333655553331605577771677777771667722777667722777","427381605"],[9,"111444470111444440114444440115556844115566884555566888555566666555366666233336666","748162530"],[9,"888322222868322442888222422882227422877777442878887442878777740888885744111844444","317046852"],[9,"444477777554333777544511177544551872554511877555516888055518818050111118000000088","642815037"],[9,"477777777127777717122727711122222718111111118661661558611663888661666888666606666","062837514"],[9,"555522222555522202758823202888433002888883022833333011833333611333336661333336111","720316485"],[9,"377442222374442222333432322553332322533332322553333388553336888516336888556666660","263047518"],[9,"055555111000545551344444451374444455374746445374746655374766688377766682337668882","620317485"],[9,"664622223664662333684660033666600037600001133600000003606050003666550033000000000","251860473"],[9,"777222622722222222774222022744402028300400022330000022130005022133005002333055552","641835027"],[9,"333366887333356877033355477003354444003554444033334244033331222011111222000111222","468531720"],[9,"645333888643333888643733381643788388647788888600778888602222228002222288000022288","258174063"],[9,"777811112717111112711112222115222444665555544666555444336605444666000444666000044","370468152"],[9,"555533333888588363888558366785588111888888881882800001822880044228880044288880444","473028516"],[9,"555026666555000648555006688556666888555555888555588888755888558715555553715555333","473526081"],[9,"666655555666665775226655777266555777255555717224555511224435331023333331000033888","361572408"],[9,"338888888633881888633111188636166118666666608226667600422277660442550060222200000","826475031"],[9,"388888888388838888338333384633337384665777444666774414600070004622000444222220000","648527031"],[9,"222115555244555555244555855224445885222644555266645555776605005776700005377775555","486152730"],[9,"866666661866666211886376211666322221633332111603332214003332215333335225333335555","074258136"],[9,"338888881377718181377711111377511410337771400333774440333344440333322440333226644","281375046"],[9,"555551188566058888560000777560633377566663337666442737646444777446477747444444447","683075241"],[9,"111222244115522044111522244166222228116663288111663228766663228777333288777333333","863570241"],[9,"000000077066000077066447777244447777224342777222222777222222555222222258122222888","524731680"],[9,"111055544110053544113553544113333448177774488111774488211774888666766688666668888","635742081"],[9,"112222888112172228611177728333370228353000828330008888333300888000004444000000044","530417286"],[9,"222224488228222448558282248758882848718888848711888888711880080733333000336663330","471602853"],[9,"661111111831555711831115771833155111855550444550500224500500004550000444555004444","164207358"],[9,"555554400554444400444111440344441000448111106448188111478888121444881121488882222","472086135"],[9,"888888880688800080488888000433888880448858180444458100444455112444551111774555111","507263841"],[9,"330000000660077220667777822677441122666641122444441225444111125444111155441111115","136204758"],[9,"222222222522224222552524066555554666585454477533454771533444771534444711333377711","306815274"],[10,"0003333000000000000000000022709990055576999905557611995555774119555577115555555711155555551118555555","6479280513"],[10,"0000444444000044444400064444443366414444336661117733666111778866111119882555111982222111112222211111","2731869504"],[10,"7775555999488555599948555559994455999999445999999944999099994499999333449999133244999963324499966633","0241358697"],[10,"9999911135999991115599999199559999999999799999922279909999927666449999766649999966664999998888449999","8695730241"],[10,"9996665555999991115599999111159999971115999999444599394444459933344455988334225548444422254444444022","3085942617"],[10,"2233377796222377777620207076662020007776002077777602207117760000551777000871174700887777440888888888","8372504691"],[10,"6555555555666666655567663335536777773333288779933320044399932200039993022033393300000333330000333331","8516240739"],[10,"8888855559858555559985855455998555544599856222499902227222290022722319022772111900227111992222119999","8096257314"],[10,"0005544444000511113490055511349900511334999055133399000111729966666172998866818299988888829999888888","6417582930"],[10,"4455555550445552525074475222207777555000773776501077366666607339996966773399999987339339393333333339","9725816403"],[10,"5555000008988555080899858808889988800884923388884433388384443733833441373883444437333364343777333334","8504179263"],[10,"7888888836888883333680823333668002233336880033366688003336460003333699113335369911533599995555555559","0394286175"],[10,"4444444111542242411122224244412292424481299242208199222220779229997777922299777796999999779999937777","9028473615"],[10,"9999777777222997717722000011772204011133221001333355111116631511111666151866666615186688661118888666","2853094716"],[10,"5555111111555111111755533333115333943311533444333355344444033333466663338846663338844466363244466666","7904286351"],[10,"0000004444662220000466221110046621144444662144933462212443356622233375666223337768883333376888888877","7503692841"],[10,"9999999955909999994590009444459900994443999090446622900046661200004066122220000611111077001811107777","8259370461"],[10,"9999990003966695003396566533339655553533975885555398888555338885555555888415155188211111518822111111","5748160392"],[10,"5558800022555888800215585288825555522222552222992255999993327559779333775779936374557793737777777773","6402973815"],[10,"7777777765779774476599974466659444441115944414151593481115159344155555933311115593333111059231111100","5974630281"],[10,"8844433333884444453384446445938446645597888664599962264449996666461199666666199906111119996666661111","5139628407"],[10,"5566610000556611099056677700995677770022566770003256770402325557000232555777023257778702225578888822","2496850713"],[10,"2222222222211111222422171222242517122424551122444495199288449119228844999933884436933333333333330033","8293047516"],[10,"1692200447119220047719922444471112222477111252227711225777771128555573555857757355555777735555777733","1627503849"],[10,"7333300011773660601147366660114666669119444464919944444499998444999555449999955549992299959999929999","3718420695"],[10,"1111628888141112887814441287781114728778199777778819977707709997700000599700030059999993305000000000","4253971680"],[10,"5555500000577755000147577508114455555551444555555145533595114455559911444454992144444449914446999991","5172946803"],[10,"7000099999774400996977740066697777700699778800066678800806627881080662781108852278880855257788883555","5280493716"],[10,"8777222666888772556688772225668222222533881122233382212922238222290022882220022082202200008000000400","1684295037"],[10,"2273333333277333113827337311332777731111222774111125244461112444946111444099911149909999914999999999","4902516837"],[10,"0000088891006000811166688888114636681111466688822148688272114888822212448588222244452882224222222222","8502964137"],[10,"3333355553992235355392223533339023333333222238433326622883732666283377222628377726662677176666666777","7041639582"],[10,"5777662222576706662256666632225666163332561116338255511138881551833388151188889811188118881111118844","1475206839"],[10,"3333338888403333388800333333380000393338000022226600107722651010777266101017722610101272261111122266","6035194728"],[10,"6215555555221554444522114444552221444555422444995544443449554433344958400030005544033307774000000007","0281639475"],[10,"7777111111727755561122755336112877576661287777776188770666618777060061887709066688800000068880000046","9164270538"],[10,"5555555772555995777255555572225158577552118855555211855565221188356622011115562600111566461111555666","7359264081"],[10,"5555444444555540044456655504845555558884111588858415555585881522555558132223558813233355781333399577","7524093186"],[10,"0000033666001103366601111886260100188626000118777600111171770011111111041111551504451551159955555555","7586294130"],[10,"7747777777777700007777777007778787700022878770505587887755558888855959185555599911156355991666635555","2748639051"],[10,"9333333333933330000393333307039900000777999990478899199044881119554488612222244811212222481111222288","3571924086"],[10,"8878888555888888855549999885556969988115666999115566999111526996611222666661113366611133336661333330","2403857169"],[10,"2233000000256666660025569666002555996190255999699022777999942287744444227774447477777777747777777777","3857162094"],[10,"9722228400977772844497978284349997888434977758443499955811319555581111995611111155566666116666666661","9574280613"],[10,"9994444222859442444285994222228556411212556661221156661111175551111777351111000035111001003311111110","6037492581"],[10,"6666666622676600000277760331225576111122556668812155568881115956811111855881444185588844448888444444","8462031957"],[10,"3964400000399944400539444000553955555558999955555877711155582771555588277188888827111118882222228888","2570381964"],[10,"3333444112333444441133343541118333354151835335455185599555508559555770885555570058555667705555000000","9517038264"],[10,"8004333333800443243388044444400804444040080000000008805555000800551111080965117100096551710099551177","9613057482"],[10,"3330000000330022200033033000003303060988300300099833334999983444444988347444994414411499441111144445","3615748209"],[10,"6643333333444444333344403335834000003533000000353201110000320170077222117777727211999777729999997772","1680724953"],[10,"0009911111099992122100995222210097722221889777277188997777718997766671493333666133336663613333333366","2946138057"],[10,"5555594444555669999455556997442515697774251166674420066767742000677744222000074433000877743007777777","4792683150"],[10,"6666660004666000000066000000006670022000777772200017999922281775882828557588882855555888285355588888","9286350741"],[10,"9993333888888388318888888831884688833882667788882267777788826667778555777777855575577755555555555000","1370592468"],[10,"1177772399617777733961177777796667799999655777777955577779995555877799555588755900455575994444555559","6820594713"],[10,"3333390888300000000833301022283000100028301010002831111102286610440022677000022277770000027777770055","5916274038"],[10,"1155553337115533323715533232775553320227993362227749446626774444866667448886777744866677664444666666","5706319482"],[10,"8888888884888686684458868860045556666014533333004433999900403339099040393909904039990970003392000000","9518047263"],[10,"5555011111300001144430077714463337771886397797888639779889883979989988999999998899999998889299998888","2486930571"],[10,"4444444444444469488436666944843316666484736688448473368888887766688888776668888576622080557622000000","7502831946"],[10,"7777000888777808008873388888887355828488733522844477355284447732222224173223224416333332296639999999","3685742091"],[10,"1666555220165555552216666665221222266222121122222211111422427781444442878114422288811482328988888333","9647350281"],[10,"7777110088707111000800011000680001102068040000202244922220224455222222455553222245555555225555555522","1938427506"],[10,"0300000000000068009155606889915566666991656666999165677669916557666911656626999965662694496666666666","1750639482"],[10,"9944444444944777774499975571148885577111228877711121111111162110011100111101010033310001101111110000","1846390527"],[10,"2888888888282888358828282833382222263438222229343322999934332222933443199997344419170744441117777444","1725938046"],[10,"7773333333447000993347777999934449799333444999995524494999952244495555224644465512666666651222866555","8536291704"],[10,"4444442400448444444044884455004444000009499444009947946609997799960993719966669371199966991119999999","6275319480"],[10,"5529966666555966966655599991118854944411844444441188884444118830404444833000004488004400474444444444","2704835196"],[10,"3333001122300001112233008881123880088172888888822288688444428868888844866688444456444444945666666999","1538492607"],[10,"4488888855444555555544444444454623444555662304475562230007776233333777666677333766661777771111177779","6802753149"],[10,"7777555533999000055393930300339333033333939333131393932113139992211111996221111199622214119998884411","1863049275"],[10,"3311112222333316662233911162273399112277389944227733444222273044424427304444442200442222220444444522","5263194807"],[10,"2223111111233355916122235599982255559888227555998042758598884777859888777785888877778888887788888888","4831960527"],[10,"7733333330773333139937333313993331331119333111119934111188994448888899422228855544442226664422226666","9082513746"],[10,"7715555533711056566371115656637116666666716666966611999996661199999668111196666611224444661114444666","8360719425"],[10,"2222222220112122255011212222221111242442771884444499188444469988444666938866666633366666663366666666","9753146028"],[10,"9999966666982221644688266664468826666044882222004483227444448333345444333444545433344555553333555555","3592640718"],[10,"7777722200777772277077677777773766699777666669117468886991548866699554888899955588888999998888999999","8530692714"],[10,"4444444111433041115143000117712200211711222221177762227717772222277777222298777722929999772999997777","4813602579"],[10,"7333322222733222282277333288820733328888003398885510999955550009955555000099955500004999990000099699","3581902647"],[10,"1111422222177742228817974444881997443488999744333896674448889664488888966668888896666558889960665888","2715809463"],[10,"9999777777990066677710000866661100086666118888666618866866361886666664188666666458666666645882666444","2741586903"],[10,"5555588888550000988955555999995511199939557119933935331933993533333999333333394433323344443333333336","7516240839"],[10,"8866669933888666693386666666637666666663116666663311663633351166333335112223333511222434450000444445","6250819473"],[10,"7776366666777666669978800006998885000009888000000988000000998808880099888880011928220001142222200011","4603581792"],[10,"3999977777997777177799077717779977711111995571111295511111129555911114955999994499999699448899966444","0726394851"],[10,"9999555588999655558899966755889996677114999669911199999999119992919911999291111100029911110031111111","6859413702"],[10,"1111111008111114000811101000381110000033197770033377777702337770000223760000223376600222537666622555","3594180627"],[10,"2266666666222222766625222276672552277677555287777458888873775838137377883833337393333333333330333333","8516924703"],[10,"7777882222777882232277778833327778888833077888433307088833330000155333000555555590055555559900056655","1583624907"],[10,"1111588888111153808811155880775111555000511155500655515550665551550006455552206645252220009922222220","7583926041"],[10,"2299999999119999999911999949970199994477111133447713313666671133336667111333666711111366651118885555","1360847295"],[10,"3482222200338822299033899999903388899977333389777733335577773515557777555555777755555577775555556777","1597402836"],[10,"1111609999116669999266669955926666555522677725522266772255226677722522444477222283447777728333333772","5183974206"],[10,"7777788882777778888817778888881717789888111779998844477999304477779900444777900056440000006666000000","9462581703"],[10,"8844456666809444666680044444463000044646330044666637700060013777000002377000000233300000023330000022","5207493618"],[10,"3333366555333333551100353555710335555777055588577705888555570598885777000000772400000022220000000222","5831742960"],[10,"9933338688999338888899933388889999911118999911188892911488882221148855211100005521000000550000000007","7360415829"],[10,"2222000055126244405522624444556666664445666686464466668666646668886444666998333466669333336766933333","7039625841"],[10,"7777791111477779611144477992224444899992444488889944448339995444883999554489999955599999990555559999","8639157420"],[10,"2522222222222220222222220002426626002244666602224968880322446681333233888338333388888833338888873333","1684903725"],[10,"1111113311110111111111011176669901777266590076777659906666765900006666550000000655500084445500088888","6197420385"],[10,"3444444444333442447433324224743222227777332222277890252227880065222778006551677700666667770006666777","7284903516"],[10,"1100000000110722000011072209991107222229747722669977722666996766666669666866666366886666668888888656","5073146928"],[10,"4441106666484411111688441116668844111611984411111188488881118888388335888833833378772333337773333333","5286039741"],[10,"6622222977632222887723232888872333220777222222000742440000004444445000444000000044000110004440111100","7053916284"],[10,"7900000066490000000649990000064499990666449900000649988011889999881588333988118833333818883222288888","0538197264"],[10,"9999993822999993383799193333379111333337961167777766116777706666676770666667660046666666004444650000","9714263805"],[10,"5555577999555555599955555552995359999999555899999655888999968558111466888811446688811144668111114660","5071428639"],[10,"5544464000554446493355444449335555444993585444499988544449798852227779855887779988588799998888177777","8529073614"],[10,"5559999999559999999955559977992555777997333407777733300777773660070007666600001766666001186666666118","2570316849"],[10,"6663333555666333777563333777756339977777333992447733309224773330992474331019444433111949441118899999","8061539274"],[10,"1111777455111177445511111777531111117003811101000388810003336911990003699999000366999999936999999223","4682059317"],[10,"8866666222888666662284886611124448611112455666677735566667773556666997355666699035566699003359999990","4835072961"],[10,"3333222222777322222247732222224473222229447772222944447428895444448888114116808811110000881111100000","3629180574"],[10,"5555533333555555333311555500052112259955212255595522225555554266755577422677777722888777772222277777","9582713046"],[10,"9777711111997771111199777611117777666211777766621277755502127755552222555555432255558444225558884442","1804962753"],[10,"9999999993999999911199999999914999909991499900000145900000115566000666555666668855666766882226677788","9740613852"],[10,"1111331444111111146611014444461000044666000004486600000046657000044655700555455900055555552205555555","4835720961"],[10,"5550044444555555444452544447745283444774222334477722221777972221116799222111111922221111992221111119","3702496185"],[10,"7700002225000000222500000022260000600266000666626600011166660000196666000014446688808884463888888444","1962835740"],[10,"2224444440222244400022224400702222244033222224333352222433335522988833512228866655588886665555558666","9582604137"],[10,"1885888888188888888818883383381998333337113337373711113777771141147777444144447044114442204444464222","3061482975"],[10,"4400010000450400020045040022204444422270444442220044499222004499922226488922222248899922228899993222","5148039726"],[10,"1139999999111119999921121199992112169999222226699902522649992255564444727566444677756666667775888866","2953604817"],[10,"8859990000885255053388555505338855550553888885553386488885538448888333444488417344888841734444444113","5362914807"],[10,"3444444448744444444874244448887422448886748848886675884888167558881116757888811177787770917777700001","0473916285"],[10,"7777777793777777773377771877737770117773477011113347000551134777001113060002111300002213330000111113","8253069147"],[10,"5555555555555550445511555543551855544333185884443378888333337877333339777333333977777333662777333366","3516479280"],[10,"7777779888177777778811177777781111100077111111077733331106773334116677333315557733335555773233555577","6825973041"],[10,"2200000006222050000020005550082222553308222555558822155558882225558888725545888877594448447444444444","9186427035"],[10,"9911111114995517717455557777745555788778055558887865565838886666583388666623338866666333336666633333","5197028463"],[10,"4777777778477733778847773377684477336666477236666344443333334455333333115333333355553339995555000099","9681352074"],[10,"7777799999755777999915579999921155559999115533969911113119991111111110111111110011181114441188814444","5092741836"],[10,"1133333333111333333201111333321111133322811116332688116666668888647464855884446455588494445555999444","7903516284"],[10,"6117777778667777777866727777789672777788967227777899992738882992273330222257444422222444442222244444","2518069473"],[10,"2266666666222636666603333666880055556666000555555500000055990000077499070007799717700799777777777777","1486397205"],[10,"6666669900666226999962222299996629999999682929999968222399998822339444788533944488853394448885554414","9246157038"],[10,"5544466333555442633355545263375555555377585555333788555533378855555377809995777789999991778899999777","6352809174"],[10,"6666222222666229033266999905329999000133999990011399900011338890000131888000013188840011118788111111","8279460531"],[10,"4449999999499999996939933336693333336669333336668903336668850036668885000628888510062227751102222277","2536809471"],[10,"5555555666555656566455261666645526666444552066444452200444447000000044770300009477030308997703333899","9142630857"],[10,"5551110000775511100077771330007771133000737333330043333300004443339000622233380866222388882222233338","5382706914"],[10,"5000007776555507733350000777775000007000888000700044820000009482200010944220011099442101109942211110","9750264831"],[10,"8777777773272707770322270000007277755500777055000044400500004400000000444006666046666696104666669600","0931427586"],[10,"3311888888333191888823211188882321111888222211688522251555552025555555202555554500055554470055555444","0483625197"],[10,"9999999999444777777744227777774427776777442277677641022767761100056666110055665800005556553055555555","7286314950"],[10,"7799055555779800055511188808551888888885111113335516333333526663323352633322244263332224226333322222","3164258079"],[10,"5555666166555776666656666666636662666663662266663300200963380000006688000666688800046688880666668888","7409251638"],[10,"7777777731772237733077223373307842233330882223333022222326002222222000222252200022225555992225559999","9152073846"],[10,"9999999933669999993399999999939999299993919929999791100997971100577777110057577710055557871045555577","5094173682"],[10,"5111111114552181114455226666642522663366222666636322276663332277666633777066669377776666937766666633","6491725380"],[10,"0055555557055553335705555533770011555377021555337722222538882442228886944228886644228866664222666666","1863942057"],[10,"1111111111224114111144444488114444411113444444731344444443334444444666409944456699955445569999555556","5079638142"],[10,"9994999333999993333399111113338991111333555777133355571112625557722222555552222255555222025555555500","3170684259"],[10,"3044442252304088822200408822220040812222044011222204400972220000997722000096662200999660020000000000","8052469731"],[10,"8883888555888388445508888666590088866999008866669970006666697700666999777066699911706662227777666622","3684157209"],[10,"0000011199000011111900000191990001119995008811395588881119952868666695226866644422686677742266677744","8419630725"],[10,"2222229991222279991122727991112277799991222777811142888888114238888801443383881133336331113333333155","1573608249"],[10,"9777777777955557777795557787779211188773921888877399188884449918884466191088444611108444441188844444","0471928536"],[10,"5559544444555555004455515500045571550004111155000011111100082112111000222211330322233133332233333633","3802695147"],[10,"2299999999299999991129999999912224488891333338879933358888883300000888000000088800000088880000000868","1594730268"],[10,"0222555555222555555522255255552222225111222235588122263355882299933587229993358722999937774499997777","0529736481"],[10,"2222227777266666777166677777776777777777667807777766780997776668099777663999997455999999945599999944","5917364208"],[10,"6666666122644466422266644444228888000442888888042288800804228850000423885007442355557742235595572223","7461839502"],[10,"7744445554774744444467777444006676614101677621110166666161116666666611866663311188833331118811111119","6158472039"],[10,"6338222222633222242266323444426633343033663333333366665555536766665333776655511977765551117776551111","3857240916"],[10,"0662222229022222239955222233995552233399555422399355582333335888333333558883133385811111738881111111","2059317486"],[10,"0005555555002255585502228558550222858838094285883800488888884448448811444444441744414441176441111111","2538164970"],[10,"2229777888227777788866677788846777774444677664444466666044416666644441666666414163666661116666661115","3064852719"],[10,"8000033333808003333388884333338899933333889993333388893333328889111222589911112659977111665997776666","2741396085"],[10,"4444422222444422229244477289991447729999144472277914467777991446739999146673599966677355906677735555","1463085297"],[10,"9999996666999999969699393999969933355986991330558291130054829990055488990055558899000008889907777778","6025917384"],[10,"6611111111661666111166666114518866663351886666355182990665519999065551999966655599996666659777655555","8570614293"]];
+/*__TESTHOOK_PRE__*/
+
+const LEVELS=RAW_LEVELS.map(function(d){
+  return {n:d[0],reg:d[1].split('').map(Number),sol:d[2].split('').map(Number)};
+});
+const TOTAL=LEVELS.length;
+
+/* ============ Constants ============ */
+const COLORS=['#F6A6C1','#B5E1A0','#FAD35F','#9CC7EE','#C4AEF0','#FFAF7A','#7FD8CB','#D8C09A','#F28C8C','#A9B8D8'];
+const COLOR_NAMES=['pink','green','yellow','blue','purple','orange','teal','tan','coral','slate'];
+const LETTERS='ABCDEFGHIJ';
+const FRUITS=[
+  {id:'lychee',name:'Lychee'},{id:'coconut',name:'Coconut'},{id:'pear',name:'Snow pear'},
+  {id:'dragon',name:'Dragon fruit'},{id:'peach',name:'White peach'}
+];
+const DOUBLE_MS=320;
+const START_HEARTS=3,START_HINTS=3;
+
+const ICON={
+  back:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20z"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="currentColor"><g><rect x="10.3" y="1.5" width="3.4" height="5" rx="1"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7"/></g><circle cx="12" cy="12" r="3" fill="#fff"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+  hint:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6M10 18h4M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.4 1.1 2.2h5c0-.8.4-1.6 1.1-2.2A6 6 0 0 0 12 3z"/></svg>',
+  restart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>',
+  x:'<svg class="xm" viewBox="0 0 24 24"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13" stroke="#fff" stroke-width="3.6" stroke-linecap="round" fill="none"/></svg>',
+  xTool:'<svg viewBox="0 0 24 24"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+  star:'<svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12,2 15.1,8.6 22,9.3 16.8,14 18.2,21 12,17.5 5.8,21 7.2,14 2,9.3 8.9,8.6"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
+};
+function fruitSvg(id,cls){return '<svg class="'+(cls||'fruit')+'" viewBox="0 0 100 100" aria-hidden="true"><use href="#fr-'+id+'"/></svg>';}
+
+/* ============ Storage (localStorage with in-memory fallback) ============ */
+const PFX='fruitdoku.v1.'+(window.FD_UID||'guest')+'.';
+const mem={};
+const LS={
+  get:function(k,d){
+    try{const v=window.localStorage.getItem(PFX+k);if(v!==null)return JSON.parse(v);}catch(e){}
+    return Object.prototype.hasOwnProperty.call(mem,k)?mem[k]:d;
+  },
+  set:function(k,v){mem[k]=v;try{window.localStorage.setItem(PFX+k,JSON.stringify(v));}catch(e){}},
+  del:function(k){delete mem[k];try{window.localStorage.removeItem(PFX+k);}catch(e){}},
+  keys:function(){
+    const out={};Object.keys(mem).forEach(function(k){out[k]=1;});
+    try{for(let i=0;i<window.localStorage.length;i++){const key=window.localStorage.key(i);if(key&&key.indexOf(PFX)===0)out[key.slice(PFX.length)]=1;}}catch(e){}
+    return Object.keys(out);
+  }
+};
+
+const settings=Object.assign({fruit:'lychee',autoX:true,sound:true,vibrate:true,letters:false,seenHelp:false},LS.get('settings',{}));
+if(!FRUITS.some(function(f){return f.id===settings.fruit;}))settings.fruit='lychee';
+const progress=Object.assign({unlocked:1,stars:{},daily:{},streak:{last:null,count:0}},LS.get('progress',{}));
+function saveSettings(){LS.set('settings',settings);}
+function saveProgress(){LS.set('progress',progress);}
+
+/* ============ Helpers ============ */
+function $(s,el){return (el||document).querySelector(s);}
+let toastTimer=null;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},2200);}
+function fmtTime(s){const m=Math.floor(s/60),r=s%60;return m+':'+(r<10?'0':'')+r;}
+function pad2(x){return (x<10?'0':'')+x;}
+function clientDate(){const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function dayNum(key){const p=key.split('-').map(Number);return Math.floor(Date.UTC(p[0],p[1]-1,p[2])/86400000);}
+function starRow(n){let s='<span class="stars">';for(let i=1;i<=3;i++)s+=ICON.star.replace('<svg','<svg class="'+(i<=n?'on':'')+'"');return s+'</span>';}
+
+/* ============ Sound & vibration ============ */
+let actx=null;
+function tone(freq,dur,type,vol,when){
+  if(!settings.sound)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime+(when||0),o=actx.createOscillator(),g=actx.createGain();
+    o.type=type||'sine';o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol||.1,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sfx={
+  tick:function(){tone(520,.06,'triangle',.06);},
+  place:function(){tone(660,.09,'sine',.11);tone(880,.13,'sine',.09,.07);},
+  wrong:function(){tone(170,.25,'sawtooth',.07);},
+  hint:function(){tone(740,.1,'sine',.09);tone(990,.14,'sine',.08,.09);},
+  win:function(){[523,659,784,1047].forEach(function(f,i){tone(f,.28,'sine',.11,i*.11);});},
+  lose:function(){[392,330,262].forEach(function(f,i){tone(f,.3,'triangle',.1,i*.16);});}
+};
+function buzz(p){if(!settings.vibrate)return;try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+
+/* ============ Modal ============ */
+function openModal(html,actions,opts){
+  opts=opts||{};actions=actions||{};
+  const root=$('#modal-root');
+  root.innerHTML='<div class="overlay"><div class="modal" role="dialog" aria-modal="true">'+html+'</div></div>';
+  root.classList.add('open');
+  root.onclick=function(e){
+    const b=e.target.closest('[data-act]');
+    if(b&&actions[b.getAttribute('data-act')]){actions[b.getAttribute('data-act')](b,e);return;}
+    if(e.target.classList.contains('overlay')&&opts.dismissible!==false){closeModal();}
+  };
+  root.onchange=function(e){if(actions.change)actions.change(e.target,e);};
+  return root.querySelector('.modal');
+}
+function closeModal(){const root=$('#modal-root');root.classList.remove('open');root.innerHTML='';root.onclick=null;root.onchange=null;}
+
+/* ============ Screens ============ */
+let curScreen='home';
+function showScreen(name){
+  curScreen=name;
+  ['home','levels','game'].forEach(function(s){$('#screen-'+s).classList.toggle('active',s===name);});
+  renderEnergy();
+}
+
+/* ============ Daily date (server date keeps everyone on the same puzzle) ============ */
+let todayKey=null;
+function fetchToday(cb){
+  if(todayKey){cb(todayKey);return;}
+  let done=false;
+  function finish(d){if(done)return;done=true;todayKey=d;cb(d);}
+  try{
+    if(window.google&&google.script&&google.script.run){
+      google.script.run
+        .withSuccessHandler(function(d){finish(/^\d{4}-\d{2}-\d{2}$/.test(d)?d:clientDate());})
+        .withFailureHandler(function(){finish(clientDate());})
+        .getServerDate();
+      setTimeout(function(){finish(clientDate());},2500);
+    }else finish(clientDate());
+  }catch(e){finish(clientDate());}
+}
+function buildDaily(key){
+  const cached=LS.get('dpuz.'+key,null);
+  if(cached&&cached.n&&cached.reg&&cached.sol&&cached.reg.length===cached.n*cached.n)return cached;
+  const dn=dayNum(key);
+  const n=[6,7,8,9,10][((dn%5)+5)%5];
+  const rng=mulberry32(hashSeed('fruitdoku-daily-'+key));
+  let p=null;
+  for(let k=0;k<8&&!p;k++)p=generatePuzzle(n,rng,2500);
+  if(!p){const pool=LEVELS.filter(function(l){return l.n===n;});const l=pool[((dn%pool.length)+pool.length)%pool.length]||LEVELS[LEVELS.length-1];p={n:l.n,reg:l.reg,sol:l.sol};}
+  LS.set('dpuz.'+key,p);
+  return p;
+}
+function activeStreak(){
+  const st=progress.streak||{};
+  if(!st.last)return 0;
+  const t=dayNum(todayKey||clientDate());
+  const l=dayNum(st.last);
+  return (l===t||l===t-1)?st.count:0;
+}
+
+/* ============ ENERGY (the balance lives on the server; this part shows it and asks the server to spend it) ============ */
+const ENERGY_ON=!!(window.google&&google.script&&google.script.run); // off in a plain preview outside Apps Script
+const ENERGY_COST=5;
+const BOLT='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>';
+let EN={known:false,energy:0,max:20,nextIn:0,regenSec:720,at:0,err:''},flushing=false;
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function readerToken(){return window.FD_TOKEN||'';}
+function gas(name,args,ok,bad){ // runs a server function with the Reading Tree login
+  const tk=readerToken();
+  if(!ENERGY_ON||!tk){bad('Please log in to Reading Tree first.');return;}
+  const r=google.script.run.withSuccessHandler(ok).withFailureHandler(function(e){bad(e&&e.message?e.message:String(e));});
+  r[name].apply(r,[tk].concat(args));
+}
+function setEnergy(o){EN.known=true;EN.err='';EN.energy=o.energy;EN.max=o.max||20;EN.nextIn=o.nextIn||0;EN.regenSec=o.regenSec||720;EN.at=Date.now();if(o.username!==undefined)EN.who={id:o.id,username:o.username,tokens:o.tokens};renderEnergy();}
+function renderWho(){ // the name / ID / tokens card on the home screen
+  const w=$('#h-who');if(!w)return;
+  const show=ENERGY_ON&&EN.who&&curScreen==='home';
+  w.style.display=show?'flex':'none';
+  if(!show)return;
+  const h='<span class="nm">🌳 '+esc(EN.who.username)+'</span><span class="tk">🧺 '+Number(EN.who.tokens).toLocaleString()+' tokens</span><span class="id">ID: '+esc(EN.who.id)+'</span>';
+  if(w.__h!==h){w.innerHTML=h;w.__h=h;}
+}
+function energyNow(){ // best guess between server checks (the server always has the final say)
+  if(!EN.known)return null;
+  let e=EN.energy,left=EN.nextIn-(Date.now()-EN.at)/1000;
+  while(e<EN.max&&left<=0){e++;left+=EN.regenSec;}
+  if(e>=EN.max){e=EN.max;left=0;}
+  return {e:e,left:Math.max(0,Math.ceil(left))};
+}
+function renderEnergy(){
+  renderWho();
+  const box=curScreen==='game'?$('#g-energy'):curScreen==='home'?$('#h-energy'):null;
+  ['#g-energy','#h-energy'].forEach(function(s){const b=$(s);if(b)b.style.display=(ENERGY_ON&&b===box)?'flex':'none';});
+  if(!box||!ENERGY_ON)return;
+  const n=energyNow();
+  const h=!n?'<span class="bolt">'+BOLT+'</span><span class="tm">'+(EN.err?esc(EN.err):'Checking energy…')+'</span>'
+    :'<span class="bolt">'+BOLT+'</span><div class="track"><div class="fill" style="width:'+(n.e/EN.max*100)+'%"></div></div><span class="num">'+n.e+'/'+EN.max+'</span><span class="tm">'+(n.e>=EN.max?'Full':'+1 in '+fmtTime(n.left))+'</span>';
+  if(box.__h!==h){box.innerHTML=h;box.__h=h;}
+}
+function flushPending(cb){ // energy that could not be charged earlier (no connection) is charged now
+  const p=LS.get('pend',0)|0;
+  if(!p||!ENERGY_ON||flushing){cb();return;}
+  flushing=true;LS.del('pend');
+  gas('authEnergySpend',[true,p],function(o){flushing=false;setEnergy(o);cb();},function(){flushing=false;LS.set('pend',(LS.get('pend',0)|0)+p);cb();});
+}
+function refreshEnergy(cb){
+  if(!ENERGY_ON){if(cb)cb(true);return;}
+  flushPending(function(){
+    gas('authEnergy',[],function(o){setEnergy(o);if(cb)cb(true);},function(m){EN.err=m;renderEnergy();if(cb)cb(false,m);});
+  });
+}
+function chargeLoss(){ // all 3 hearts are gone: the run costs 5 energy
+  if(!ENERGY_ON)return;
+  gas('authEnergySpend',[true,1],setEnergy,function(){LS.set('pend',(LS.get('pend',0)|0)+1);});
+}
+function requireEnergy(go){ // a new run needs at least 5 energy (it is not spent here)
+  if(!ENERGY_ON){go();return;}
+  const n=energyNow();
+  if(n&&n.e>=ENERGY_COST){go();return;}
+  openModal('<div class="loading"><div class="spin"></div><p>Checking your energy…</p></div>',{},{dismissible:false});
+  refreshEnergy(function(ok,msg){
+    closeModal();
+    const m=energyNow();
+    if(ok&&m&&m.e>=ENERGY_COST){go();return;}
+    showNoEnergy(ok?'':msg);
+  });
+}
+function beginRun(id,go){if(LS.get('save.'+id,null)){go();return;}requireEnergy(go);} // continuing a saved game is free
+function showNoEnergy(msg){
+  const n=energyNow();
+  const body=msg?'<p class="sub">'+esc(msg)+'</p>':'<p class="sub">Each run needs '+ENERGY_COST+' ⚡ energy. You have '+(n?n.e:0)+'.'+(n&&n.left?'<br>Next +1 ⚡ in '+fmtTime(n.left)+'.':'')+'<br>Reading a chapter in Reading Tree gives +5 ⚡.</p>';
+  openModal('<h3>⚡ Not enough energy</h3>'+body+'<div class="mcol"><button class="btn primary" data-act="tree">🌳 Go read a chapter</button><button class="btn" data-act="ok">OK</button></div>',
+    {tree:function(){closeModal();goReadingTree();},ok:function(){closeModal();}});
+}
+function goReadingTree(){
+  const box=$('#goLoading');
+  function fail(){box.style.display='none';toast('Could not go back. Please try again.');}
+  box.style.display='flex'; // show the loading modal right away
+  setTimeout(function(){ // short pause so the modal is drawn first
+    try{
+      google.script.run
+        .withSuccessHandler(function(u){window.open(u,'_top');})
+        .withFailureHandler(fail)
+        .getAppUrl();
+    }catch(e){fail();}
+  },120);
+}
+
+/* ============ Game state ============ */
+let G=null,cells=[],rendered=[],lastTap={i:-1,t:0,snap:null},msgTimer=null,initialRender=true;
+/*__TESTHOOK__*/
+
+function startLevel(l){
+  const d=LEVELS[l-1];
+  beginRun('L'+l,function(){
+    startGame({mode:'level',id:'L'+l,title:'Level '+l,level:l,n:d.n,reg:d.reg,sol:d.sol});
+  });
+}
+function startDaily(){
+  openModal('<div class="loading"><div class="spin"></div><p>Picking today’s fruit puzzle…</p></div>',{},{dismissible:false});
+  fetchToday(function(key){
+    setTimeout(function(){
+      const p=buildDaily(key);
+      closeModal();
+      const p2=key.split('-').map(Number);
+      const label=new Date(p2[0],p2[1]-1,p2[2]).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+      beginRun('D'+key,function(){startGame({mode:'daily',id:'D'+key,title:'Daily · '+label,dateKey:key,n:p.n,reg:p.reg,sol:p.sol});});
+    },30);
+  });
+}
+function startGame(cfg){
+  closeModal();
+  const N=cfg.n*cfg.n;
+  G={cfg:cfg,mode:cfg.mode,id:cfg.id,title:cfg.title,level:cfg.level||0,dateKey:cfg.dateKey||null,
+     n:cfg.n,reg:cfg.reg,sol:cfg.sol,grid:new Uint8Array(N),hearts:START_HEARTS,hints:START_HINTS,
+     revived:false,mistakes:0,hintsUsed:0,hintCell:-1,tapMode:'mark',history:[],elapsed:0,t0:0,
+     over:false,won:false,chip:1};
+  let resumed=false;
+  const sv=LS.get('save.'+G.id,null);
+  if(sv&&sv.grid&&sv.grid.length===N&&valid(sv)){
+    G.grid=Uint8Array.from(sv.grid);G.hearts=sv.hearts;G.hints=sv.hints;G.revived=!!sv.revived;
+    G.mistakes=sv.mistakes|0;G.hintsUsed=sv.hintsUsed|0;G.elapsed=sv.elapsed|0;resumed=true;
+  }
+  G.t0=Date.now();
+  lastTap={i:-1,t:0,snap:null};
+  initialRender=true;
+  $('#g-title').textContent=G.title;
+  buildBoard();
+  renderAll();
+  initialRender=false;
+  showScreen('game');
+  if(resumed)say('Welcome back — your progress was restored.','');
+  else if(G.mode==='level'&&G.level===1&&!progress.stars[1])say('Tip: the green color has only one square. Double-tap it to place a fruit!','hint');
+  else say('','');
+  function valid(s){
+    if(typeof s.hearts!=='number'||s.hearts<1||s.hearts>START_HEARTS)return false;
+    for(let i=0;i<s.grid.length;i++){
+      const v=s.grid[i];
+      if(v!==0&&v!==1&&v!==2)return false;
+      if(v===2&&G.sol[(i/G.n)|0]!==i%G.n)return false;
+    }
+    return true;
+  }
+}
+function countPlaced(){let c=0;for(let i=0;i<G.grid.length;i++)if(G.grid[i]===2)c++;return c;}
+function elapsedNow(){return G.elapsed+(G.t0?Date.now()-G.t0:0);}
+function save(){
+  if(!G||G.over||G.won)return;
+  LS.set('save.'+G.id,{grid:Array.from(G.grid),hearts:G.hearts,hints:G.hints,revived:G.revived,mistakes:G.mistakes,hintsUsed:G.hintsUsed,elapsed:elapsedNow()});
+}
+function say(text,kind){
+  const m=$('#g-msg');
+  m.textContent=text||'';
+  m.className='msg'+(kind?' '+kind:'');
+  clearTimeout(msgTimer);
+  if(text)msgTimer=setTimeout(function(){m.textContent='';m.className='msg';},7000);
+}
+
+/* ---- board rendering ---- */
+function buildBoard(){
+  const board=$('#board'),n=G.n;
+  board.innerHTML='';board.classList.remove('won');
+  board.style.setProperty('--n',n);
+  board.style.setProperty('--gap',(n<=6?5:n<=8?4:3)+'px');
+  cells=[];rendered=new Array(n*n).fill(-1);
+  for(let i=0;i<n*n;i++){
+    const b=document.createElement('button');
+    b.type='button';b.className='cell';b.setAttribute('data-i',i);b.setAttribute('role','gridcell');
+    b.style.background=COLORS[G.reg[i]];
+    board.appendChild(b);cells.push(b);
+  }
+}
+function cellHTML(i){
+  const st=G.grid[i];
+  let h=st===2?fruitSvg(settings.fruit,'fruit'):st===1?ICON.x:'';
+  if(settings.letters)h+='<span class="ltr">'+LETTERS[G.reg[i]]+'</span>';
+  return h;
+}
+function renderBoard(){
+  const n=G.n;
+  for(let i=0;i<n*n;i++){
+    const st=G.grid[i],el=cells[i];
+    if(rendered[i]!==st){
+      el.innerHTML=cellHTML(i);
+      if(!initialRender&&st!==0){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+      rendered[i]=st;
+    }
+    el.classList.toggle('hint',i===G.hintCell);
+    const r=((i/n)|0)+1,c=(i%n)+1;
+    el.setAttribute('aria-label','Row '+r+', column '+c+', '+COLOR_NAMES[G.reg[i]]+', '+(st===2?'fruit':st===1?'marked':'empty'));
+  }
+}
+function forceRerender(){if(G){rendered=new Array(G.n*G.n).fill(-1);const keep=initialRender;initialRender=true;renderAll();initialRender=keep;}}
+function renderStatus(lostIdx){
+  $('#g-count').innerHTML=fruitSvg(settings.fruit,'fruit')+'<span>'+countPlaced()+'/'+G.n+'</span>';
+  let h='';
+  for(let i=0;i<START_HEARTS;i++){
+    const on=i<G.hearts;
+    h+=ICON.heart.replace('<svg','<svg class="'+(on?'':'off')+(i===lostIdx?' lost':'')+'"');
+  }
+  $('#g-hearts').innerHTML=h;
+  $('#g-hearts').setAttribute('aria-label',G.hearts+' hearts left');
+}
+function renderChips(){
+  const chips=document.querySelectorAll('#g-chips .chip');
+  for(let i=0;i<chips.length;i++)chips[i].classList.toggle('active',i===G.chip);
+}
+function renderTools(){
+  $('#t-undo').innerHTML=ICON.undo+'<span>Undo</span>';
+  $('#t-hint').innerHTML=ICON.hint+'<span>Hint</span><b class="badge'+(G.hints?'':' zero')+'" id="hint-n">'+G.hints+'</b>';
+  $('#t-mode').innerHTML=(G.tapMode==='mark'?ICON.xTool:fruitSvg(settings.fruit,'fruit'))+'<span>'+(G.tapMode==='mark'?'Mark ✕':'Place')+'</span>';
+  $('#t-restart').innerHTML=ICON.restart+'<span>Restart</span>';
+  $('#g-peek').innerHTML=fruitSvg(settings.fruit,'fruit');
+}
+function renderAll(lostIdx){renderBoard();renderStatus(lostIdx);renderChips();renderTools();}
+
+/* ---- rules ---- */
+function conflictsWithPlaced(i){
+  const n=G.n,r=(i/n)|0,c=i%n,g=G.reg[i];
+  for(let k=0;k<n*n;k++){
+    if(G.grid[k]!==2)continue;
+    const kr=(k/n)|0,kc=k%n;
+    if(G.reg[k]===g||kr===r||kc===c||(Math.abs(kr-r)<=1&&Math.abs(kc-c)<=1))return true;
+  }
+  return false;
+}
+function explainWrong(i){
+  const n=G.n,r=(i/n)|0,c=i%n,g=G.reg[i];
+  for(let k=0;k<n*n;k++){
+    if(G.grid[k]!==2)continue;
+    const kr=(k/n)|0,kc=k%n;
+    if(G.reg[k]===g)return {chip:0,msg:'That color already has a fruit.'};
+    if(kr===r||kc===c)return {chip:1,msg:'Only one fruit per row and per column.'};
+    if(Math.abs(kr-r)<=1&&Math.abs(kc-c)<=1)return {chip:2,msg:'Fruits can’t touch — not even diagonally.'};
+  }
+  return {chip:-1,msg:'Not here — that square would leave another color with nowhere to go.'};
+}
+function autoMark(i){
+  const n=G.n,r=(i/n)|0,c=i%n,g=G.reg[i];
+  for(let k=0;k<n*n;k++){
+    if(k===i||G.grid[k]!==0)continue;
+    const kr=(k/n)|0,kc=k%n;
+    if(kr===r||kc===c||G.reg[k]===g||(Math.abs(kr-r)<=1&&Math.abs(kc-c)<=1))G.grid[k]=1;
+  }
+}
+
+/* ---- actions ---- */
+function onCellClick(i,e){
+  if(!G||G.over||G.won)return;
+  if(G.grid[i]===2){lastTap={i:-1,t:0,snap:null};return;}
+  if(e&&e.shiftKey){placeFruit(i);return;}
+  if(G.tapMode==='place'){placeFruit(i);return;}
+  const now=Date.now();
+  if(lastTap.i===i&&now-lastTap.t<DOUBLE_MS&&lastTap.snap){
+    G.history.pop();
+    G.grid=lastTap.snap.slice();
+    lastTap={i:-1,t:0,snap:null};
+    placeFruit(i);
+    return;
+  }
+  const snap=G.grid.slice();
+  G.history.push(snap);
+  G.grid[i]=G.grid[i]===1?0:1;
+  lastTap={i:i,t:now,snap:snap};
+  sfx.tick();
+  renderBoard();save();
+}
+function placeFruit(i){
+  if(!G||G.over||G.won||G.grid[i]===2)return;
+  const n=G.n,r=(i/n)|0,c=i%n;
+  G.history.push(G.grid.slice());
+  lastTap={i:-1,t:0,snap:null};
+  if(G.sol[r]!==c){wrongMove(i);return;}
+  G.grid[i]=2;G.hintCell=-1;
+  if(settings.autoX)autoMark(i);
+  sfx.place();buzz(15);
+  const placed=countPlaced();
+  renderAll();
+  if(placed===n){onWin();return;}
+  say(placed===n-1?'One more to go!':'','');
+  save();
+}
+function wrongMove(i){
+  G.mistakes++;G.hearts--;G.grid[i]=1;
+  const ex=explainWrong(i);
+  if(ex.chip>=0){G.chip=ex.chip;}
+  renderAll(G.hearts);
+  const el=cells[i];el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');
+  if(ex.chip>=0){const ch=document.querySelectorAll('#g-chips .chip')[ex.chip];ch.classList.remove('bad');void ch.offsetWidth;ch.classList.add('bad');setTimeout(function(){ch.classList.remove('bad');},900);}
+  say(ex.msg+(G.hearts>0?'':''),'bad');
+  sfx.wrong();buzz([60,40,60]);
+  if(G.hearts<=0){
+    G.over=true;G.t0=0;LS.del('save.'+G.id);
+    if(!G.revived)chargeLoss();
+    const g=G;
+    setTimeout(function(){if(G===g&&curScreen==='game')showGameOver();},700);
+  }else save();
+}
+function undo(){
+  if(!G||G.over||G.won)return;
+  if(!G.history.length){say('Nothing to undo.','');return;}
+  G.grid=G.history.pop();G.hintCell=-1;lastTap={i:-1,t:0,snap:null};
+  renderAll();save();sfx.tick();
+}
+function giveHint(){
+  if(!G||G.over||G.won)return;
+  if(G.hints<=0){say('No hints left on this level.','bad');return;}
+  const n=G.n,N=n*n,placedReg={},cnt=new Array(n).fill(0);
+  let i;
+  for(i=0;i<N;i++)if(G.grid[i]===2)placedReg[G.reg[i]]=true;
+  for(i=0;i<N;i++){
+    if(G.grid[i]===2||placedReg[G.reg[i]])continue;
+    if(!conflictsWithPlaced(i))cnt[G.reg[i]]++;
+  }
+  let best=-1,bestCnt=1e9;
+  for(let k=0;k<n;k++){if(placedReg[k])continue;if(cnt[k]<bestCnt){bestCnt=cnt[k];best=k;}}
+  if(best<0)return;
+  let target=-1;
+  for(let r=0;r<n;r++){if(G.reg[r*n+G.sol[r]]===best){target=r*n+G.sol[r];break;}}
+  G.hints--;G.hintsUsed++;G.hintCell=target;
+  renderAll();save();sfx.hint();
+  say('Hint: look at the '+COLOR_NAMES[best]+' area — only '+bestCnt+(bestCnt===1?' square':' squares')+' left there. Try the glowing one!','hint');
+}
+function restartGame(charge){
+  if(!G)return;
+  const cfg=G.cfg,id=G.id;
+  function go(){LS.del('save.'+id);startGame(cfg);}
+  if(!ENERGY_ON){go();return;}
+  if(!charge){requireEnergy(go);return;}
+  openModal('<div class="loading"><div class="spin"></div><p>One moment…</p></div>',{},{dismissible:false});
+  gas('authEnergySpend',[false,1],function(o){setEnergy(o);go();},function(m){
+    refreshEnergy(function(){closeModal();showNoEnergy(/not enough energy/i.test(m)?'':m);});
+  });
+}
+
+/* ---- win / lose ---- */
+function calcStars(){let s=3;if(G.mistakes>0)s--;if(G.hintsUsed>0)s--;if(G.revived)s--;return Math.max(1,s);}
+function onWin(){
+  G.won=true;G.elapsed=elapsedNow();G.t0=0;
+  const secs=Math.round(G.elapsed/1000),stars=calcStars();
+  if(G.mode==='level'){
+    progress.stars[G.level]=Math.max(progress.stars[G.level]||0,stars);
+    progress.unlocked=Math.max(progress.unlocked,Math.min(TOTAL,G.level+1));
+  }else{
+    const prev=progress.daily[G.dateKey];
+    progress.daily[G.dateKey]={stars:Math.max(stars,prev?prev.stars:0),secs:prev?Math.min(prev.secs,secs):secs};
+    if(!prev){
+      const st=progress.streak||{last:null,count:0};
+      st.count=(st.last&&dayNum(st.last)===dayNum(G.dateKey)-1)?st.count+1:1;
+      st.last=G.dateKey;progress.streak=st;
+    }
+  }
+  saveProgress();LS.del('save.'+G.id);
+  $('#board').classList.add('won');
+  say('','');sfx.win();buzz([30,40,30]);
+  const g=G;
+  setTimeout(function(){if(G===g&&curScreen==='game')showWin(stars,secs);},900);
+}
+function confetti(){
+  const box=$('#confetti');if(!box)return;
+  let h='';
+  for(let i=0;i<16;i++){
+    const f=FRUITS[Math.floor(Math.random()*FRUITS.length)].id;
+    const sz=24+Math.random()*18;
+    h+='<span class="cf" style="left:'+(Math.random()*92)+'%;width:'+sz+'px;height:'+sz+'px;animation-duration:'+(2.2+Math.random()*1.8)+'s;animation-delay:'+(Math.random()*1.2)+'s">'+fruitSvg(f,'fruit').replace('<svg','<svg style="width:100%;height:100%"')+'</span>';
+  }
+  box.innerHTML=h;
+}
+function showWin(stars,secs){
+  const isLevel=G.mode==='level',last=isLevel&&G.level>=TOTAL;
+  let btns='';
+  if(isLevel&&!last)btns+='<button class="btn primary" data-act="next">Next Level</button>';
+  btns+='<button class="btn" data-act="again">Play again</button>';
+  btns+='<button class="btn" data-act="menu">'+(isLevel?'Levels':'Home')+'</button>';
+  openModal('<div class="confetti" id="confetti"></div><h3>'+(isLevel?'Level Complete!':'Daily Complete!')+'</h3>'+
+    '<div class="stars big">'+starRow(stars).replace('<span class="stars">','').replace('</span>','')+'</div>'+
+    '<p class="sub">Time '+fmtTime(secs)+' · Mistakes '+G.mistakes+' · Hints '+G.hintsUsed+
+    (last?'<br>You cleared every level! Try the Daily Challenge.':'')+'</p><div class="mcol">'+btns+'</div>',
+  {
+    next:function(){startLevel(G.level+1);},
+    again:function(){restartGame();},
+    menu:function(){closeModal();leaveGame();}
+  },{dismissible:false});
+  confetti();
+}
+function showGameOver(){
+  sfx.lose();
+  let btns='';
+  if(!G.revived)btns+='<button class="btn primary" data-act="revive">Continue with 1 heart</button>';
+  btns+='<button class="btn'+(G.revived?' primary':'')+'" data-act="retry">Retry level</button><button class="btn" data-act="menu">Back</button>';
+  openModal('<h3>Out of hearts</h3><div class="stars big" style="color:#ee4056;justify-content:center">'+ICON.heart.replace('<svg','<svg style="width:54px;height:54px;color:#e6d6d6"')+'</div>'+
+    '<p class="sub">Think it through with the three rules — or use a hint.'+(ENERGY_ON&&!G.revived?'<br>−'+ENERGY_COST+' ⚡ energy used.':'')+(G.revived?'':'<br>You can continue once per level.')+'</p><div class="mcol">'+btns+'</div>',
+  {
+    revive:function(){
+      closeModal();G.revived=true;G.over=false;G.hearts=1;G.t0=Date.now();
+      renderAll();save();say('Back in the game — be careful!','');
+    },
+    retry:function(){restartGame();},
+    menu:function(){closeModal();leaveGame();}
+  },{dismissible:false});
+}
+function leaveGame(){
+  if(G&&!G.over&&!G.won){G.elapsed=elapsedNow();G.t0=0;save();}
+  if(G&&G.mode==='daily'){renderHome();showScreen('home');}
+  else{renderLevels();showScreen('levels');}
+}
+
+/* ============ Home / Levels ============ */
+function renderHome(){
+  $('#play-level').textContent='· Level '+Math.min(progress.unlocked,TOTAL);
+  const stars=Object.keys(progress.stars).reduce(function(a,k){return a+(progress.stars[k]||0);},0);
+  const streak=activeStreak();
+  $('#home-stats').innerHTML='★ '+stars+' / '+(TOTAL*3)+(streak?' &nbsp;·&nbsp; 🔥 '+streak+'-day streak':'');
+  const d=todayKey&&progress.daily[todayKey];
+  $('#daily-sub').innerHTML=todayKey?(d?'<span style="color:#3fae7a">✓ done today</span>':'<span class="dot"></span> new puzzle'):'';
+}
+function renderLevels(){
+  let h='';
+  for(let l=1;l<=TOTAL;l++){
+    const locked=l>progress.unlocked,st=progress.stars[l]||0,d=LEVELS[l-1];
+    h+='<button class="lvl'+(locked?' locked':'')+((l===progress.unlocked&&!st)?' current':'')+'" data-l="'+l+'" aria-label="Level '+l+(locked?' locked':'')+'">'+
+       '<span class="num">'+(locked?ICON.lock:l)+'</span><span class="sz">'+d.n+'×'+d.n+'</span>'+(locked?'<span class="stars">&nbsp;</span>':starRow(st))+'</button>';
+  }
+  $('#lvl-grid').innerHTML=h;
+}
+
+/* ============ Help & settings ============ */
+function showHelp(){
+  const f=settings.fruit;
+  let mini='<div class="mini">';
+  for(let i=0;i<9;i++)mini+=i===4?'<div class="c">'+fruitSvg(f,'fruit')+'</div>':'<div>'+ICON.x.replace('<svg','<svg style="width:22px;height:22px"')+'</div>';
+  mini+='</div>';
+  openModal('<h3>How to play</h3>'+
+    '<p>Find the right square for every white fruit. Every board follows <b>three rules</b>:</p>'+
+    '<ol><li><b>One fruit per color.</b> Each colored region (any shape) holds exactly one fruit.</li>'+
+    '<li><b>One fruit per row and column.</b></li>'+
+    '<li><b>Fruits cannot touch</b> — not even diagonally.</li></ol>'+mini+
+    '<p class="cap">All eight squares around a fruit are off-limits.</p>'+
+    '<h4>Controls</h4><ul><li><b>Tap</b> a square to mark it ✕ (tap again to clear).</li>'+
+    '<li><b>Double-tap</b> a square to place a fruit. You can also switch the toolbar button to “Place”, or Shift-click on a computer.</li>'+
+    '<li>After you place a fruit, the game auto-marks ✕ in its row, column, color and neighbors (turn off in Settings).</li></ul>'+
+    '<h4>Hearts, hints &amp; stars</h4><ul><li>A wrong fruit costs a <b>heart</b>. Lose all three and the attempt ends — you can continue once per level.</li>'+
+    '<li>You get <b>3 hints</b> per level. A hint glows the most-forced square.</li>'+
+    '<li>3 stars = no mistakes and no hints.</li></ul>'+
+    '<h4>Energy ⚡</h4><ul><li>Starting a run needs 5 energy. It is only spent when all 3 hearts are lost, or when you restart.</li>'+
+    '<li>You get +1 energy every 12 minutes (max 20), and +5 for every chapter you read in Reading Tree.</li></ul>'+
+    '<h4>Solving tips</h4><ul><li>Start with the color that has the fewest squares.</li>'+
+    '<li>After every fruit, cross out its row, column and neighbors.</li>'+
+    '<li>Imagine a fruit in a square: if some color, row or column then has nowhere to go, that square is wrong.</li>'+
+    '<li>Before the last fruit, check all three rules once more.</li></ul>'+
+    '<details><summary>FAQ</summary>'+
+    '<p><b>Is it Sudoku?</b> Not quite — no numbers. It’s a deduction puzzle like Sudoku crossed with Minesweeper.</p>'+
+    '<p><b>Do I need to guess?</b> No. Every board has exactly one solution reachable by logic.</p>'+
+    '<p><b>What is the daily challenge?</b> One new puzzle per day, the same for everyone. Keep a streak going!</p>'+
+    '<p><b>Does it work offline?</b> Puzzles are made inside the page, so once it has loaded you can keep playing without a connection.</p></details>'+
+    '<div class="mcol"><button class="btn primary" data-act="ok">Got it</button></div>',
+  {ok:function(){closeModal();}});
+}
+function showSettings(){
+  function row(key,label,sub){
+    return '<label class="row"><span>'+label+(sub?'<small>'+sub+'</small>':'')+'</span><input type="checkbox" data-set="'+key+'"'+(settings[key]?' checked':'')+'><i class="sw"></i></label>';
+  }
+  let fp='';
+  FRUITS.forEach(function(x){fp+='<button class="fp'+(settings.fruit===x.id?' sel':'')+'" data-act="fruit" data-fruit="'+x.id+'">'+fruitSvg(x.id,'fruit')+'<span>'+x.name+'</span></button>';});
+  openModal('<h3>Settings</h3><div class="set-lab">Fruit</div><div class="fruit-pick">'+fp+'</div>'+
+    row('autoX','Auto-mark ✕','Marks row, column, color and neighbors after each fruit')+
+    row('sound','Sound')+row('vibrate','Vibration')+
+    row('letters','Color letters','Shows a letter on each color (color-blind helper)')+
+    '<div class="mrow"><button class="btn danger" data-act="reset">Reset progress</button><button class="btn primary" data-act="ok">Done</button></div>',
+  {
+    ok:function(){closeModal();},
+    fruit:function(b){
+      settings.fruit=b.getAttribute('data-fruit');saveSettings();
+      const all=document.querySelectorAll('#modal-root .fp');
+      for(let i=0;i<all.length;i++)all[i].classList.toggle('sel',all[i]===b);
+      if(G&&curScreen==='game')forceRerender();
+      renderHomeFruits();
+    },
+    change:function(el){
+      const k=el.getAttribute('data-set');if(!k)return;
+      settings[k]=el.checked;saveSettings();
+      if(k==='letters'&&G&&curScreen==='game')forceRerender();
+    },
+    reset:function(){
+      openModal('<h3>Reset progress?</h3><p class="sub">This clears your levels, stars, daily streak and saved games. Settings are kept.</p><div class="mrow"><button class="btn" data-act="no">Cancel</button><button class="btn danger" data-act="yes">Reset</button></div>',
+      {no:function(){showSettings();},yes:function(){
+        LS.keys().forEach(function(k){if(k!=='settings'&&k!=='pend')LS.del(k);});
+        progress.unlocked=1;progress.stars={};progress.daily={};progress.streak={last:null,count:0};
+        G=null;renderHome();renderLevels();closeModal();showScreen('home');toast('Progress reset');
+      }});
+    }
+  });
+}
+function renderHomeFruits(){
+  $('#logo-fruits').innerHTML=fruitSvg('pear','fruit')+fruitSvg(settings.fruit,'fruit')+fruitSvg('peach','fruit');
+}
+
+/* ============ Wiring ============ */
+function init(){
+  $('#home-settings').innerHTML=ICON.gear;
+  $('#g-settings').innerHTML=ICON.gear;
+  $('#g-back').innerHTML=ICON.back;
+  $('#lv-back').innerHTML=ICON.back;
+  renderHomeFruits();
+
+  $('#home-settings').addEventListener('click',showSettings);
+  $('#g-settings').addEventListener('click',showSettings);
+  $('#btn-help').addEventListener('click',showHelp);
+    $('#btn-exit').addEventListener('click',goReadingTree);
+  // if the player comes back with the browser Back button, hide the modal again
+  window.addEventListener('pageshow',function(){$('#goLoading').style.display='none';});
+  $('#btn-play').addEventListener('click',function(){startLevel(Math.min(progress.unlocked,TOTAL));});
+  $('#btn-levels').addEventListener('click',function(){renderLevels();showScreen('levels');});
+  $('#btn-daily').addEventListener('click',startDaily);
+  $('#lv-back').addEventListener('click',function(){renderHome();showScreen('home');});
+  $('#g-back').addEventListener('click',function(){leaveGame();});
+  $('#lvl-grid').addEventListener('click',function(e){
+    const b=e.target.closest('.lvl');if(!b)return;
+    const l=+b.getAttribute('data-l');
+    if(l>progress.unlocked){toast('Finish level '+(l-1)+' to unlock this one');return;}
+    startLevel(l);
+  });
+  const board=$('#board');
+  board.addEventListener('click',function(e){const b=e.target.closest('.cell');if(b)onCellClick(+b.getAttribute('data-i'),e);});
+  board.addEventListener('contextmenu',function(e){const b=e.target.closest('.cell');if(b){e.preventDefault();placeFruit(+b.getAttribute('data-i'));}});
+  board.addEventListener('animationend',function(e){const c=e.target.closest&&e.target.closest('.cell');if(c){c.classList.remove('pop');c.classList.remove('shake');}});
+  $('#g-chips').addEventListener('click',function(e){
+    const b=e.target.closest('.chip');if(!b||!G)return;
+    G.chip=+b.getAttribute('data-r');renderChips();
+    say(['Every colored region must contain exactly one fruit.','Every row and every column must contain exactly one fruit.','No two fruits may be in neighboring squares — including diagonals.'][G.chip],'');
+  });
+  $('#t-undo').addEventListener('click',undo);
+  $('#t-hint').addEventListener('click',giveHint);
+  $('#t-mode').addEventListener('click',function(){
+    if(!G)return;
+    G.tapMode=G.tapMode==='mark'?'place':'mark';renderTools();
+    say(G.tapMode==='place'?'Place mode: a single tap puts a fruit down.':'Mark mode: tap to ✕, double-tap to place a fruit.','');
+  });
+  $('#t-restart').addEventListener('click',function(){
+    if(!G)return;
+    openModal('<h3>Restart level?</h3><p class="sub">Your marks, hearts and hints for this level will reset.'+(ENERGY_ON?'<br><b>Restarting costs '+ENERGY_COST+' ⚡ energy.</b>':'')+'</p><div class="mrow"><button class="btn" data-act="no">Cancel</button><button class="btn primary" data-act="yes">Restart</button></div>',
+      {no:function(){closeModal();},yes:function(){restartGame(true);}});
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(!G||curScreen!=='game'||G.over||G.won)return;
+    if(document.hidden){G.elapsed=elapsedNow();G.t0=0;save();}
+    else if(!G.t0){G.t0=Date.now();}
+  });
+
+  renderHome();renderLevels();showScreen('home');
+  setInterval(renderEnergy,1000);
+  refreshEnergy();
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshEnergy();}); // picks up energy earned by reading
+  fetchToday(function(){renderHome();});
+  if(!settings.seenHelp){settings.seenHelp=true;saveSettings();setTimeout(showHelp,400);}
+}
+init();
+
+})();
+</script>
+</body>
+</html>
