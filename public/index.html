@@ -6,7 +6,7 @@ JsGifts.html | JsNotes.html (notes + highlights) | JsAccounts.html (login + pass
 JsPreview.html (preview only) | JsStart.html (startup, must stay last). Server side: Main.gs, Settings.gs, Shop.gs, ...
 -->
 <html>
-<head>
+<head><style id="coverBg">html{background:#faf6ea}</style>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Reading Tree</title>
@@ -215,6 +215,43 @@ body.night #sky .nightsky { opacity: 1; }
 <script src="js/adapter.js"></script>
 </head>
 <body>
+  <!-- ===== LOADING COVER (hides the page until it is fully ready) ===== -->
+<div id="cover" style="position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#faf6ea;color:#2b2416;font-family:sans-serif;transition:opacity .3s">
+<div style="font-size:48px">&#127795;</div>
+<div style="font-size:20px;font-weight:bold;margin:8px 0 18px">Reading Tree</div>
+<div style="width:70%;max-width:320px;height:10px;border-radius:5px;background:rgba(0,0,0,.12);overflow:hidden"><div id="coverBar" style="width:0;height:100%;background:#2f7d32;border-radius:5px"></div></div>
+<div id="coverPct" style="margin-top:10px;font-size:14px">0%</div>
+</div>
+<script>
+(function () {
+  var cv = document.getElementById("cover"), bar = document.getElementById("coverBar"), pct = document.getElementById("coverPct");
+  try { if (localStorage.getItem("treeNight") === "1") { cv.style.background = "#14181a"; cv.style.color = "#e4e8dc"; document.getElementById("coverBg").textContent = "html{background:#14181a}"; } } catch (e) {}
+  var fromFarm = /farm\.html/.test(document.referrer);         // coming back from the Farm: quick
+  var minMs = fromFarm ? 250 : 1300, t0 = Date.now(), loaded = false, authDone = false, gone = false;
+  function set(p) { p = Math.round(p); bar.style.width = p + "%"; pct.textContent = p + "%"; }
+  function hide() { if (gone) return; gone = true; set(100); setTimeout(function () { cv.style.opacity = "0"; setTimeout(function () { cv.style.display = "none"; }, 320); }, 150); }
+  function check() { if (loaded && authDone && Date.now() - t0 >= minMs) hide(); }
+  var tick = setInterval(function () {
+    if (gone) { clearInterval(tick); return; }
+    set(Math.min(90, (Date.now() - t0) / minMs * 90));
+    check();
+    if (Date.now() - t0 > 7000) hide();                           // safety: never stay stuck
+  }, 60);
+  window.addEventListener("load", function () { loaded = true; setTimeout(function () { if (!window.__coverWrapped) { authDone = true; } }, 700); });
+  window.addEventListener("pageshow", function (e) { if (e.persisted) { gone = true; cv.style.display = "none"; } });
+  // ready when the page has finished asking the server who is logged in
+  if (typeof window.SB_CALL === "function") {
+    var orig = window.SB_CALL, asked = false; window.__coverWrapped = true;
+    window.SB_CALL = function (name) {
+      var r = orig.apply(this, arguments);
+      if (name === "authState" && r && r.then) { asked = true; var d = function () { setTimeout(function () { authDone = true; }, 200); }; r.then(d, d); }
+      return r;
+    };
+    // a logged-out visitor never asks: allow after load + 1.2 s
+    window.addEventListener("load", function () { setTimeout(function () { if (!asked) authDone = true; }, 1200); });
+  }
+})();
+</script>
 <!-- ===== LOGIN / CREATE ACCOUNT SCREEN (covers the page until a reader logs in) ===== -->
 <div id="auth"><div class="acard">
 <h1>&#127795; Reading Tree</h1>
