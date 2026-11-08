@@ -666,7 +666,12 @@ function goReadingTree(){
   setTimeout(function(){ // short pause so the modal is drawn first
     try{
       google.script.run
-        .withSuccessHandler(function(u){window.open(u,'_top');})
+        .withSuccessHandler(function(u){
+          // came from the tree: step back (no reload); otherwise open it
+          var ref=document.referrer||'';
+          if(ref&&ref.indexOf(location.origin)===0&&!/fruitdoku\.html|farm\.html/.test(ref)&&history.length>1){history.back();setTimeout(function(){window.open(u,'_top');},1500);}
+          else window.open(u,'_top');
+        })
         .withFailureHandler(fail)
         .getAppUrl();
     }catch(e){fail();}

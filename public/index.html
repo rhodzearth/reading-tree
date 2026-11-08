@@ -213,6 +213,27 @@ body.night #sky .nightsky { opacity: 1; }
 <script src="js/config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/adapter.js"></script>
+
+<style id="v2css">
+/* font size buttons */
+#pbar { position: relative; }
+#fsBox { position: absolute; right: 14px; top: 1px; display: flex; gap: 6px; }
+#fsBox button { width: 30px; height: 22px; padding: 0; border: 1px solid #b9ad88; background: #fff; color: #2b2416; border-radius: 8px; font-size: 17px; line-height: 1; cursor: pointer; }
+body.night #fsBox button { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+/* only the book icon while the reading panel is hidden */
+body.reading-hidden #miniLbl { display: none; }
+body.reading-hidden #showRead { width: 48px; height: 48px; padding: 0; border-radius: 50%; font-size: 24px; line-height: 1; }
+/* resuming a saved login: show only the progress cover, never the login card */
+#auth.resuming .acard { visibility: hidden; }
+/* log out confirmation */
+#logoutModal { position: fixed; inset: 0; z-index: 85; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; }
+#logoutModal .acard { width: 100%; max-width: 320px; background: #fff; border-radius: 16px; padding: 24px 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; text-align: center; }
+#logoutYes { width: 100%; margin-top: 16px; padding: 11px; background: #c0392b; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+#logoutNo { width: 100%; margin-top: 8px; padding: 10px; background: none; border: 0; color: #555; font-size: 15px; cursor: pointer; }
+body.night #logoutModal { background: rgba(20,24,26,.96); }
+body.night #logoutModal .acard { background: #1c2226; color: #e4e8dc; }
+body.night #logoutNo { color: #9aa5a8; }
+</style>
 </head>
 <body>
   <!-- ===== LOADING COVER (hides the page until it is fully ready) ===== -->
@@ -375,10 +396,17 @@ class="setArrow">›</span></button>
 <button id="nameBack" type="button">Cancel</button>
 </div></div>
 
+<!-- ===== LOG OUT CONFIRMATION ===== -->
+<div id="logoutModal"><div class="acard">
+<div class="goTitle">Are you sure you want to log out?</div>
+<button id="logoutYes" type="button">Yes, log out</button>
+<button id="logoutNo" type="button">Cancel</button>
+</div></div>
+
 <div id="toast"></div>
 <div id="app">
 <!-- ===== READER PANEL (left): chapter title + JUMP menu + chapter text ===== -->
-<section id="reader"><div id="rhead"><div id="rtitle"></div><select id="jump" aria-label="Jump to chapter"></select><button id="night" title="Night mode" aria-label="Night mode">&#127769;</button><button id="hideRead" title="Hide reading panel" aria-label="Hide reading panel">Hide</button><button id="settingsBtn" title="Settings" aria-label="Settings" style="background:none; border:1px solid #b9ad88; border-radius:8px; padding:5px 8px; font-size:15px; cursor:pointer;">⚙️</button></div><div id="pbar"><div id="pbarTxt">0% complete</div><div class="track"><div class="fill" id="pbarFill"></div></div></div><div id="rtext"></div>
+<section id="reader"><div id="rhead"><div id="rtitle"></div><select id="jump" aria-label="Jump to chapter"></select><button id="night" title="Night mode" aria-label="Night mode">&#127769;</button><button id="hideRead" title="Hide reading panel" aria-label="Hide reading panel">Hide</button><button id="settingsBtn" title="Settings" aria-label="Settings" style="background:none; border:1px solid #b9ad88; border-radius:8px; padding:5px 8px; font-size:15px; cursor:pointer;">⚙️</button></div><div id="pbar"><div id="pbarTxt">0% complete</div><div id="fsBox"><button id="fsMinus" type="button" aria-label="Smaller text">&minus;</button><button id="fsPlus" type="button" aria-label="Bigger text">+</button></div><div class="track"><div class="fill" id="pbarFill"></div></div></div><div id="rtext"></div>
 <!-- ===== CONTROLS (bottom of the reading panel): name + Log out, stage label, Prev, Finished/Next ===== -->
 <div id="ui"><div id="lbl">Loading...</div><div id="rcheck"><div id="rcTxt"></div><div class="track"><div class="fill" id="rcFill"></div></div></div><div id="fruitbar"><span id="basket">🪣 0</span><button id="harvest" type="button" style="display:none"><span class="fruitdot"></span> Harvest (<span id="fruitN">0</span>)</button></div><div style="display:none"><button id="prev" type="button"></button><button id="next" type="button"></button></div></div>
 
@@ -424,7 +452,7 @@ class="setArrow">›</span></button>
 </section>
 <section id="treewrap">
 <!-- ===== SHOW-READING BAR (only visible while the reading panel is hidden) ===== -->
-<div id="miniBar"><button id="showRead" type="button">&#128214; Show reading panel</button><span id="miniLbl"></span></div>
+<div id="miniBar"><button id="showRead" type="button" aria-label="Show reading panel" title="Show reading panel">&#128214;</button><span id="miniLbl"></span></div>
 <!-- ===== TREE (right side): book, trunk, branches, leaves, fruits are drawn here ===== -->
 <svg id="scene" viewBox="-169 0 1138 640" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -1798,6 +1826,7 @@ if (st.mustChange) openPw(true); else { pendingPw = ""; focusReader(); } // the 
 function logout() { try { if (window.sbSignOut) sbSignOut(); } catch (e) {}
 tokenSet(""); cache = {}; NOTES = {}; colors = ["yellow"]; owned = []; closeVerse(); progress = 0; fruits = 0; tokens = 0; curIdx = 0; curWait = 0; viewIdx = 0; loadedIdx = -1; RCSAVE = {}; RC.ready = false; RC.eligible = false;
 $("rtext").textContent = ""; 
+$("auth").classList.remove("resuming");
 // Restore visibility of auth form elements that were hidden during token loading
 $("aUser").style.display = "";
 $("aPass").style.display = "";
@@ -1850,11 +1879,12 @@ $("aPass").style.display = "none";
 $("aGo").style.display = "none";
 var tabsEl = document.querySelector("#auth .atabs");
 if (tabsEl) tabsEl.style.display = "none";
-$("aErr").textContent = "Loading your reading tree...";
+$("auth").classList.add("resuming"); // no message: the green progress cover is all the reader sees
 
 TOKEN = t; 
 call("authState", [t], startApp, function () { 
 tokenSet(""); 
+$("auth").classList.remove("resuming");
 // If token verification fails, restore the login form inputs
 $("aUser").style.display = "";
 $("aPass").style.display = "";
@@ -2487,6 +2517,60 @@ initSwipe(); // starts the swipe feature
 
 </script>
 
+
+<script>
+// ############################################################################
+// v2 additions: log out confirmation, text size buttons, Back button for pop-ups
+// ############################################################################
+(function () {
+  function el(id) { return document.getElementById(id); }
+
+  // ---- Log out: ask first, then show the loading dialog ----
+  function closeConfirm() { el("logoutModal").style.display = "none"; }
+  el("logout").onclick = function (e) { e.preventDefault(); el("logoutModal").style.display = "flex"; };
+  el("logoutNo").onclick = closeConfirm;
+  el("logoutYes").onclick = function () {
+    closeConfirm();
+    el("goTitle").textContent = "Logging out...";
+    el("goLoading").style.display = "flex";
+    setTimeout(function () { logout(); el("goLoading").style.display = "none"; }, 900);
+  };
+
+  // ---- Text size: minus and plus (remembered in this browser) ----
+  var FS_MIN = 13, FS_MAX = 30, fs = 17;
+  try { var s = parseInt(localStorage.getItem("treeFont"), 10); if (s >= FS_MIN && s <= FS_MAX) fs = s; } catch (e) {}
+  function applyFont() { el("rtext").style.fontSize = fs + "px"; try { localStorage.setItem("treeFont", String(fs)); } catch (e) {} }
+  el("fsMinus").onclick = function () { fs = Math.max(FS_MIN, fs - 1); applyFont(); };
+  el("fsPlus").onclick = function () { fs = Math.min(FS_MAX, fs + 1); applyFont(); };
+  applyFont();
+
+  // ---- Phone Back button: closes the pop-up on top instead of leaving or reloading the page ----
+  // Every pop-up that opens adds one history step; Back removes it and closes that pop-up.
+  var CLOSERS = { settingsModal: "settingsClose", gamesModal: "gamesClose", langModal: "langClose", nameModal: "nameBack",
+                  gift: "giftBack", about: "aboutClose", logoutModal: "logoutNo", pw: "pwCancel" }; // welcome has no closer: Back cannot skip it
+  var ORDER = ["settingsModal", "gamesModal", "langModal", "nameModal", "gift", "about", "pw", "welcome", "logoutModal"];
+  var depth = 0, skip = 0;
+  function isOpen(id) { var m = el(id); return !!m && m.style.display !== "" && m.style.display !== "none"; }
+  function openList() { return ORDER.filter(isOpen); }
+  function sync() {
+    var n = openList().length;
+    while (depth < n) { try { history.pushState({ ov: depth + 1 }, ""); } catch (e) {} depth++; }
+    if (depth > n) { var d = depth - n; depth = n; skip++; history.go(-d); }
+  }
+  window.addEventListener("popstate", function () {
+    if (skip > 0) { skip--; return; }
+    if (depth > 0) {
+      depth--;
+      var open = openList(), top = open[open.length - 1], c = top && CLOSERS[top] && el(CLOSERS[top]);
+      if (top === "pw" && window.pwForced) c = null; // forced new password: Back must not log the reader out
+      if (c) c.click();
+      sync(); // if nothing could close (welcome, forced password), the step is put back
+    }
+  });
+  var mo = new MutationObserver(sync);
+  ORDER.forEach(function (id) { if (el(id)) mo.observe(el(id), { attributes: true, attributeFilter: ["style"] }); });
+})();
+</script>
 </body>
 
 </html>
