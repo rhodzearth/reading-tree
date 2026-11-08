@@ -211,7 +211,7 @@ var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
 try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
 TOKEN=window.FARM_TOKEN||"";
-function call(n,a,ok,bad){FARM_CALL(n,a).then(function(s){if(s&&s.me&&!s.crops&&S){s.crops=S.crops;s.items=S.items;s.fls=S.fls;s.pfs=S.pfs;if(!s.fl)s.fl=S.fl;if(!s.lo)s.lo=S.lo}ok(s)},function(e){var m=e&&e.message?e.message:String(e);if(/log in/i.test(m)){showMsg("Please log in to the Reading Tree first, then open Reading Farm again.")}else if(bad)bad(m);else toast(m)})}
+function call(n,a,ok,bad){FARM_CALL(n,a).then(function(s){if(s&&s.me&&!s.crops&&S){s.crops=S.crops;s.items=S.items;s.fls=S.fls;s.pfs=S.pfs;if(!s.fl)s.fl=S.fl;if(!s.lo)s.lo=S.lo}try{ok(s)}catch(e){busy=false;toast("Page problem: "+(e&&e.message?e.message:e))}},function(e){var m=e&&e.message?e.message:String(e);if(/log in/i.test(m)){showMsg("Please log in to the Reading Tree first, then open Reading Farm again.")}else if(bad)bad(m);else toast(m)})}
 function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},3000)}
 function showMsg(m){$("msg").style.display="";$("msg").textContent=m;$("main").style.display="none"}
 function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
@@ -1751,13 +1751,13 @@ function sv(){$("saveBtn").innerHTML=(Q.length||busy)?"&#9203;":"&#128190;"}
 function kick(){clearTimeout(QT);pump()}
 function send(fn,args){Q.push([fn,args]);qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
 function pump(){if(busy||!Q.length)return;var n=0,ops=[],j;
- while(n<Q.length&&BAT[Q[n][0]]){ops.push([BAT[Q[n][0]]].concat(Q[n][1].slice(1)));n++}
+ while(n<Q.length&&n<300&&BAT[Q[n][0]]){ops.push([BAT[Q[n][0]]].concat(Q[n][1].slice(1)));n++}
  busy=true;if(n)j=["farmSync",[TOKEN,ops]];else{n=1;j=Q[0]}
  call(j[0],j[1],function(s){busy=false;RT=0;Q.splice(0,n);qSave();sv();
   if(s.out&&s.out.skipped){toast("\u26A0 "+(s.out.err||"Some changes were skipped"));flush(load)}
   if(!Q.length&&!DRAG){if(V&&s.out&&s.out.id===V.id&&s.out.plots)V=s.out;S=s;paint();cacheS()}pump()},
  function(m){busy=false;sv();
-  if(j[0]==="farmSync"){if(++RT===3)toast("Connection problem. Your changes are kept and will save automatically.");setTimeout(pump,Math.min(15000,2000*RT))}
+  if(j[0]==="farmSync"){if(++RT===2||RT===5)toast("Save problem: "+m+" (your changes are kept and will retry)");setTimeout(pump,Math.min(15000,2000*RT))}
   else{Q.splice(0,1);qSave();toast(m);pump()}})}
 function tapPlot(i){var p=S.plots[i];
  if(!p){var c=cr(sel);if(!c)return;
