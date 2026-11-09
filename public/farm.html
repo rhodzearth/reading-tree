@@ -162,7 +162,7 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none}
   <div class="seeds" id="seeds"></div>
   </div>
  <div id="botBar"><button class="btn alt" id="wfBtn" title="30 white fruits = boost crops 6h">&#9898;</button><button class="btn alt" id="hAll" title="Harvest"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block"><path d="M4 20l5.5-5.5" stroke="#7a5430" stroke-width="3.2" stroke-linecap="round"/><path d="M9 15C4 9 9 3 19.5 4 13.5 6 11.5 10 15.5 14 13 15.7 10.8 15.8 9 15z" fill="#d5dbe0" stroke="#5a6068" stroke-width="1.2" stroke-linejoin="round"/><path d="M10 13.5C8.5 10 11 6.5 15 5.5" stroke="#fff" stroke-width=".9" stroke-linecap="round" fill="none"/></svg></button><button class="btn alt" id="plAll" title="Plant all seeds"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block"><path d="M2.5 15h19l-2.2 6.5H4.7z" fill="#8a5c34" stroke="#4a301a" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 17.5h14M6 19.5h12" stroke="#5a3a1e" stroke-width="1" stroke-linecap="round"/><ellipse cx="6.5" cy="5" rx="1.7" ry="2.5" transform="rotate(-20 6.5 5)" fill="#e8c46a" stroke="#7a5430" stroke-width="1"/><ellipse cx="12" cy="8.5" rx="1.7" ry="2.5" fill="#e8c46a" stroke="#7a5430" stroke-width="1"/><ellipse cx="17.5" cy="5" rx="1.7" ry="2.5" transform="rotate(20 17.5 5)" fill="#e8c46a" stroke="#7a5430" stroke-width="1"/><path d="M6.5 9.5v2.5M12 12.5v1.5M17.5 9.5v2.5" stroke="#2f7d32" stroke-width="1.3" stroke-linecap="round"/></svg></button><button class="btn alt" id="edBtn" title="Decorate"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block"><path d="M3 11l9-7 9 7v10H3z" fill="#c9413a" stroke="#6e1d16" stroke-width="1.3" stroke-linejoin="round"/><path d="M3 11l9-7 9 7" fill="none" stroke="#f2eee2" stroke-width="1.6" stroke-linejoin="round"/><rect x="8" y="12" width="8" height="9" fill="#8f2f28" stroke="#f2eee2" stroke-width="1.2"/><path d="M8 12l8 9M16 12l-8 9" stroke="#f2eee2" stroke-width="1"/></svg></button><button class="btn alt" id="buyPlot" title="New plot"></button><button class="btn alt" id="expBtn" title="Expand land"></button><button class="btn alt" id="mkBtn" title="Market">&#128722;</button><button class="btn alt" id="seedChip" title="Current seed"></button><button class="btn alt" id="gearBtn" title="Choose seeds"><svg width="20" height="20" viewBox="0 0 24 24" style="display:block"><path d="M12 2C17.5 7 18.5 15 12 22 5.5 15 6.5 7 12 2z" fill="#b98a46" stroke="#5a3a1a" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 5v14" stroke="#5a3a1a" stroke-width="1" stroke-linecap="round"/><path d="M9 9.5c1-2 2-3.2 3-4M9 14c.8-1.5 1.8-2.8 3-3.8" stroke="#e8c46a" stroke-width="1.1" stroke-linecap="round" fill="none"/></svg></button></div>
- <div id="editbar"><span id="edTxt"></span><button class="btn alt" id="edStop" style="display:none">&#10006; Stop</button><button class="btn alt" id="edBrush" style="display:none"></button><button class="btn alt" id="edAll" style="display:none">&#129699; Paint all</button><button class="btn alt" id="edRot" style="display:none">&#128260; Rotate</button><button class="btn alt" id="edUp" style="display:none">&#11014;&#65039; Upgrade fence</button><button class="btn alt" id="edSell" style="display:none"></button><button class="btn alt" id="edStore" style="display:none">&#128230; Store in barn</button><button class="btn alt" id="edGrp" style="display:none">&#129513; Store group</button><button class="btn alt" id="edPlantG" style="display:none">&#127793; Plant group</button><button class="btn alt" id="edHarvG" style="display:none">&#127806; Harvest group</button><button class="btn alt" id="edUndo" style="display:none">&#8617; Undo</button><button class="btn alt" id="edBarn"></button><button class="btn" id="edDone">&#10004; Done</button></div>
+ <div id="editbar"><span id="edTxt"></span><button class="btn alt" id="edStop" style="display:none">&#10006; Stop</button><button class="btn alt" id="edBrush" style="display:none"></button><button class="btn alt" id="edAll" style="display:none">&#129699; Paint all</button><button class="btn alt" id="edRot" style="display:none">&#128260; Rotate</button><button class="btn alt" id="edUp" style="display:none">&#11014;&#65039; Upgrade fence</button><button class="btn alt" id="edSell" style="display:none"></button><button class="btn alt" id="edStore" style="display:none">&#128230; Store in barn</button><button class="btn alt" id="edGrp" style="display:none">&#129513; Store group</button><button class="btn alt" id="edMoveG" style="display:none">&#8596;&#65039; Move group</button><button class="btn alt" id="edPlantG" style="display:none">&#127793; Plant group</button><button class="btn alt" id="edHarvG" style="display:none">&#127806; Harvest group</button><button class="btn alt" id="edUndo" style="display:none">&#8617; Undo</button><button class="btn alt" id="edBarn"></button><button class="btn" id="edDone">&#10004; Done</button></div>
  <div id="buyBar"><button class="bb no" id="buyNo">&#10006;</button><button class="bb yes" id="buyYes">&#10004;</button></div>
  <div id="barnP" style="display:none"><b>&#127969; Barn storage</b><button class="btn" id="barnAll" style="float:right">&#128230; Store all</button><button class="btn alt" id="barnUndo" style="float:right;margin-right:6px;display:none">&#8617; Undo</button><div id="barnList"></div></div>
   <div id="mkt" style="display:none">
@@ -216,7 +216,10 @@ function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clear
 function showMsg(m){$("msg").style.display="";$("msg").textContent=m;$("main").style.display="none"}
 function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
 function cr(id){if(S.crops!==CRA){CRA=S.crops;CRM={};S.crops.forEach(function(c){CRM[c.id]=c})}return CRM[id]||null}
-function goBack(p){window.location.href="index.html"+(p||"")}
+function goBack(p){var ref=document.referrer||"",base=ref.split("#")[0].split("?")[0],
+ ok=!p&&ref.indexOf(location.origin)===0&&/(index\.html|\/)$/.test(base)&&history.length>1;
+ if(ok){var n=HARM?2:1;HARM=false;HSKIP=true;history.go(-n);setTimeout(function(){window.location.href="index.html"},1800)}
+ else window.location.href="index.html"+(p||"")}
 function openTree(){$("goTitle").textContent="Opening Reading Tree...";$("goLoading").style.display="flex";setTimeout(function(){goBack("")},120)}
 window.addEventListener("pageshow",function(){$("goLoading").style.display="none"});
 var BT=0;
@@ -1618,13 +1621,15 @@ function camBox(pp,np,dc,n,m,ls,cv){m=m==null?1:m;setRot(cv);var c0=999,c1=-999,
  (dc||[]).forEach(function(x){if(!x.s)add(x.c,x.r)});
  if(c1<-900)return null;
  return[Math.max(B.c0,c0-m),Math.min(B.c1,c1+m+1),Math.max(B.r0,r0-m),Math.min(B.r1,r1+m+1)]}
+function lvl1Box(cv){setRot(cv);var n=szOf(cv),B=wbox(n,LSof(cv)),a=rtile(0,0),b=rtile(Math.min(7,n-1),Math.min(7,n-1)),
+ c0=Math.min(a[0],b[0]),c1=Math.max(a[0],b[0]),r0=Math.min(a[1],b[1]),r1=Math.max(a[1],b[1]),x=[Math.max(B.c0,c0-1),Math.min(B.c1,c1+2),Math.max(B.r0,r0-1),Math.min(B.r1,r1+2)];x.l1=1;return x}
 function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox(n,ls),d=dims(n,ls),aw=window.innerWidth,ah=window.innerHeight-top-bot,
  k0=Math.max(.08,Math.min(aw/(d.W-120),ah/d.H,2.4)),k=k0,mx=d.mx,my=d.my,ox=(n+2)*56+30,oy=186,z=cv._z||1,kd;
  if(box){var xs=[],ys=[],kz,cap;
   [[box[0],box[2]],[box[1],box[2]],[box[1],box[3]],[box[0],box[3]]].forEach(function(q){xs.push(ox+(q[0]-q[1])*56);ys.push(oy+(q[0]+q[1])*28)});
   var x0=Math.min.apply(null,xs)-30,x1=Math.max.apply(null,xs)+30,y0=Math.min.apply(null,ys)-110,y1=Math.max.apply(null,ys)+40;
-  kz=Math.min(aw/(x1-x0),ah/(y1-y0),2.2);cap=aw/(2*Math.min(n,10)*56+20+48);
-  if(kz>cap){kz=cap;mx=n<=10?ox:(x0+x1)/2}else mx=(x0+x1)/2;
+  kz=Math.min(aw/(x1-x0),ah/(y1-y0),2.2);cap=aw/(2*Math.min(n,box.l1?8:10)*56+20+48);
+  if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
   if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx}
  kd=k;if(cv._kabs)k=Math.max(k0*.6,Math.min(3.2,cv._kabs));else k=Math.max(k0*.6,Math.min(3.2,kd*z));cv._z=k/kd;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
@@ -1636,7 +1641,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
 function fitAll(){var hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight,eb=$("editbar").offsetHeight,f,vc,vh,lc,lh,lb;MHT=hud;
  $("buyBar").style.bottom=(dh+14)+"px";$("editbar").style.bottom=(dh+10)+"px";$("barnP").style.bottom=(dh+eb+20)+"px";$("toast").style.bottom=(dh+12)+"px";
  if(S){PERF=(S.sz||8)>=36||!!(S.ls&&S.ls.length)||S.np>150;
-  f=$("field");if(!f._kabs||!f._box)f._box=camBox(S.pp,S.np,S.dc,S.sz||8,1,S.ls,f);
+  f=$("field");if(!f._kabs||!f._box)f._box=lvl1Box(f);
   fit(f,S.np,hud,dh,f._box);f._fp=[S.np,hud,dh,f._box,0,"bgGrass",0]}
  if(V&&$("visit").style.display!=="none"){vh=$("vHead").offsetHeight;vc=$("vCanvas");if(!vc._kabs||!vc._box)vc._box=camBox(V.pp,V.np,V.dc,V.sz||8,1,V.ls,vc);
   fit(vc,V.np,vh,0,vc._box,0);vc._fp=[V.np,vh,0,vc._box,0,"vBg",0];grassBg($("vBg"),vc,0)}
@@ -1844,7 +1849,7 @@ function visitTap(i){var p=V.plots[i];if(!p)return;var c=cr(p.c);p.hb=p.hb||[];
  p.t-=Math.round(c.ms*.1);p.hb.push(S.me);var hc=S.helpCoins||3,hx=S.helpXp||1;S.coins+=hc;S.xp+=hx;S.helpLeft--;lvlUp();paint();toast("\uD83D\uDCA7 Fertilized! Its time drops 10%. +"+hc+"\uD83E\uDE99 +"+hx+" XP");send("farmHelp",[TOKEN,V.id,i])}
 // same "go home" logic as before, now in its own function
 function goHome(){busyShow("Returning to your farm...");
- flush(function(){call("farmState",[TOKEN],function(s){V=null;$("visit").style.display="none";setState(s);busyHide()},function(m){V=null;$("visit").style.display="none";busyHide();toast(m)})})}
+ flush(function(){call("farmState",[TOKEN],function(s){V=null;var f0=$("field");f0._kabs=0;f0._z=1;f0._pan=[0,0];f0._box=null;$("visit").style.display="none";setState(s);busyHide()},function(m){V=null;$("visit").style.display="none";busyHide();toast(m)})})}
 // the door icon opens this menu
 function visitMenu(){if(!V)return;
  var dlg=$("dlg"),others=S.nb.filter(function(n){return n.id!==V.id}),rows="";
@@ -1936,7 +1941,7 @@ function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  var barnSel=SEL&&SEL.t==="d"&&dcById(SEL.id).k==="barn",seeded=SEL&&SEL.t==="p"&&S.plots[SEL.i],isD=SEL&&SEL.t==="d",itx=isD&&dcById(SEL.id);
  $("edBarn").textContent="\uD83C\uDFE1 Barn ("+stored().length+")";
  $("edStore").style.display=SEL&&!barnSel&&!seeded?"":"none";
- $("edGrp").style.display=SEL&&!barnSel?"":"none";
+ $("edGrp").style.display=SEL&&!barnSel?"":"none";$("edMoveG").style.display=SEL&&!barnSel&&!GMOVE?"":"none";
  $("edPlantG").style.display=SEL&&SEL.t==="p"&&!S.plots[SEL.i]?"":"none";
  $("edHarvG").style.display=SEL&&((SEL.t==="p"&&S.plots[SEL.i])||(isD&&itx&&FTD[itx.k]))?"":"none";
  $("edTxt").textContent=PAINT?"Painting "+(floorDef(PAINT.id)||{name:""}).name+" ("+((floorDef(PAINT.id)||{cost:0}).cost)+"\uD83E\uDE99 per tile) - brush "+PAINT.size+"x"+PAINT.size:PBUY?"Tap a free tile to buy & place a plot (\uD83E\uDE99 "+S.plotCost+")":PLACING?"Placing: "+nameOf(PLACING)+" ("+stored().length+" in barn)":SEL?nameOf(SEL):"";
@@ -1944,8 +1949,9 @@ function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  $("edRot").style.display=isD?"":"none";$("edSell").style.display=isD&&!barnSel?"":"none";$("edUp").style.display=isD&&itx&&isF(itx.k)?"":"none";
  if(isD&&!barnSel&&itx)$("edSell").textContent="\uD83D\uDCB0 Sell +"+sellVal(itx);
  $("edStop").style.display=PLACING||PAINT?"":"none";$("edBrush").style.display=PAINT?"":"none";$("edAll").style.display=PAINT?"":"none";if(PAINT)$("edBrush").textContent="\uD83D\uDD8C Brush "+PAINT.size+"x"+PAINT.size;
+ if(GMOVE){$("edTxt").textContent="Moving a group of "+GMOVE.list.length+": tap the new spot for the selected item";$("edStop").style.display="";$("edMoveG").style.display="none"}
  renderBarn()}
-function setEdit0(on){if($("field")._rot){$("field")._pan=[0,0];$("field")._box=null}EDIT=on;SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
+function setEdit0(on){GMOVE=null;if($("field")._rot){$("field")._pan=[0,0];$("field")._box=null}EDIT=on;SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
 function setEdit(on){var b=!on&&BUYING;setEdit0(on);if(b){BUYING=0;$("mkt").style.display="flex";renderMkt()}}
 $("edBtn").onclick=function(){PEND=null;$("buyBar").style.display="none";BUYING=0;setEdit(!EDIT)};$("edDone").onclick=function(){setEdit(false)};
 $("edBarn").onclick=function(){var p=$("barnP");p.style.display=p.style.display==="none"?"block":"none"};
@@ -1959,7 +1965,7 @@ $("edGrp").onclick=function(){
  if(!st||gk==="barn")return;
  function add(c2,r2,s){var kk=flKey(c2,r2);(cand[kk]=cand[kk]||[]).push(s)}
  if(gk==="p"){for(i=0;i<S.np;i++)if(S.pp[i])add(S.pp[i][0],S.pp[i][1],{t:"p",i:i})}
- else(S.dc||[]).forEach(function(x){if(!x.s&&x.k===gk)add(x.c,x.r,{t:"d",id:x.id})});
+ else(S.dc||[]).forEach(function(x){if(!x.s&&gnorm(x.k)===gnorm(gk))add(x.c,x.r,{t:"d",id:x.id})});
  seen[flKey(st[0],st[1])]=1;q.push(st);
  while(q.length){p=q.pop();
   (cand[flKey(p[0],p[1])]||[]).forEach(function(s){list.push(s);if(s.t==="p"&&S.plots[s.i])skip++});
@@ -1970,12 +1976,13 @@ $("edGrp").onclick=function(){
  try{if(n)FarmAudio.play("store")}catch(e){}
  toast(n?"\uD83D\uDCE6 Stored a group of "+n+(skip?" ("+skip+" planted plot"+(skip>1?"s":"")+" skipped)":"")+" - tap Undo to restore":(skip?"Planted plots can't be stored. Harvest them first.":"Nothing to store"))};
  // ===== GROUP HELPERS: same type, touching (diagonals count), starts from the selected item =====
+function gnorm(k){var m;if(k==="f_corner")return"f_fence";m=/^f_([a-z]+)_c$/.exec(k||"");return m?"f_"+m[1]:k}
 function grpOf(s){
  var gk=gkey(s),st=getPos(s),cand={},seen={},q=[],list=[],i,a,b,p,c,r,key;
  if(!st||gk==="barn")return[];
  function add(c2,r2,x){var kk=flKey(c2,r2);(cand[kk]=cand[kk]||[]).push(x)}
  if(gk==="p"){for(i=0;i<S.np;i++)if(S.pp[i])add(S.pp[i][0],S.pp[i][1],{t:"p",i:i})}
- else(S.dc||[]).forEach(function(x){if(!x.s&&x.k===gk)add(x.c,x.r,{t:"d",id:x.id})});
+ else(S.dc||[]).forEach(function(x){if(!x.s&&gnorm(x.k)===gnorm(gk))add(x.c,x.r,{t:"d",id:x.id})});
  seen[flKey(st[0],st[1])]=1;q.push(st);
  while(q.length){p=q.pop();
   (cand[flKey(p[0],p[1])]||[]).forEach(function(s2){list.push(s2)});
@@ -2020,7 +2027,7 @@ $("barnAll").onclick=function(){var l=[],i,skip=0,n;
  (S.dc||[]).forEach(function(x){if(!x.s&&x.k!=="barn")l.push({t:"d",id:x.id})});
  n=doStore(l);SEL=null;PLACING=null;paint();editUI();drawAll();
  toast(n?"\uD83D\uDCE6 Stored "+n+" items"+(skip?" ("+skip+" planted plots skipped)":"")+" - tap Undo to restore":(skip?"Planted plots can't be stored. Harvest them first.":"Nothing to store"))};
-$("edStop").onclick=function(){PLACING=null;PAINT=null;editUI();drawAll()};
+$("edStop").onclick=function(){PLACING=null;PAINT=null;GMOVE=null;editUI();drawAll()};
 $("edBrush").onclick=function(){if(!PAINT)return;PAINT.size=BRUSH[(BRUSH.indexOf(PAINT.size)+1)%BRUSH.length];editUI()};
 // ===== PAINT ALL: fill every tile of every land with the chosen floor =====
 $("edAll").onclick=function(){
@@ -2055,8 +2062,32 @@ $("edSell").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id)
  SELL1=0;S.coins+=sellVal(it);S.dc=S.dc.filter(function(x){return x.id!==it.id});SEL=null;send("farmSell",[TOKEN,it.id]);paint();drawAll()};
 var HOVT=null,BT2=0;
 function badTile(c,r){HOVT=[c,r];drawAll();clearTimeout(BT2);BT2=setTimeout(function(){HOVT=null;drawAll()},350)}
+var GMOVE=null;
+function gmoveTap(tc,tr){
+ var a=getPos(GMOVE.anchor),L=GMOVE.list,dc,dr,ig={},occ={},mv=[],bad=null,i,q;
+ if(!a){GMOVE=null;editUI();return}
+ dc=tc-a[0];dr=tr-a[1];
+ if(!dc&&!dr){GMOVE=null;SEL=null;editUI();drawAll();return}
+ L.forEach(function(s){ig[s.t==="p"?"p"+s.i:"d"+s.id]=1});
+ for(i=0;i<S.np;i++){q=S.pp[i];if(q&&!ig["p"+i])occ[flKey(q[0],q[1])]=1}
+ (S.dc||[]).forEach(function(x){if(!x.s&&!isF(x.k)&&!ig["d"+x.id])occ[flKey(x.c,x.r)]=1});
+ L.forEach(function(s){var p=getPos(s),nc,nr,fe;if(!p||bad)return;nc=p[0]+dc;nr=p[1]+dr;
+  fe=s.t==="d"&&isF((dcById(s.id)||{}).k);
+  if(!inLandP(parS(),nc,nr)||(!fe&&(flAt(nc,nr)==="wt"||occ[flKey(nc,nr)])))bad=[nc,nr];
+  mv.push([s,nc,nr,p[0]*dc+p[1]*dr])});
+ if(bad){badTile(bad[0],bad[1]);toast("The group does not fit there (blocked, water, or outside your land).");return}
+ mv.sort(function(x,y){return y[3]-x[3]}); // the items in front move first, so none ever lands on one that has not moved yet
+ mv.forEach(function(m){var s=m[0];setPos(s,m[1],m[2]);
+  if(s.t==="p")send("farmPlotMove",[TOKEN,s.i,m[1],m[2],0]);else send("farmDecor",[TOKEN,s.id,m[1],m[2],0])});
+ GMOVE=null;SEL=null;HOVT=null;editUI();drawAll();toast("\u2194\uFE0F Moved a group of "+mv.length)}
+$("edMoveG").onclick=function(){
+ if(!SEL)return;var list=grpOf(SEL);
+ if(OUTI[gkey(SEL)]){toast("Outside items are moved one by one.");return}
+ if(list.length<2){toast("Nothing touches this item. Just tap a free tile to move it.");return}
+ GMOVE={anchor:SEL,list:list};editUI();drawAll()};
 function editTap(cv,e){var p=ptr(cv,e),t=toTile(cv,p),tc=Math.floor(t[0]),tr=Math.floor(t[1]),it,pl,h,o;
  if(PAINT){paintAt(tc,tr);return}
+ if(GMOVE){gmoveTap(tc,tr);return}
  if(PBUY){if(!tileFree(tc,tr,null)){badTile(tc,tr);return}
   if(S.np>=S.max||S.coins<S.plotCost){PBUY=0;toast("You cannot buy a plot right now.");editUI();return}
   var ni=S.np;S.coins-=S.plotCost;S.np++;S.plots.push(null);S.pp.push([tc,tr]);S.plotCost=30*(S.np-4);
@@ -2873,11 +2904,25 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
    else for(k=0;k<p.length;k+=2){x0=G.ox+(p[k]-p[k+1])*hw;y0=G.oy+(p[k]+p[k+1])*hh;X.moveTo(x0,y0);X.lineTo(x0+hw,y0+hh);X.lineTo(x0,y0+2*hh);X.lineTo(x0-hw,y0+hh);X.closePath()}
    X.fillStyle=FLC[id]||"#888";X.fill()}
   return}
+ var T=[],hs=0,fc,m,key,fv,oc,ox_;
  for(c=VT.c0;c<=VT.c1;c++)for(r=VT.r0;r<=VT.r1;r++){id=F[wkey(c,r)];if(!id||!FLD[id])continue;
   if(id==="wt"){W.push(c,r);WSET[flKey(c,r)]=1;continue} // water is drawn later as ONE rounded body
-  x0=G.ox+(c-r)*hw;y0=G.oy+(c+r)*hh;fr=0;
-  X.drawImage(ftile(id,CSD,fr),x0-57,y0-1,114,58)}
+  T.push(c,r,id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r)|0}
+ // When the view stands still (the game keeps redrawing for swaying crops), the finished floor picture is reused.
+ try{m=X.getTransform();key=X.canvas.id+"|"+X.canvas.width+"|"+X.canvas.height+"|"+m.a+"|"+m.e+"|"+m.f+"|"+G.ox+"|"+G.oy+"|"+CR+"|"+CSD+"|"+T.length+"|"+hs}catch(e){key=null}
+ fv=FLV[X.canvas.id]||(FLV[X.canvas.id]={});
+ if(key&&fv.key===key&&fv.oc){X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(fv.oc,0,0);X.restore()}
+ else{
+  fc=X;ox_=null;
+  if(key&&fv.key===key&&T.length>60){ // second frame in a row with the same view: build the picture once
+   oc=fv.oc2||(fv.oc2=document.createElement("canvas"));if(oc.width!==X.canvas.width||oc.height!==X.canvas.height){oc.width=X.canvas.width;oc.height=X.canvas.height}
+   ox_=oc.getContext("2d");ox_.setTransform(1,0,0,1,0,0);ox_.clearRect(0,0,oc.width,oc.height);ox_.setTransform(m);fc=ox_}
+  for(k=0;k<T.length;k+=3){x0=G.ox+(T[k]-T[k+1])*hw;y0=G.oy+(T[k]+T[k+1])*hh;fc.drawImage(ftile(T[k+2],CSD,0),x0-57,y0-1,114,58)}
+  if(ox_){fv.oc=oc;fv.oc2=null;X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(oc,0,0);X.restore()}
+  else if(fv.key!==key)fv.oc=null;
+  fv.key=key}
  if(W.length)drawWaterBody(F,W,t)}
+var FLV={};
 
 // ----- painting floors -----
 var PAINT=null,BRUSH=[1,3,5,9];
