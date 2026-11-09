@@ -1540,7 +1540,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
   cw=parseFloat(cv.style.width)||window.innerWidth,ch=parseFloat(cv.style.height)||window.innerHeight,
   ox=(rows+2)*TW/2+30,oy=130+TH,W=(rows+cols+4)*TW/2+60,H=oy+(cols+rows+2)*TH/2+60;
  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr)}
- NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceSegs(G.P);WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);
+ NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);
  if(CR){pp=pp.map(function(q){return q?rtile(q[0],q[1]):q});
   items=(items||[]).map(function(it){var o=Object.create(it),t=rtile(it.c,it.r);o.c=t[0];o.r=t[1];o._o=it;
    if(isF(it.k))o.rot=isCorner(it.k)?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;return o})}
@@ -1552,6 +1552,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
  cs=[[wx0,wy0],[wx1,wy0],[wx1,wy1],[wx0,wy1]].map(function(q){var dx=(q[0]-ox)/(TW/2),dy=(q[1]-oy)/(TH/2);return[(dx+dy)/2,(dy-dx)/2]});
  cc=cs.map(function(q){return q[0]});rr=cs.map(function(q){return q[1]});
  VT={c0:Math.max(WBX.c0,Math.floor(Math.min.apply(null,cc))-1),c1:Math.min(WBX.c1-1,Math.ceil(Math.max.apply(null,cc))+1),r0:Math.max(WBX.r0,Math.floor(Math.min.apply(null,rr))-1),r1:Math.min(WBX.r1-1,Math.ceil(Math.max.apply(null,rr))+1)};
+ VTF={c0:Math.max(WBX.c0-8,Math.floor(Math.min.apply(null,cc))-1),c1:Math.min(WBX.c1+7,Math.ceil(Math.max.apply(null,cc))+1),r0:Math.max(WBX.r0-8,Math.floor(Math.min.apply(null,rr))-1),r1:Math.min(WBX.r1+7,Math.ceil(Math.max.apply(null,rr))+1)};
  if(SPRN>120)SPRN=evict(SPR);
  drawSea();drawFloors(cv);drawBack();drawSoil(plots,pp,np);
  if(edit&&LOD===1){var sf=SEL||PLACING||PBUY,occ=sf?occMap(PLACING?null:SEL):null,gc,gr;
@@ -1936,7 +1937,7 @@ function undoStore(){var b=UNDO.pop(),n=0;if(!b){toast("Nothing to undo");return
 function infoDlg(ic,title,sub,chips,yes,yesTxt){var dlg=$("dlg");function shut(){dlg.style.display="none"}
  $("dlgBody").innerHTML="<div style='font-size:38px;line-height:1'>"+ic+"</div><div class='dtitle'>"+title+"</div><div class='dsub'>"+sub+"</div><div class='drow'>"+chips.map(function(c){return"<span class='dchip'>"+c+"</span>"}).join("")+"</div><div class='dbtns'>"+(yes?"<button class='btn alt' id='dNo'>Cancel</button><button class='btn ok' id='dYes'>"+yesTxt+"</button>":"<button class='btn ok' id='dYes'>OK</button>")+"</div>";
  dlg.style.display="flex";$("dYes").onclick=function(){shut();if(yes)yes()};if(yes)$("dNo").onclick=shut;dlg.onclick=function(ev){if(ev.target===dlg)shut()}}
-function sellVal(it){var d=(S.items||[]).filter(function(x){return x.id===it.k})[0];return d?Math.floor(d.cost*(S.sellRate||.5)):0}
+function sellVal(it){var d=(S.items||[]).filter(function(x){return x.id===it.k})[0];return d?Math.floor((d.rf!=null?d.rf:d.cost)*(S.sellRate||.5)):0}
 function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  var barnSel=SEL&&SEL.t==="d"&&dcById(SEL.id).k==="barn",seeded=SEL&&SEL.t==="p"&&S.plots[SEL.i],isD=SEL&&SEL.t==="d",itx=isD&&dcById(SEL.id);
  $("edBarn").textContent="\uD83C\uDFE1 Barn ("+stored().length+")";
@@ -2177,7 +2178,7 @@ function layBuild(L){var pp=[],dc=[],occ={},pend=[],lay={},i,e,sx=0,sy=0,n=0,k,m
   if(x.t!=null)o.t=x.t;
   if(q){o.c=q[1];o.r=q[2];o.rot=q[3];o.s=q[4]?1:0}
   if(x.k==="barn")o.s=0;
-  if(!o.s){if(isF(x.k)){if(!(isFinite(o.c)&&isFinite(o.r)&&inLandP(P,o.c,o.r))){o.c=x.c;o.r=x.r}}else if(OUTI[x.k]){o.c=x.c;o.r=x.r}else if(ok(o.c,o.r))occ[flKey(o.c,o.r)]=1;else pend.push({o:o})}
+  if(!o.s){if(isF(x.k)){if(!(isFinite(o.c)&&isFinite(o.r)&&inLandP(P,o.c,o.r))){o.c=x.c;o.r=x.r}}else if(OUTI[x.k]||(isFlagK(x.k)&&!inLandP(P,x.c,x.r))){o.c=x.c;o.r=x.r}else if(ok(o.c,o.r))occ[flKey(o.c,o.r)]=1;else pend.push({o:o})}
   dc.push(o)});
  for(k in occ){sx+=Math.floor(k/4096)-2048;sy+=k%4096-2048;n++}
  mc=n?sx/n:((S.sz||8)-1)/2;mr=n?sy/n:mc;
@@ -2856,8 +2857,8 @@ function waterBlobPath(W,S2,sc){var hw=G.TW/2,hh=G.TH/2,k,c,r,cx,cy,rx=hw*.6*sc,
   if(S2[flKey(c+1,r)])blob(cx+hw/2,cy+hh/2);
   if(S2[flKey(c,r+1)])blob(cx-hw/2,cy+hh/2);
   if(S2[flKey(c+1,r+1)])blob(cx,cy+hh)}}
-function drawWaterBody(F,W,t){var hw=G.TW/2,hh=G.TH/2,k,c,r,x0,y0,minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,bx0,bx1,by0,by1,gx,gy,h,px,py,x,y,yy,row,al,ph,S2={};
- for(k=0;k<W.length;k+=2){S2[flKey(W[k],W[k+1])]=1;c=W[k];r=W[k+1];x0=G.ox+(c-r)*hw;y0=G.oy+(c+r)*hh;
+function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G.TW/2,hh=G.TH/2,k,c,r,x0,y0,minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,bx0,bx1,by0,by1,gx,gy,h,px,py,x,y,yy,row,al,ph,S2={};
+ for(k=0;k<WA.length;k+=2){S2A[flKey(WA[k],WA[k+1])]=1;if(k<W.length)S2[flKey(W[k],W[k+1])]=1;c=WA[k];r=WA[k+1];x0=G.ox+(c-r)*hw;y0=G.oy+(c+r)*hh;
   if(x0-hw<minX)minX=x0-hw;if(x0+hw>maxX)maxX=x0+hw;if(y0<minY)minY=y0;if(y0+2*hh>maxY)maxY=y0+2*hh}
  X.save();
  // 1) sandy shore rim + white foam: stroke the outline first, the water fill then covers the inner half (and any inner lines)
@@ -2865,7 +2866,7 @@ function drawWaterBody(F,W,t){var hw=G.TW/2,hh=G.TH/2,k,c,r,x0,y0,minX=1e9,maxX=
  X.lineJoin="round";X.strokeStyle="rgba(205,180,128,.95)";X.lineWidth=3;X.stroke();
  X.strokeStyle="rgba(255,255,255,.5)";X.lineWidth=1.1;X.stroke();
  // 2) the water itself: light shallows at the edge, deeper blue towards the middle (3 smooth layers)
- X.beginPath();waterBlobPath(W,S2,1);X.fillStyle="#cdbd8c";X.fill();X.save();X.clip(); // sandy bottom, seen through the clear water
+ X.beginPath();waterBlobPath(WA,S2A,1);X.fillStyle="#cdbd8c";X.fill();X.save();X.clip(); // sandy bottom, seen through the clear water
  bx0=Math.max(minX,VW.x0);bx1=Math.min(maxX,VW.x1);by0=Math.max(minY,VW.y0);by1=Math.min(maxY,VW.y1);
   // clear water: pebbles on the bottom (fixed to the world), then see-through blue water on top
  for(gy=Math.floor(by0/20)-1;gy<=Math.floor(by1/20)+1;gy++)for(gx=Math.floor(bx0/26)-1;gx<=Math.floor(bx1/26)+1;gx++){
@@ -2898,14 +2899,14 @@ function wkey(c,r){if(!CR)return flKey(c,r);var t=utile(c,r);return flKey(t[0],t
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
  if(LOD>1){P={};
-  for(c=VT.c0;c<=VT.c1;c++)for(r=VT.r0;r<=VT.r1;r++){id=F[wkey(c,r)];if(id){if(!P[id])P[id]=[];P[id].push(c,r)}}
+  for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(id){if(!P[id])P[id]=[];P[id].push(c,r)}}
   for(id in P){p=P[id];X.beginPath();
    if(id==="wt"){S2={};for(k=0;k<p.length;k+=2)S2[flKey(p[k],p[k+1])]=1;waterBlobPath(p,S2,1)}
    else for(k=0;k<p.length;k+=2){x0=G.ox+(p[k]-p[k+1])*hw;y0=G.oy+(p[k]+p[k+1])*hh;X.moveTo(x0,y0);X.lineTo(x0+hw,y0+hh);X.lineTo(x0,y0+2*hh);X.lineTo(x0-hw,y0+hh);X.closePath()}
    X.fillStyle=FLC[id]||"#888";X.fill()}
   return}
  var T=[],hs=0,fc,m,key,fv,oc,ox_;
- for(c=VT.c0;c<=VT.c1;c++)for(r=VT.r0;r<=VT.r1;r++){id=F[wkey(c,r)];if(!id||!FLD[id])continue;
+ for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(!id||!FLD[id])continue;
   if(id==="wt"){W.push(c,r);WSET[flKey(c,r)]=1;continue} // water is drawn later as ONE rounded body
   T.push(c,r,id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r)|0}
  // When the view stands still (the game keeps redrawing for swaying crops), the finished floor picture is reused.
@@ -2921,8 +2922,27 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
   if(ox_){fv.oc=oc;fv.oc2=null;X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(oc,0,0);X.restore()}
   else if(fv.key!==key)fv.oc=null;
   fv.key=key}
- if(W.length)drawWaterBody(F,W,t)}
-var FLV={};
+ if(W.length)drawWaterBody(F,W,t,waterExt(W))}
+var FLV={},VTF={c0:0,c1:0,r0:0,r1:0};
+// distance from the middle of a tile to the nearest land square (in the same tile numbers the picture uses)
+function wDist(c,r){var P=G.P,x=c+.5,y=r+.5,d=1e9,i,q,dx,dy;for(i=0;i<P.length;i++){q=P[i];dx=Math.max(q.c0-x,0,x-q.c1);dy=Math.max(q.r0-y,0,y-q.r1);d=Math.min(d,Math.sqrt(dx*dx+dy*dy))}return d}
+// water painted on the far edge of the beach reaches the sea: add 2 invisible water tiles outward so the pond joins the shallows
+function waterExt(W){var out=[],have={},seen={},q=[],k,c,r,st,d,N=[[1,0],[-1,0],[0,1],[0,-1]];
+ for(k=0;k<W.length;k+=2)have[flKey(W[k],W[k+1])]=1;
+ for(k=0;k<W.length;k+=2){c=W[k];r=W[k+1];if(inLandP(G.P,c,r))continue;d=wDist(c,r);if(d>=6.2)q.push([c,r,d])}
+ for(st=0;st<2&&q.length;st++){var nq=[];q.forEach(function(e){N.forEach(function(v){var a=e[0]+v[0],b=e[1]+v[1],key=flKey(a,b),dd;
+   if(have[key]||seen[key]||inLandP(G.P,a,b))return;dd=wDist(a,b);if(dd>e[2]+.01&&dd<=9.2){seen[key]=1;out.push(a,b);nq.push([a,b,dd])}})});q=nq}
+ return out}
+// the perimeter fence disappears where the water inside and the water outside meet
+function fenceCut(segs,F){if(!F||!segs.length)return segs;var out=[];
+ segs.forEach(function(s){var q=s.q,t,run=null,wet,ic,ir,oc,or_;
+  for(t=s.a;t<s.b;t++){
+   if(s.ed==="r0"){ic=t;ir=q.r0;oc=t;or_=q.r0-1}else if(s.ed==="r1"){ic=t;ir=q.r1-1;oc=t;or_=q.r1}
+   else if(s.ed==="c0"){ic=q.c0;ir=t;oc=q.c0-1;or_=t}else{ic=q.c1-1;ir=t;oc=q.c1;or_=t}
+   wet=F[wkey(ic,ir)]==="wt"&&F[wkey(oc,or_)]==="wt";
+   if(wet){if(run!==null){out.push({ed:s.ed,a:run,b:t,q:q});run=null}}else if(run===null)run=t}
+  if(run!==null)out.push({ed:s.ed,a:run,b:s.b,q:q})});
+ return out}
 
 // ----- painting floors -----
 var PAINT=null,BRUSH=[1,3,5,9];
@@ -2931,7 +2951,7 @@ function paintAt(tc,tr){var f=PAINT&&floorDef(PAINT.id),sz,h,pl={},i,c,r,key,tl=
  if(!f)return;sz=PAINT.size;h=(sz-1)/2;if(!S.fl)S.fl={};
  for(i=0;i<S.np;i++)if(S.pp[i])pl[flKey(S.pp[i][0],S.pp[i][1])]=1;
  (S.dc||[]).forEach(function(o){if(!o.s&&!isF(o.k))pl[flKey(o.c,o.r)]=1}); // tiles holding trees/animals/decor cannot become water
- for(c=tc-h;c<=tc+h;c++)for(r=tr-h;r<=tr+h;r++){if(!inLandP(parS(),c,r))continue;key=flKey(c,r);
+ for(c=tc-h;c<=tc+h;c++)for(r=tr-h;r<=tr+h;r++){if(!inLandP(parS(),c,r)&&!(!outLocked()&&zoneAt(c,r)==="b"))continue;key=flKey(c,r);
   if(f.id==="gr"){if(S.fl[key])tl.push(key);continue}
   if(S.fl[key]===f.id||(f.id==="wt"&&pl[key]))continue;tl.push(key)}
  if(!tl.length){toast(sz>1?"Nothing to change here.":"Already this floor.");return}
@@ -3106,12 +3126,19 @@ function outDist(c,r){var P=parS(),x=c+.5,y=r+.5,d=1e9,i,q,dx,dy;
  return d}
 function zoneAt(c,r){var d;if(inLandP(parS(),c,r))return null;d=outDist(c,r);return d<=7?"b":(d>=8.2&&d<=30?"w":null)}
 function curK(ig){var o;if(PEND)return PEND.k;if(PLACING&&PLACING.t==="d"){o=dcById(PLACING.id);return o?o.k:null}if(ig&&ig.t==="d"){o=dcById(ig.id);return o?o.k:null}return null}
-function OUTSEL(){return !!OUTI[curK(SEL)]}
+function isFlagK(k){return /^fl_/.test(k||"")}
+function OUTSEL(){var k=curK(SEL);return !!OUTI[k]||isFlagK(k)}
 var _tileFree=tileFree;
 tileFree=function(c,r,ig,k){var z;if(k===undefined)k=curK(ig);z=OUTI[k];
  if(!z)return _tileFree(c,r,ig);
  if(zoneAt(c,r)!==z)return false;
  return !(S.dc||[]).some(function(x){return !x.s&&OUTI[x.k]&&x.c===c&&x.r===r&&!(ig&&ig.t==="d"&&ig.id===x.id)})};
+var _tileFree2=tileFree;
+tileFree=function(c,r,ig,k){if(k===undefined)k=curK(ig);
+ if(isFlagK(k)&&!inLandP(parS(),c,r)){ // a flag on the beach: sand only, never on water, one outside thing per tile
+  if(outLocked()||zoneAt(c,r)!=="b"||flAt(c,r)==="wt")return false;
+  return !(S.dc||[]).some(function(x){return !x.s&&(OUTI[x.k]||isFlagK(x.k))&&x.c===c&&x.r===r&&!(ig&&ig.t==="d"&&ig.id===x.id)})}
+ return _tileFree2(c,r,ig,k)};
 // first free spot, as close as possible to the middle of the screen
 function outFreeTile(i){var f=$("field"),g=f._g,v=f._view,B=wbox0(S.sz||8,S.ls),cc,rr,px,py,dx,dy,best=null,bd=1e18,c,r,d,M=34;
  if(g&&v&&!g.cr){px=(window.innerWidth/2-v.L)/v.k;py=(window.innerHeight/2-v.T)/v.k;dx=(px-g.ox)/(g.TW/2);dy=(py-g.oy)/(g.TH/2);cc=(dx+dy)/2;rr=(dy-dx)/2}
