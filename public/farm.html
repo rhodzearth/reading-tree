@@ -1627,9 +1627,8 @@ function camBox(pp,np,dc,n,m,ls,cv){m=m==null?1:m;setRot(cv);var c0=999,c1=-999,
  (dc||[]).forEach(function(x){if(!x.s)add(x.c,x.r)});
  if(c1<-900)return null;
  return[Math.max(B.c0,c0-m),Math.min(B.c1,c1+m+1),Math.max(B.r0,r0-m),Math.min(B.r1,r1+m+1)]}
-var L1SPAN=560,L1MARG=36; // L1SPAN = how much of the farm is seen across the screen (smaller = closer); L1MARG = pixels between the bottom fence corner and the bottom of the farm area
 function lvl1Box(cv){setRot(cv);var n=szOf(cv),B=wbox(n,LSof(cv)),a=rtile(0,0),b=rtile(Math.min(7,n-1),Math.min(7,n-1)),
- c0=Math.min(a[0],b[0]),c1=Math.max(a[0],b[0]),r0=Math.min(a[1],b[1]),r1=Math.max(a[1],b[1]),x=[Math.max(B.c0,c0-1),Math.min(B.c1,c1+2),Math.max(B.r0,r0-1),Math.min(B.r1,r1+2)];k=Math.min(3.2,aw/L1SPAN);
+ c0=Math.min(a[0],b[0]),c1=Math.max(a[0],b[0]),r0=Math.min(a[1],b[1]),r1=Math.max(a[1],b[1]),x=[Math.max(B.c0,c0-1),Math.min(B.c1,c1+2),Math.max(B.r0,r0-1),Math.min(B.r1,r1+2)];x.l1=1;return x}
 function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox(n,ls),d=dims(n,ls),aw=window.innerWidth,ah=window.innerHeight-top-bot,
  k0=Math.max(.08,Math.min(aw/(d.W-120),ah/d.H,2.4)),k=k0,mx=d.mx,my=d.my,ox=(n+2)*56+30,oy=186,z=cv._z||1,kd;
  if(box){var xs=[],ys=[],kz,cap;
@@ -1637,8 +1636,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
   var x0=Math.min.apply(null,xs)-30,x1=Math.max.apply(null,xs)+30,y0=Math.min.apply(null,ys)-110,y1=Math.max.apply(null,ys)+40;
   kz=Math.min(aw/(x1-x0),ah/(y1-y0),2.2);cap=aw/(2*Math.min(n,box.l1?8:10)*56+20+48);
   if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
-  if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx;
-  if(box.l1&&box.vb){k=Math.min(3.2,aw/L1SPAN);mx=ox;my=oy+(box.vb[0]+box.vb[1])*28-(ah/2-L1MARG)/k}} // first view: a bit closer, land sitting low so its bottom fence corner is near the bottom
+  if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx}
  kd=k;if(cv._kabs)k=Math.max(k0*.6,Math.min(3.2,cv._kabs));else k=Math.max(k0*.6,Math.min(3.2,kd*z));cv._z=k/kd;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
   nx=aw-pad-L0-(ox+(B.c1-B.r0)*56+2200)*k,xx=pad-L0-(ox+(B.c0-B.r1)*56-2200)*k,ny=vt+ah-pad-T0-(oy+(B.c1+B.r1)*28+1600)*k,xy=vt+pad-T0-(oy+(B.c0+B.r0)*28-1600)*k,px,py;
@@ -1651,7 +1649,7 @@ function fitAll(){var hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight,eb=$
  if(S){PERF=(S.sz||8)>=36||!!(S.ls&&S.ls.length)||S.np>150;
   f=$("field");if(!f._kabs||!f._box)f._box=lvl1Box(f);
   fit(f,S.np,hud,dh,f._box);f._fp=[S.np,hud,dh,f._box,0,"bgGrass",0]}
- if(V&&$("visit").style.display!=="none"){vh=$("vHead").offsetHeight;vc=$("vCanvas");if(!vc._kabs||!vc._box)vc._box=lvl1Box(vc);
+ if(V&&$("visit").style.display!=="none"){vh=$("vHead").offsetHeight;vc=$("vCanvas");if(!vc._kabs||!vc._box)vc._box=camBox(V.pp,V.np,V.dc,V.sz||8,1,V.ls,vc);
   fit(vc,V.np,vh,0,vc._box,0);vc._fp=[V.np,vh,0,vc._box,0,"vBg",0];grassBg($("vBg"),vc,0)}
  if(LAY&&$("lay").style.display!=="none"){lh=$("lHead").offsetHeight;lb=$("lBar").offsetHeight;lc=$("lCanvas");
   fit(lc,S.np,lh,lb,LAY.box,1);lc._fp=[S.np,lh,lb,LAY.box,1,"lBg",lh];grassBg($("lBg"),lc,lh)}
@@ -1761,7 +1759,6 @@ var Q=[],busy=false,QT=0,IDLE=1500,RT=0,QK="farmQ_"+TOKEN.slice(-12);
 var BAT={farmPlant:"pl",farmHarvest:"hv",farmBuyPlot:"bp",farmDecor:"d",farmPlotMove:"p",farmTreeHarvest:"th",farmRotate:"rt",farmSell:"sl",farmBuyAt:"bu",farmFloor:"fl",farmFenceSwap:"fs"};
 function qSave(){try{if(Q.length)localStorage.setItem(QK,JSON.stringify(Q));else localStorage.removeItem(QK)}catch(e){}}
 function sv(){$("saveBtn").innerHTML=(Q.length||busy)?"&#9203;":"&#128190;"}
-function sendMany(L){L.forEach(function(x){Q.push(x)});qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
 function kick(){clearTimeout(QT);pump()}
 function send(fn,args){Q.push([fn,args]);qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
 function pump(){if(busy||!Q.length)return;var n=0,ops=[],j;
@@ -1972,13 +1969,12 @@ $("edGrp").onclick=function(){
  if(!SEL)return;
  var gk=gkey(SEL),st=getPos(SEL),cand={},seen={},q=[],list=[],skip=0,n,i,a,b,p,c,r,key;
  if(!st||gk==="barn")return;
- if(isF(gk)&&dcById(SEL.id))list=fenceGroup(dcById(SEL.id));
  function add(c2,r2,s){var kk=flKey(c2,r2);(cand[kk]=cand[kk]||[]).push(s)}
  if(gk==="p"){for(i=0;i<S.np;i++)if(S.pp[i])add(S.pp[i][0],S.pp[i][1],{t:"p",i:i})}
  else(S.dc||[]).forEach(function(x){if(!x.s&&gnorm(x.k)===gnorm(gk))add(x.c,x.r,{t:"d",id:x.id})});
  seen[flKey(st[0],st[1])]=1;q.push(st);
  while(q.length){p=q.pop();
-  if(!isF(gk))(cand[flKey(p[0],p[1])]||[]).forEach(function(s){list.push(s);if(s.t==="p"&&S.plots[s.i])skip++});
+  (cand[flKey(p[0],p[1])]||[]).forEach(function(s){list.push(s);if(s.t==="p"&&S.plots[s.i])skip++});
   for(a=-1;a<=1;a++)for(b=-1;b<=1;b++){if(!a&&!b)continue;c=p[0]+a;r=p[1]+b;key=flKey(c,r);
    if(seen[key]||!cand[key])continue;seen[key]=1;q.push([c,r])}}
   var sg=list.map(function(s){var p2=getPos(s);return p2?p2[0]+","+p2[1]:""}).join(";")+"|"+gk;
@@ -1989,21 +1985,10 @@ $("edGrp").onclick=function(){
  try{if(n)FarmAudio.play("store")}catch(e){}
  toast(n?"\uD83D\uDCE6 Stored a group of "+n+(skip?" ("+skip+" planted plot"+(skip>1?"s":"")+" skipped)":"")+" - tap Undo to restore":(skip?"Planted plots can't be stored. Harvest them first.":"Nothing to store"))};
  // ===== GROUP HELPERS: same type, touching (diagonals count), starts from the selected item =====
-// ===== FENCE GROUP: fences join only when their edges really touch (same style) =====
-function fEdgesOf(it){var c=it.c,r=it.r,t=(it.rot||0)&3;
- function E(e){return e===0?[[c,r],[c+1,r]]:e===1?[[c,r],[c,r+1]]:e===2?[[c,r+1],[c+1,r+1]]:[[c+1,r],[c+1,r+1]]}
- return(isCorner(it.k)?[[0,1],[0,3],[2,3],[2,1]][t]:[t]).map(E)}
-function fVertsOf(it){var v=[];fEdgesOf(it).forEach(function(e){v.push(e[0],e[1])});return v}
-function fenceGroup(start){var sg=gnorm(start.k),byV={},seen={},q=[start],out=[],p;
- (S.dc||[]).forEach(function(x){if(x.s||gnorm(x.k)!==sg)return;fVertsOf(x).forEach(function(v){var k=v[0]+","+v[1];(byV[k]=byV[k]||[]).push(x)})});
- seen[start.id]=1;
- while(q.length){p=q.pop();out.push({t:"d",id:p.id});fVertsOf(p).forEach(function(v){(byV[v[0]+","+v[1]]||[]).forEach(function(n){if(!seen[n.id]){seen[n.id]=1;q.push(n)}})})}
- return out}
- function gnorm(k){var m;if(k==="f_corner")return"f_fence";m=/^f_([a-z]+)_c$/.exec(k||"");return m?"f_"+m[1]:k}
+function gnorm(k){var m;if(k==="f_corner")return"f_fence";m=/^f_([a-z]+)_c$/.exec(k||"");return m?"f_"+m[1]:k}
 function grpOf(s){
  var gk=gkey(s),st=getPos(s),cand={},seen={},q=[],list=[],i,a,b,p,c,r,key;
- if(!st||gk==="barn")return[]; if(!st||gk==="barn")return[];
- if(isF(gk)&&dcById(s.id))return fenceGroup(dcById(s.id));
+ if(!st||gk==="barn")return[];
  function add(c2,r2,x){var kk=flKey(c2,r2);(cand[kk]=cand[kk]||[]).push(x)}
  if(gk==="p"){for(i=0;i<S.np;i++)if(S.pp[i])add(S.pp[i][0],S.pp[i][1],{t:"p",i:i})}
  else(S.dc||[]).forEach(function(x){if(!x.s&&gnorm(x.k)===gnorm(gk))add(x.c,x.r,{t:"d",id:x.id})});
@@ -2075,8 +2060,8 @@ $("edAll").onclick=function(){
   function(){var done,j;
    if(S.coins<cost){toast("Not enough coins.");return}
    done=tl.slice(0,n);S.coins-=cost;
-   done.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});FLN++;
-   var BL=[];for(j=0;j<done.length;j+=400)BL.push(["farmFloor",[TOKEN,f.id,done.slice(j,j+400)]]);sendMany(BL);
+   done.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});
+   for(j=0;j<done.length;j+=400)send("farmFloor",[TOKEN,f.id,done.slice(j,j+400)]);
    paint();drawAll();
    toast("\uD83D\uDD8C "+f.name+" x"+n+(cost?" (-"+cost+"\uD83E\uDE99)":""))},
   "Paint all")};
@@ -2921,46 +2906,10 @@ function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G
  X.restore();X.restore()}
 var WSET={}; // tiles that are water (so the light checker pattern is not drawn over them)
 function wkey(c,r){if(!CR)return flKey(c,r);var t=utile(c,r);return flKey(t[0],t[1])}
-// ===== FLOOR MAP: the whole floor as 1 pixel per tile, drawn with ONE call while you drag or zoom =====
-var FMAP=null,FLN=0,FRGB={};
-function flRGB(id){var h=FLC[id]||"#888888",v=FRGB[id];if(v)return v;v=[parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)];return FRGB[id]=v}
-function floorMap(F){var fm=FMAP,keys,k,n,c,r,id,key,minc=1e9,maxc=-1e9,minr=1e9,maxr=-1e9,w,h,cv,cx,im,d,o,v,W=[],L=[];
- if(fm&&fm.F===F&&fm.n===FLN)return fm;
- keys=Object.keys(F);n=keys.length;
- for(k=0;k<n;k++){id=F[keys[k]];if(!id)continue;key=+keys[k];c=Math.floor(key/4096)-2048;r=key%4096-2048;
-  if(id==="wt"){W.push(c,r);continue}
-  L.push(c,r,id);if(c<minc)minc=c;if(c>maxc)maxc=c;if(r<minr)minr=r;if(r>maxr)maxr=r}
- if(!L.length)return FMAP={F:F,n:FLN,cv:null,W:W};
- w=maxc-minc+1;h=maxr-minr+1;cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");im=cx.createImageData(w,h);d=im.data;
- for(k=0;k<L.length;k+=3){o=((L[k+1]-minr)*w+(L[k]-minc))*4;v=flRGB(L[k+2]);d[o]=v[0];d[o+1]=v[1];d[o+2]=v[2];d[o+3]=255}
- cx.putImageData(im,0,0);return FMAP={F:F,n:FLN,cv:cv,minc:minc,minr:minr,w:w,h:h,W:W}}
- // ===== TEXTURED FLOOR WHILE MOVING: the floor is baked in blocks of 16x16 tiles (half size) and each block is drawn with ONE call =====
-var FCH={F:null,ver:"",m:{},q:[]},FCHN=16,FCHS=.5;
-function bakeChunk(F,i,j,hw,hh){var CH=FCHN,sc=FCHS,c0=i*CH,r0=j*CH,lc,lr,id,cnt=0,cv,cx,w,h,px,py;
- for(lr=0;lr<CH;lr++)for(lc=0;lc<CH;lc++){id=F[flKey(c0+lc,r0+lr)];if(id&&id!=="wt"&&FLD[id])cnt++}
- if(!cnt)return{cv:null};
- w=Math.ceil((2*CH*hw+8)*sc);h=Math.ceil((2*CH*hh+62)*sc);
- cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");cx.setTransform(sc,0,0,sc,0,0);
- for(lr=0;lr<CH;lr++)for(lc=0;lc<CH;lc++){id=F[flKey(c0+lc,r0+lr)];if(!id||id==="wt"||!FLD[id])continue;
-  px=(lc-lr)*hw+CH*hw+4;py=(lc+lr)*hh+2;cx.drawImage(ftile(id,CSD,0),px-57,py-1,114,58)}
- return{cv:cv,w:w,h:h}}
-function chunkDraw(F,hw,hh){var ver=FLN+"|"+CSD+"|"+G.ox+"|"+G.oy+"|"+hw+"|"+hh,CH=FCHN,sc=FCHS,i0,i1,j0,j1,i,j,k,ch,built=0;
- if(FCH.F!==F||FCH.ver!==ver)FCH={F:F,ver:ver,m:{},q:[]};
- i0=Math.floor(VTF.c0/CH);i1=Math.floor(VTF.c1/CH);j0=Math.floor(VTF.r0/CH);j1=Math.floor(VTF.r1/CH);
- if((i1-i0+1)*(j1-j0+1)>16)return; // zoomed far out: the flat colours are enough
- for(i=i0;i<=i1;i++)for(j=j0;j<=j1;j++){k=i+","+j;ch=FCH.m[k];
-  if(!ch){if(built>=3)continue;ch=FCH.m[k]=bakeChunk(F,i,j,hw,hh);built++;FCH.q.push(k);if(FCH.q.length>40)delete FCH.m[FCH.q.shift()]}
-  if(ch.cv)X.drawImage(ch.cv,G.ox+(i*CH-j*CH)*hw-(CH*hw+4),G.oy+(i*CH+j*CH)*hh-2,ch.w/sc,ch.h/sc)}}
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
   var flat=LOD>1,cnt=0;
   if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=150;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=150;r++)if(F[wkey(c,r)])cnt++;flat=cnt>150}
-  if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
-   if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
-   chunkDraw(F,hw,hh);
-   for(k=0;k<fm.W.length;k+=2)if(fm.W[k]>=VTF.c0&&fm.W[k]<=VTF.c1&&fm.W[k+1]>=VTF.r0&&fm.W[k+1]<=VTF.r1)wp.push(fm.W[k],fm.W[k+1]);
-   if(wp.length){X.beginPath();pe2=wp.concat(waterExt(wp));S3={};for(k=0;k<pe2.length;k+=2)S3[flKey(pe2[k],pe2[k+1])]=1;waterBlobPath(pe2,S3,1);X.fillStyle=FLC.wt;X.fill()}
-   return}
   if(flat){P={};
    for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(id){if(!P[id])P[id]=[];P[id].push(c,r)}}
   for(id in P){p=P[id];X.beginPath();
@@ -3021,7 +2970,7 @@ function paintAt(tc,tr){var f=PAINT&&floorDef(PAINT.id),sz,h,pl={},i,c,r,key,tl=
  n=f.cost?Math.min(tl.length,Math.floor(S.coins/f.cost)):tl.length;
  if(!n){toast(f.name+" costs "+f.cost+" coins per tile. You have "+S.coins+".");return}
  tl=tl.slice(0,n);cost=n*f.cost;S.coins-=cost;
- tl.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});FLN++;
+ tl.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});
  send("farmFloor",[TOKEN,f.id,tl]);paint();drawAll();
  toast(f.id==="gr"?"\uD83C\uDF31 Grass restored":"\uD83D\uDD8C "+f.name+" x"+n+(cost?" (-"+cost+"\uD83E\uDE99)":""))}
 function startPaint(f){var sz=PAINT?PAINT.size:1;PEND=null;$("buyBar").style.display="none";BUYING=0;$("mkt").style.display="none";
