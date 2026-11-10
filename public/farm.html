@@ -1759,6 +1759,7 @@ var Q=[],busy=false,QT=0,IDLE=1500,RT=0,QK="farmQ_"+TOKEN.slice(-12);
 var BAT={farmPlant:"pl",farmHarvest:"hv",farmBuyPlot:"bp",farmDecor:"d",farmPlotMove:"p",farmTreeHarvest:"th",farmRotate:"rt",farmSell:"sl",farmBuyAt:"bu",farmFloor:"fl",farmFenceSwap:"fs"};
 function qSave(){try{if(Q.length)localStorage.setItem(QK,JSON.stringify(Q));else localStorage.removeItem(QK)}catch(e){}}
 function sv(){$("saveBtn").innerHTML=(Q.length||busy)?"&#9203;":"&#128190;"}
+function sendMany(L){L.forEach(function(x){Q.push(x)});qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
 function kick(){clearTimeout(QT);pump()}
 function send(fn,args){Q.push([fn,args]);qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
 function pump(){if(busy||!Q.length)return;var n=0,ops=[],j;
@@ -2072,8 +2073,8 @@ $("edAll").onclick=function(){
   function(){var done,j;
    if(S.coins<cost){toast("Not enough coins.");return}
    done=tl.slice(0,n);S.coins-=cost;
-   done.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});
-   for(j=0;j<done.length;j+=400)send("farmFloor",[TOKEN,f.id,done.slice(j,j+400)]);
+   done.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});FLN++;
+   var BL=[];for(j=0;j<done.length;j+=400)BL.push(["farmFloor",[TOKEN,f.id,done.slice(j,j+400)]]);sendMany(BL);
    paint();drawAll();
    toast("\uD83D\uDD8C "+f.name+" x"+n+(cost?" (-"+cost+"\uD83E\uDE99)":""))},
   "Paint all")};
@@ -2918,10 +2919,28 @@ function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G
  X.restore();X.restore()}
 var WSET={}; // tiles that are water (so the light checker pattern is not drawn over them)
 function wkey(c,r){if(!CR)return flKey(c,r);var t=utile(c,r);return flKey(t[0],t[1])}
+// ===== FLOOR MAP: the whole floor as 1 pixel per tile, drawn with ONE call while you drag or zoom =====
+var FMAP=null,FLN=0,FRGB={};
+function flRGB(id){var h=FLC[id]||"#888888",v=FRGB[id];if(v)return v;v=[parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)];return FRGB[id]=v}
+function floorMap(F){var fm=FMAP,keys,k,n,c,r,id,key,minc=1e9,maxc=-1e9,minr=1e9,maxr=-1e9,w,h,cv,cx,im,d,o,v,W=[],L=[];
+ if(fm&&fm.F===F&&fm.n===FLN)return fm;
+ keys=Object.keys(F);n=keys.length;
+ for(k=0;k<n;k++){id=F[keys[k]];if(!id)continue;key=+keys[k];c=Math.floor(key/4096)-2048;r=key%4096-2048;
+  if(id==="wt"){W.push(c,r);continue}
+  L.push(c,r,id);if(c<minc)minc=c;if(c>maxc)maxc=c;if(r<minr)minr=r;if(r>maxr)maxr=r}
+ if(!L.length)return FMAP={F:F,n:FLN,cv:null,W:W};
+ w=maxc-minc+1;h=maxr-minr+1;cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");im=cx.createImageData(w,h);d=im.data;
+ for(k=0;k<L.length;k+=3){o=((L[k+1]-minr)*w+(L[k]-minc))*4;v=flRGB(L[k+2]);d[o]=v[0];d[o+1]=v[1];d[o+2]=v[2];d[o+3]=255}
+ cx.putImageData(im,0,0);return FMAP={F:F,n:FLN,cv:cv,minc:minc,minr:minr,w:w,h:h,W:W}}
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
   var flat=LOD>1,cnt=0;
   if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=150;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=150;r++)if(F[wkey(c,r)])cnt++;flat=cnt>150}
+  if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
+   if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
+   for(k=0;k<fm.W.length;k+=2)if(fm.W[k]>=VTF.c0&&fm.W[k]<=VTF.c1&&fm.W[k+1]>=VTF.r0&&fm.W[k+1]<=VTF.r1)wp.push(fm.W[k],fm.W[k+1]);
+   if(wp.length){X.beginPath();pe2=wp.concat(waterExt(wp));S3={};for(k=0;k<pe2.length;k+=2)S3[flKey(pe2[k],pe2[k+1])]=1;waterBlobPath(pe2,S3,1);X.fillStyle=FLC.wt;X.fill()}
+   return}
   if(flat){P={};
    for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(id){if(!P[id])P[id]=[];P[id].push(c,r)}}
   for(id in P){p=P[id];X.beginPath();
@@ -2982,7 +3001,7 @@ function paintAt(tc,tr){var f=PAINT&&floorDef(PAINT.id),sz,h,pl={},i,c,r,key,tl=
  n=f.cost?Math.min(tl.length,Math.floor(S.coins/f.cost)):tl.length;
  if(!n){toast(f.name+" costs "+f.cost+" coins per tile. You have "+S.coins+".");return}
  tl=tl.slice(0,n);cost=n*f.cost;S.coins-=cost;
- tl.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});
+ tl.forEach(function(k){if(f.id==="gr")delete S.fl[k];else S.fl[k]=f.id});FLN++;
  send("farmFloor",[TOKEN,f.id,tl]);paint();drawAll();
  toast(f.id==="gr"?"\uD83C\uDF31 Grass restored":"\uD83D\uDD8C "+f.name+" x"+n+(cost?" (-"+cost+"\uD83E\uDE99)":""))}
 function startPaint(f){var sz=PAINT?PAINT.size:1;PEND=null;$("buyBar").style.display="none";BUYING=0;$("mkt").style.display="none";
