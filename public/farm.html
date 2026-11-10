@@ -2932,12 +2932,30 @@ function floorMap(F){var fm=FMAP,keys,k,n,c,r,id,key,minc=1e9,maxc=-1e9,minr=1e9
  w=maxc-minc+1;h=maxr-minr+1;cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");im=cx.createImageData(w,h);d=im.data;
  for(k=0;k<L.length;k+=3){o=((L[k+1]-minr)*w+(L[k]-minc))*4;v=flRGB(L[k+2]);d[o]=v[0];d[o+1]=v[1];d[o+2]=v[2];d[o+3]=255}
  cx.putImageData(im,0,0);return FMAP={F:F,n:FLN,cv:cv,minc:minc,minr:minr,w:w,h:h,W:W}}
+ // ===== TEXTURED FLOOR WHILE MOVING: the floor is baked in blocks of 16x16 tiles (half size) and each block is drawn with ONE call =====
+var FCH={F:null,ver:"",m:{},q:[]},FCHN=16,FCHS=.5;
+function bakeChunk(F,i,j,hw,hh){var CH=FCHN,sc=FCHS,c0=i*CH,r0=j*CH,lc,lr,id,cnt=0,cv,cx,w,h,px,py;
+ for(lr=0;lr<CH;lr++)for(lc=0;lc<CH;lc++){id=F[flKey(c0+lc,r0+lr)];if(id&&id!=="wt"&&FLD[id])cnt++}
+ if(!cnt)return{cv:null};
+ w=Math.ceil((2*CH*hw+8)*sc);h=Math.ceil((2*CH*hh+62)*sc);
+ cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");cx.setTransform(sc,0,0,sc,0,0);
+ for(lr=0;lr<CH;lr++)for(lc=0;lc<CH;lc++){id=F[flKey(c0+lc,r0+lr)];if(!id||id==="wt"||!FLD[id])continue;
+  px=(lc-lr)*hw+CH*hw+4;py=(lc+lr)*hh+2;cx.drawImage(ftile(id,CSD,0),px-57,py-1,114,58)}
+ return{cv:cv,w:w,h:h}}
+function chunkDraw(F,hw,hh){var ver=FLN+"|"+CSD+"|"+G.ox+"|"+G.oy+"|"+hw+"|"+hh,CH=FCHN,sc=FCHS,i0,i1,j0,j1,i,j,k,ch,built=0;
+ if(FCH.F!==F||FCH.ver!==ver)FCH={F:F,ver:ver,m:{},q:[]};
+ i0=Math.floor(VTF.c0/CH);i1=Math.floor(VTF.c1/CH);j0=Math.floor(VTF.r0/CH);j1=Math.floor(VTF.r1/CH);
+ if((i1-i0+1)*(j1-j0+1)>16)return; // zoomed far out: the flat colours are enough
+ for(i=i0;i<=i1;i++)for(j=j0;j<=j1;j++){k=i+","+j;ch=FCH.m[k];
+  if(!ch){if(built>=3)continue;ch=FCH.m[k]=bakeChunk(F,i,j,hw,hh);built++;FCH.q.push(k);if(FCH.q.length>40)delete FCH.m[FCH.q.shift()]}
+  if(ch.cv)X.drawImage(ch.cv,G.ox+(i*CH-j*CH)*hw-(CH*hw+4),G.oy+(i*CH+j*CH)*hh-2,ch.w/sc,ch.h/sc)}}
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
   var flat=LOD>1,cnt=0;
   if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=150;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=150;r++)if(F[wkey(c,r)])cnt++;flat=cnt>150}
   if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
    if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
+   chunkDraw(F,hw,hh);
    for(k=0;k<fm.W.length;k+=2)if(fm.W[k]>=VTF.c0&&fm.W[k]<=VTF.c1&&fm.W[k+1]>=VTF.r0&&fm.W[k+1]<=VTF.r1)wp.push(fm.W[k],fm.W[k+1]);
    if(wp.length){X.beginPath();pe2=wp.concat(waterExt(wp));S3={};for(k=0;k<pe2.length;k+=2)S3[flKey(pe2[k],pe2[k+1])]=1;waterBlobPath(pe2,S3,1);X.fillStyle=FLC.wt;X.fill()}
    return}
