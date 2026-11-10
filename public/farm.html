@@ -1969,12 +1969,13 @@ $("edGrp").onclick=function(){
  if(!SEL)return;
  var gk=gkey(SEL),st=getPos(SEL),cand={},seen={},q=[],list=[],skip=0,n,i,a,b,p,c,r,key;
  if(!st||gk==="barn")return;
+ if(isF(gk)&&dcById(SEL.id))list=fenceGroup(dcById(SEL.id));
  function add(c2,r2,s){var kk=flKey(c2,r2);(cand[kk]=cand[kk]||[]).push(s)}
  if(gk==="p"){for(i=0;i<S.np;i++)if(S.pp[i])add(S.pp[i][0],S.pp[i][1],{t:"p",i:i})}
  else(S.dc||[]).forEach(function(x){if(!x.s&&gnorm(x.k)===gnorm(gk))add(x.c,x.r,{t:"d",id:x.id})});
  seen[flKey(st[0],st[1])]=1;q.push(st);
  while(q.length){p=q.pop();
-  (cand[flKey(p[0],p[1])]||[]).forEach(function(s){list.push(s);if(s.t==="p"&&S.plots[s.i])skip++});
+  if(!isF(gk))(cand[flKey(p[0],p[1])]||[]).forEach(function(s){list.push(s);if(s.t==="p"&&S.plots[s.i])skip++});
   for(a=-1;a<=1;a++)for(b=-1;b<=1;b++){if(!a&&!b)continue;c=p[0]+a;r=p[1]+b;key=flKey(c,r);
    if(seen[key]||!cand[key])continue;seen[key]=1;q.push([c,r])}}
   var sg=list.map(function(s){var p2=getPos(s);return p2?p2[0]+","+p2[1]:""}).join(";")+"|"+gk;
@@ -1985,10 +1986,21 @@ $("edGrp").onclick=function(){
  try{if(n)FarmAudio.play("store")}catch(e){}
  toast(n?"\uD83D\uDCE6 Stored a group of "+n+(skip?" ("+skip+" planted plot"+(skip>1?"s":"")+" skipped)":"")+" - tap Undo to restore":(skip?"Planted plots can't be stored. Harvest them first.":"Nothing to store"))};
  // ===== GROUP HELPERS: same type, touching (diagonals count), starts from the selected item =====
-function gnorm(k){var m;if(k==="f_corner")return"f_fence";m=/^f_([a-z]+)_c$/.exec(k||"");return m?"f_"+m[1]:k}
+// ===== FENCE GROUP: fences join only when their edges really touch (same style) =====
+function fEdgesOf(it){var c=it.c,r=it.r,t=(it.rot||0)&3;
+ function E(e){return e===0?[[c,r],[c+1,r]]:e===1?[[c,r],[c,r+1]]:e===2?[[c,r+1],[c+1,r+1]]:[[c+1,r],[c+1,r+1]]}
+ return(isCorner(it.k)?[[0,1],[0,3],[2,3],[2,1]][t]:[t]).map(E)}
+function fVertsOf(it){var v=[];fEdgesOf(it).forEach(function(e){v.push(e[0],e[1])});return v}
+function fenceGroup(start){var sg=gnorm(start.k),byV={},seen={},q=[start],out=[],p;
+ (S.dc||[]).forEach(function(x){if(x.s||gnorm(x.k)!==sg)return;fVertsOf(x).forEach(function(v){var k=v[0]+","+v[1];(byV[k]=byV[k]||[]).push(x)})});
+ seen[start.id]=1;
+ while(q.length){p=q.pop();out.push({t:"d",id:p.id});fVertsOf(p).forEach(function(v){(byV[v[0]+","+v[1]]||[]).forEach(function(n){if(!seen[n.id]){seen[n.id]=1;q.push(n)}})})}
+ return out}
+ function gnorm(k){var m;if(k==="f_corner")return"f_fence";m=/^f_([a-z]+)_c$/.exec(k||"");return m?"f_"+m[1]:k}
 function grpOf(s){
  var gk=gkey(s),st=getPos(s),cand={},seen={},q=[],list=[],i,a,b,p,c,r,key;
- if(!st||gk==="barn")return[];
+ if(!st||gk==="barn")return[]; if(!st||gk==="barn")return[];
+ if(isF(gk)&&dcById(s.id))return fenceGroup(dcById(s.id));
  function add(c2,r2,x){var kk=flKey(c2,r2);(cand[kk]=cand[kk]||[]).push(x)}
  if(gk==="p"){for(i=0;i<S.np;i++)if(S.pp[i])add(S.pp[i][0],S.pp[i][1],{t:"p",i:i})}
  else(S.dc||[]).forEach(function(x){if(!x.s&&gnorm(x.k)===gnorm(gk))add(x.c,x.r,{t:"d",id:x.id})});
