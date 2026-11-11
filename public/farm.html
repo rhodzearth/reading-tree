@@ -155,6 +155,7 @@ body.paint-top #hud{visibility:hidden}
 #dlg:has(#fbN){align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
 #dlg:has(#fbN) .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
 body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
+#barnAll{display:none!important}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -3598,6 +3599,20 @@ b.onclick=function(){var l=grp(),tot=0,sg,ids;if(!l.length)return;
  SEL=null;paint();editUI();drawAll();
  try{FarmAudio.play("sell")}catch(e){}
  toast("\uD83D\uDCB0 Sold a group of "+l.length+" for +"+tot+"\uD83E\uDE99")};
+})();
+
+(function(){
+var b=document.createElement("button");b.className="btn alt";b.id="lStoAll";b.textContent="\uD83D\uDCE6 Store all";
+$("lStore").parentNode.insertBefore(b,$("lStore"));
+b.onclick=function(){if(!LAY)return;var n=0,skip=0,i;
+ for(i=0;i<LAY.pp.length;i++)if(LAY.pp[i]){if(S.plots[i])skip++;else n++}
+ LAY.dc.forEach(function(o){if(!o.s&&o.k!=="barn")n++});
+ if(!n){toast(skip?"Planted plots can't be stored. Harvest them first.":"Nothing to store");return}
+ laySnap();
+ for(i=0;i<LAY.pp.length;i++)if(LAY.pp[i]&&!S.plots[i])LAY.pp[i]=null;
+ LAY.dc.forEach(function(o){if(!o.s&&o.k!=="barn")o.s=1});
+ SEL=null;PLACING=null;layUI();drawAll();
+ toast("\uD83D\uDCE6 Stored "+n+" items in this layout"+(skip?" ("+skip+" planted plots skipped)":"")+". Tap Undo to bring them back, or Close to throw this away.")};
 })();
 
 /* ===== HOUSE SIZES: a house covers n x n tiles (same table as the server). The barn is about 1 tile, so a cottage is barn size and a mega mansion is huge. ===== */
