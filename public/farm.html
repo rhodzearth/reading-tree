@@ -211,7 +211,7 @@ var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
 try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
 TOKEN=window.FARM_TOKEN||"";
-function call(n,a,ok,bad){FARM_CALL(n,a).then(function(s){if(s&&s.me&&!s.crops&&S){s.crops=S.crops;s.items=S.items;s.fls=S.fls;s.pfs=S.pfs;if(!s.fl)s.fl=S.fl;if(!s.lo)s.lo=S.lo}try{ok(s)}catch(e){busy=false;toast("Page problem: "+(e&&e.message?e.message:e))}},function(e){var m=e&&e.message?e.message:String(e);if(/log in/i.test(m)){showMsg("Please log in to the Reading Tree first, then open Reading Farm again.")}else if(bad)bad(m);else toast(m)})}
+function call(n,a,ok,bad){FARM_CALL(n,a).then(function(s){if(s&&s.me&&!s.crops&&S){s.crops=S.crops;s.items=S.items;s.fls=S.fls;s.pfs=S.pfs;if(!s.fl)s.fl=S.fl;if(!s.fr)s.fr=S.fr;if(!s.ft)s.ft=S.ft;if(!s.lo)s.lo=S.lo}try{ok(s)}catch(e){busy=false;toast("Page problem: "+(e&&e.message?e.message:e))}},function(e){var m=e&&e.message?e.message:String(e);if(/log in/i.test(m)){showMsg("Please log in to the Reading Tree first, then open Reading Farm again.")}else if(bad)bad(m);else toast(m)})}
 function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},3000)}
 function showMsg(m){$("msg").style.display="";$("msg").textContent=m;$("main").style.display="none"}
 function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
@@ -2936,13 +2936,13 @@ function floorMap(F){var fm=FMAP,keys,k,n,c,r,id,key,minc=1e9,maxc=-1e9,minr=1e9
  cx.putImageData(im,0,0);return FMAP={F:F,n:FLN,cv:cv,minc:minc,minr:minr,w:w,h:h,W:W}}
 // ===== TEXTURED FLOOR WHILE MOVING: the floor is baked in blocks of 16x16 tiles (half size) and each block is drawn with ONE call =====
 var FCH={F:null,ver:"",m:{},q:[]},FCHN=16,FCHS=.5;
-function bakeChunk(F,i,j,hw,hh){var CH=FCHN,sc=FCHS,c0=i*CH,r0=j*CH,lc,lr,id,cnt=0,cv,cx,w,h,px,py;
+function bakeChunk(F,i,j,hw,hh){var CH=FCHN,sc=FCHS,c0=i*CH,r0=j*CH,lc,lr,id,cnt=0,cv,cx,w,h,px,py,FRm=frOf(X.canvas)||{};
  for(lr=0;lr<CH;lr++)for(lc=0;lc<CH;lc++){id=F[flKey(c0+lc,r0+lr)];if(id&&id!=="wt"&&FLD[id])cnt++}
  if(!cnt)return{cv:null};
  w=Math.ceil((2*CH*hw+8)*sc);h=Math.ceil((2*CH*hh+62)*sc);
  cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");cx.setTransform(sc,0,0,sc,0,0);
  for(lr=0;lr<CH;lr++)for(lc=0;lc<CH;lc++){id=F[flKey(c0+lc,r0+lr)];if(!id||id==="wt"||!FLD[id])continue;
-  px=(lc-lr)*hw+CH*hw+4;py=(lc+lr)*hh+2;cx.drawImage(ftile(id,CSD,0),px-57,py-1,114,58)}
+  px=(lc-lr)*hw+CH*hw+4;py=(lc+lr)*hh+2;cx.drawImage(ftileR(id,CSD,FRm[flKey(c0+lc,r0+lr)]|0),px-57,py-1,114,58)}
  return{cv:cv,w:w,h:h}}
 function chunkDraw(F,hw,hh){var ver=FLN+"|"+CSD+"|"+G.ox+"|"+G.oy+"|"+hw+"|"+hh,CH=FCHN,sc=FCHS,i0,i1,j0,j1,i,j,k,ch,built=0;
  if(FCH.F!==F||FCH.ver!==ver)FCH={F:F,ver:ver,m:{},q:[]};
@@ -2953,7 +2953,7 @@ function chunkDraw(F,hw,hh){var ver=FLN+"|"+CSD+"|"+G.ox+"|"+G.oy+"|"+hw+"|"+hh,
   if(ch.cv)X.drawImage(ch.cv,G.ox+(i*CH-j*CH)*hw-(CH*hw+4),G.oy+(i*CH+j*CH)*hh-2,ch.w/sc,ch.h/sc)}}
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
-  var flat=LOD>1,cnt=0;
+  var flat=LOD>1,cnt=0,FRm=frOf(cv)||{},rot;
   if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=150;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=150;r++)if(F[wkey(c,r)])cnt++;flat=cnt>150}
   if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
    if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
@@ -2971,7 +2971,7 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
  var T=[],hs=0,fc,m,key,fv,oc,ox_;
  for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(!id||!FLD[id])continue;
   if(id==="wt"){W.push(c,r);WSET[flKey(c,r)]=1;continue} // water is drawn later as ONE rounded body
-  T.push(c,r,id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r)|0}
+  rot=FRm[wkey(c,r)]|0;T.push(c,r,rot?id+rot:id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r+rot*17)|0}
  // When the view stands still (the game keeps redrawing for swaying crops), the finished floor picture is reused.
  try{m=X.getTransform();key=X.canvas.id+"|"+X.canvas.width+"|"+X.canvas.height+"|"+m.a+"|"+m.e+"|"+m.f+"|"+G.ox+"|"+G.oy+"|"+CR+"|"+CSD+"|"+T.length+"|"+hs}catch(e){key=null}
  fv=FLV[X.canvas.id]||(FLV[X.canvas.id]={});
@@ -2981,7 +2981,7 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
   if(key&&fv.key===key&&T.length>60){ // second frame in a row with the same view: build the picture once
    oc=fv.oc2||(fv.oc2=document.createElement("canvas"));if(oc.width!==X.canvas.width||oc.height!==X.canvas.height){oc.width=X.canvas.width;oc.height=X.canvas.height}
    ox_=oc.getContext("2d");ox_.setTransform(1,0,0,1,0,0);ox_.clearRect(0,0,oc.width,oc.height);ox_.setTransform(m);fc=ox_}
-  for(k=0;k<T.length;k+=3){x0=G.ox+(T[k]-T[k+1])*hw;y0=G.oy+(T[k]+T[k+1])*hh;fc.drawImage(ftile(T[k+2],CSD,0),x0-57,y0-1,114,58)}
+  for(k=0;k<T.length;k+=3){x0=G.ox+(T[k]-T[k+1])*hw;y0=G.oy+(T[k]+T[k+1])*hh;fc.drawImage(ftileR(T[k+2].slice(0,2),CSD,T[k+2].length>2?+T[k+2].charAt(2):0),x0-57,y0-1,114,58)}
   if(ox_){fv.oc=oc;fv.oc2=null;X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(oc,0,0);X.restore()}
   else if(fv.key!==key)fv.oc=null;
   fv.key=key}
@@ -3430,6 +3430,129 @@ $("stF").onclick=function(){STAB="f";stabPaint();paint()};
 if(!TOKEN)showMsg("Please log in to the Reading Tree first, then open Reading Farm from Settings > Games.");else{try{var cs=JSON.parse(localStorage.getItem("farmS2_"+TOKEN.slice(-12))||"null");if(cs&&cs.plots&&cs.pp){cs.out=null;cs.now=0;S=cs;$("main").style.display="";paint()}}catch(e){}
  try{Q=JSON.parse(localStorage.getItem(QK)||"[]")||[]}catch(e){Q=[]}
  if(Q.length){kick();flush(load)}else load()}
+
+/* ===== FLOOR TILES: bought into the barn, placed, turned, stored back. This block replaces the old "paint" functions above (water is still painted). ===== */
+BAT.farmFloorBuy="fb";BAT.farmFloorRot="fr";
+function frOf(cv){return cv&&cv.id==="vCanvas"?(V&&V.fr):(S&&S.fr)}
+function ftileR(id,dpr,rot){var key="R|"+id+"|"+dpr+"|"+rot,c=FTS[key],cx,b;if(!rot)return ftile(id,dpr,0);if(c)return c;
+ b=ftile(id,dpr,0);c=document.createElement("canvas");c.width=b.width;c.height=b.height;cx=c.getContext("2d");cx.setTransform(dpr,0,0,dpr,0,0);cx.translate(57,29);
+ if(rot===1)cx.transform(0,.5,-2,0,0,0);else if(rot===2)cx.scale(-1,-1);else cx.transform(0,-.5,2,0,0,0);
+ cx.drawImage(b,-57,-29,114,58);return FTS[key]=c}
+function isTileF(id){return id!=="gr"&&id!=="wt"}
+function haveTiles(id){return (S.ft&&S.ft[id])|0}
+// change the floor data on the screen (the server does the same when the action arrives)
+function applyFloorKeys(f,keys,rot){var used=0;if(!S.fl)S.fl={};if(!S.fr)S.fr={};if(!S.ft)S.ft={};
+ keys.forEach(function(k){var old=S.fl[k];
+  if(f.id==="gr"||f.id==="wt"){if(old&&old!=="wt")S.ft[old]=(S.ft[old]|0)+1;if(f.id==="gr")delete S.fl[k];else S.fl[k]="wt";delete S.fr[k];return}
+  if(old!==f.id){if(old&&old!=="wt")S.ft[old]=(S.ft[old]|0)+1;used++}
+  S.fl[k]=f.id;if(rot)S.fr[k]=rot;else delete S.fr[k]});
+ if(isTileF(f.id)){S.ft[f.id]=(S.ft[f.id]|0)-used;if(S.ft[f.id]<=0)delete S.ft[f.id]}
+ FLN++}
+function sendFloorKeys(f,keys,rot){var BL=[],j;for(j=0;j<keys.length;j+=400)BL.push(["farmFloor",[TOKEN,f.id,keys.slice(j,j+400),rot]]);if(BL.length===1)send(BL[0][0],BL[0][1]);else sendMany(BL)}
+function buyFloorDlg(f){var dlg=$("dlg"),q=[10,50,100,500,1000,5000],rows="",inp,tot;
+ function shut(){dlg.style.display="none"}
+ q.forEach(function(n){rows+="<button class='btn alt' data-n='"+n+"' style='margin:3px'>"+n+"</button>"});
+ $("dlgBody").innerHTML="<div id='fbThumb' style='width:84px;height:84px;margin:0 auto'></div><div class='dtitle'>"+esc(f.name)+" tiles</div><div class='dsub'>\uD83E\uDE99 "+f.cost+" per tile &middot; In your barn: <b id='fbHave'>"+haveTiles(f.id)+"</b><br>Bought tiles are kept in your barn. Place them on your land, turn them, or store them back.</div><div style='margin:8px 0'>"+rows+"</div><div style='margin:6px 0'><input id='fbN' type='number' min='1' max='20000' value='100' style='width:120px;font-size:16px;padding:6px;border-radius:8px;text-align:center'></div><div class='small' id='fbTot'></div><div class='dbtns'><button class='btn alt' id='dNo'>Close</button><button class='btn ok' id='fbBuy'>Buy</button></div>";
+ $("fbThumb").appendChild(fThumb(f.id,Math.min(1.5,window.devicePixelRatio||1)));
+ inp=$("fbN");tot=$("fbTot");
+ function n0(){return Math.max(0,Math.min(20000,Math.floor(+inp.value||0)))}
+ function upd(){var n=n0();tot.textContent=n+" tiles = \uD83E\uDE99 "+(n*f.cost)+"  (you have \uD83E\uDE99 "+S.coins+")"}
+ upd();inp.oninput=upd;dlg.style.display="flex";$("dNo").onclick=shut;
+ $("fbBuy").onclick=function(){var n=n0(),cost=n*f.cost;
+  if(S.level<f.lvl){toast(f.name+" unlocks at level "+f.lvl);return}
+  if(n<1){toast("Choose how many tiles to buy.");return}
+  if(S.coins<cost){toast(n+" tiles cost "+cost+" coins. You have "+S.coins+".");return}
+  S.coins-=cost;if(!S.ft)S.ft={};S.ft[f.id]=(S.ft[f.id]|0)+n;send("farmFloorBuy",[TOKEN,f.id,n]);
+  $("fbHave").textContent=S.ft[f.id];upd();toast("\uD83E\uDDF1 "+n+" "+f.name+" tiles are in your barn");paint();renderBarn()};
+ dlg.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button");if(ev.target===dlg){shut();return}if(b&&b.dataset.n){inp.value=b.dataset.n;upd()}}}
+function startPaint(f){var sz=PAINT?PAINT.size:1,rot=PAINT?PAINT.rot|0:0;
+ if(isTileF(f.id)&&!haveTiles(f.id)){buyFloorDlg(f);return}
+ PEND=null;$("buyBar").style.display="none";BUYING=0;$("mkt").style.display="none";
+ setEdit0(true);PAINT={id:f.id,size:sz,rot:rot,turn:0};editUI();drawAll();
+ toast(f.id==="gr"?"\uD83D\uDCE6 Tap tiles to take floor tiles back to your barn.":f.id==="wt"?"\uD83D\uDD8C Tap tiles to paint water (\uD83E\uDE99 "+f.cost+" per tile). Use Brush for bigger areas.":"\uD83E\uDDF1 Tap tiles to place "+f.name+" from your barn ("+haveTiles(f.id)+" left). Use \u21BB to turn them, Brush for bigger areas.")}
+function paintAt(tc,tr){var f=PAINT&&floorDef(PAINT.id),sz,h,pl={},i,c,r,key,tl=[],fresh=[],turnL=[],n,cost,tile,rot,have,keys;
+ if(!f)return;sz=PAINT.size;h=(sz-1)/2;if(!S.fl)S.fl={};if(!S.fr)S.fr={};if(!S.ft)S.ft={};
+ for(i=0;i<S.np;i++)if(S.pp[i])pl[flKey(S.pp[i][0],S.pp[i][1])]=1;
+ (S.dc||[]).forEach(function(o){if(!o.s&&!isF(o.k))pl[flKey(o.c,o.r)]=1});
+ tile=isTileF(f.id);rot=PAINT.turn?0:(PAINT.rot|0);
+ for(c=tc-h;c<=tc+h;c++)for(r=tr-h;r<=tr+h;r++){if(!inLandP(parS(),c,r)&&!(!outLocked()&&zoneAt(c,r)==="b"))continue;key=flKey(c,r);
+  if(PAINT.turn){if(S.fl[key]&&S.fl[key]!=="wt")tl.push(key);continue}
+  if(f.id==="gr"){if(S.fl[key])tl.push(key);continue}
+  if(S.fl[key]===f.id){if(tile&&(S.fr[key]|0)!==rot)turnL.push(key);continue}
+  if(f.id==="wt"&&pl[key])continue;
+  fresh.push(key)}
+ if(PAINT.turn){if(!tl.length){toast("No floor tiles here to turn.");return}
+  tl.forEach(function(k){var v=((S.fr[k]|0)+1)&3;if(v)S.fr[k]=v;else delete S.fr[k]});FLN++;
+  for(i=0;i<tl.length;i+=400)send("farmFloorRot",[TOKEN,tl.slice(i,i+400)]);paint();drawAll();toast("\u21BB Turned "+tl.length+" tile"+(tl.length>1?"s":""));return}
+ if(f.id==="gr"){if(!tl.length){toast(sz>1?"No floor tiles here.":"No floor tile here.");return}
+  applyFloorKeys(f,tl,0);sendFloorKeys(f,tl,0);paint();drawAll();renderBarn();toast("\uD83D\uDCE6 Tiles stored in your barn");return}
+ if(f.id==="wt"){if(!fresh.length){toast(sz>1?"Nothing to change here.":"Already water.");return}
+  n=Math.min(fresh.length,Math.floor(S.coins/f.cost));if(!n){toast(f.name+" costs "+f.cost+" coins per tile. You have "+S.coins+".");return}
+  keys=fresh.slice(0,n);cost=n*f.cost;S.coins-=cost;applyFloorKeys(f,keys,0);sendFloorKeys(f,keys,0);paint();drawAll();renderBarn();
+  toast("\uD83D\uDD8C "+f.name+" x"+n+" (-"+cost+"\uD83E\uDE99)");return}
+ if(!fresh.length&&!turnL.length){toast(sz>1?"Nothing to change here.":"Already this tile.");return}
+ have=haveTiles(f.id);
+ if(!have&&!turnL.length){toast("No "+f.name+" tiles left in your barn.");buyFloorDlg(f);return}
+ n=Math.min(fresh.length,have);keys=fresh.slice(0,n).concat(turnL);
+ applyFloorKeys(f,keys,rot);sendFloorKeys(f,keys,rot);paint();drawAll();renderBarn();
+ toast(n<fresh.length?"\uD83E\uDDF1 Your barn ran out of "+f.name+" tiles":"\uD83E\uDDF1 "+f.name+" x"+keys.length+" ("+haveTiles(f.id)+" left in barn)")}
+$("edAll").onclick=function(){var f=PAINT&&floorDef(PAINT.id),pl={},tl=[],fresh=[],turnL=[],n,cost,tile,rot,have,ttl,sub,chips;
+ if(!f||PAINT.turn)return;if(!S.fl)S.fl={};if(!S.fr)S.fr={};if(!S.ft)S.ft={};
+ tile=isTileF(f.id);rot=PAINT.rot|0;have=haveTiles(f.id);
+ for(var i=0;i<S.np;i++)if(S.pp[i])pl[flKey(S.pp[i][0],S.pp[i][1])]=1;
+ (S.dc||[]).forEach(function(o){if(!o.s&&!isF(o.k))pl[flKey(o.c,o.r)]=1});
+ parS().forEach(function(q){var c,r,key;
+  for(r=q.r0;r<q.r1;r++)for(c=q.c0;c<q.c1;c++){key=flKey(c,r);
+   if(f.id==="gr"){if(S.fl[key])tl.push(key);continue}
+   if(S.fl[key]===f.id){if(tile&&(S.fr[key]|0)!==rot)turnL.push(key);continue}
+   if(f.id==="wt"&&pl[key])continue;
+   fresh.push(key)}});
+ if(f.id==="gr"){if(!tl.length){toast("No floor tiles to store.");return}
+  infoDlg("\uD83D\uDCE6","Store all floor tiles?","Every placed floor tile (not water) goes back to your barn. Water is removed.",["Tiles: "+tl.length],
+   function(){applyFloorKeys(f,tl,0);sendFloorKeys(f,tl,0);paint();drawAll();renderBarn();toast("\uD83D\uDCE6 Tiles stored in your barn")},"Store all");return}
+ if(f.id==="wt"){if(!fresh.length){toast("Nothing to change. Everything already has water.");return}
+  n=Math.min(fresh.length,Math.floor(S.coins/f.cost));if(!n){toast(f.name+" costs "+f.cost+" coins per tile. You have "+S.coins+".");return}cost=n*f.cost;
+  infoDlg("\uD83E\uDEA3","Paint all with "+f.name+"?",n<fresh.length?"You can afford "+n+" of the "+fresh.length+" tiles, so only those will be painted.":"Every free tile of your land will become water.",
+   ["Tiles: "+n,"\uD83E\uDE99 "+cost,"Left: \uD83E\uDE99 "+(S.coins-cost)],
+   function(){var keys;if(S.coins<cost){toast("Not enough coins.");return}keys=fresh.slice(0,n);S.coins-=cost;applyFloorKeys(f,keys,0);sendFloorKeys(f,keys,0);paint();drawAll();renderBarn();toast("\uD83D\uDD8C "+f.name+" x"+n+" (-"+cost+"\uD83E\uDE99)")},"Paint all");return}
+ if(!fresh.length&&!turnL.length){toast("Nothing to change. Everything already has this tile.");return}
+ if(!have&&!turnL.length){toast("No "+f.name+" tiles in your barn. Buy some first.");buyFloorDlg(f);return}
+ n=Math.min(fresh.length,have);
+ infoDlg("\uD83E\uDDF1","Place all "+f.name+"?",n<fresh.length?"Your barn has "+n+" tiles for "+fresh.length+" free spaces, so only "+n+" will be placed. Buy more tiles to cover the rest.":"Every free tile of your land will get "+f.name+".",
+  ["Tiles: "+n,"In barn: "+have,"Left: "+(have-n)],
+  function(){var keys=fresh.slice(0,n).concat(turnL);applyFloorKeys(f,keys,rot);sendFloorKeys(f,keys,rot);paint();drawAll();renderBarn();toast("\uD83E\uDDF1 "+f.name+" x"+keys.length)},"Place all")};
+function renderFloors(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio||1),frag=document.createDocumentFragment(),L=[{id:"gr",name:"Grass",cost:0,lvl:1}].concat(S.fls||[]);
+ L.forEach(function(f){var lock=S.level<f.lvl,tile=isTileF(f.id),d=document.createElement("div"),v=document.createElement("div"),t=document.createElement("b"),sm=document.createElement("div"),b=document.createElement("button"),b2;
+  d.className="mc"+(lock?" lock":"");v.className="mcv";v.appendChild(fThumb(f.id,dpr));t.textContent=f.name;sm.className="small";
+  sm.innerHTML=f.id==="gr"?"Free &middot; default<br>Takes floor tiles back to your barn":f.id==="wt"?f.cost+"\uD83E\uDE99 per tile<br>Painted, not stored. Nothing can be placed on water":f.cost+"\uD83E\uDE99 per tile<br>In your barn: <b>"+haveTiles(f.id)+"</b>";
+  d.appendChild(v);d.appendChild(t);d.appendChild(sm);
+  if(lock){b.className="btn";b.textContent="\uD83D\uDD12 Level "+f.lvl;b.onclick=function(){toast(f.name+" unlocks at level "+f.lvl)};d.appendChild(b)}
+  else if(tile){b.className="btn";b.textContent="Buy tiles";b.onclick=function(){buyFloorDlg(f)};b2=document.createElement("button");b2.className="btn alt";b2.textContent="Place";b2.style.marginLeft="6px";b2.onclick=function(){startPaint(f)};d.appendChild(b);d.appendChild(b2)}
+  else{b.className="btn";b.textContent=f.id==="gr"?"Store tiles":"Paint";b.onclick=function(){startPaint(f)};d.appendChild(b)}
+  frag.appendChild(d)});
+ box.appendChild(frag)}
+function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.keys(S.ft||{}).filter(function(id){return (S.ft[id]|0)>0});box.innerHTML="";
+ $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none";
+ if(!l.length&&!tl.length){box.textContent="Barn is empty.";return}
+ l.forEach(function(s){var k=gkey(s);if(!G2[k]){G2[k]=[];ks.push(k)}G2[k].push(s)});
+ ks.forEach(function(k){var g=G2[k],ic=k==="p"?"\uD83D\uDFEB":(KN[k]||["?",k])[0],nm=k==="p"?"Plot":(KN[k]||["?",k])[1],b=document.createElement("button");
+  b.className="btn alt";b.textContent=ic+" "+nm+" \u00D7"+g.length;
+  b.onclick=function(){PLACING=g[0];SEL=null;$("barnP").style.display="none";editUI();drawAll()};box.appendChild(b)});
+ tl.forEach(function(id){var f=floorDef(id)||{id:id,name:id},b=document.createElement("button");b.className="btn alt";b.textContent="\uD83E\uDDF1 "+f.name+" tile \u00D7"+S.ft[id];
+  b.onclick=function(){$("barnP").style.display="none";startPaint(f)};box.appendChild(b)})}
+// the tile buttons on the edit bar
+(function(){var b=document.createElement("button");b.className="btn alt";b.id="edFRot";b.style.display="none";$("edAll").parentNode.insertBefore(b,$("edAll"));
+ b.onclick=function(){if(!PAINT)return;var s=PAINT.turn?4:(PAINT.rot|0);s=(s+1)%5;PAINT.turn=s===4?1:0;PAINT.rot=s===4?0:s;editUI();drawAll()}})();
+var _editUI0=editUI;
+editUI=function(){_editUI0.apply(this,arguments);var f,tile,b=$("edFRot");
+ if(!PAINT){b.style.display="none";return}
+ f=floorDef(PAINT.id)||{id:"",name:""};tile=isTileF(f.id);
+ b.style.display=(tile||PAINT.turn)?"":"none";
+ b.textContent="\u21BB "+(PAINT.turn?"Turn tiles by tapping":["Place straight","Place turned 90\u00B0","Place turned 180\u00B0","Place turned 270\u00B0"][PAINT.rot|0]);
+ $("edAll").style.display=PAINT.turn?"none":"";
+ $("edAll").textContent=tile?"\uD83E\uDDF1 Place all":f.id==="gr"?"\uD83D\uDCE6 Store all":"\uD83E\uDEA3 Paint all";
+ $("edTxt").textContent=PAINT.turn?"Tap floor tiles to turn them a quarter turn - brush "+PAINT.size+"x"+PAINT.size:tile?"Placing "+f.name+" tiles ("+haveTiles(f.id)+" in barn) - brush "+PAINT.size+"x"+PAINT.size:f.id==="gr"?"Tap tiles to store them in the barn - brush "+PAINT.size+"x"+PAINT.size:"Painting water (\uD83E\uDE99 "+f.cost+" per tile) - brush "+PAINT.size+"x"+PAINT.size};
+
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
