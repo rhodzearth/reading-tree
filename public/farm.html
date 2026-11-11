@@ -3580,6 +3580,26 @@ b.onclick=function(){var ks=FLAST.filter(function(k){return S.fl&&S.fl[k]&&S.fl[
  for(i=0;i<ks.length;i+=400)send("farmFloorRot",[TOKEN,ks.slice(i,i+400)]);paint();drawAll();toast("\u21BB Turned "+ks.length+" tile"+(ks.length>1?"s":""))}
 })();
 
+(function(){
+var b=document.createElement("button");b.className="btn alt";b.id="edSellG";b.style.display="none";
+$("edSell").parentNode.insertBefore(b,$("edSell").nextSibling);
+function grp(){var out=[],it,g0;if(!SEL||SEL.t!=="d")return out;g0=dcById(SEL.id);if(!g0||g0.k==="barn")return out;
+ grpOf(SEL).forEach(function(s){if(s.t!=="d")return;it=dcById(s.id);if(it&&!it.s&&it.k!=="barn")out.push(it)});return out}
+var _eu3=editUI;
+editUI=function(){_eu3.apply(this,arguments);var g=$("edSell").style.display!=="none"&&SEL&&SEL.t==="d";b.style.display=g?"":"none";if(g)b.textContent="\uD83D\uDCB0 Sell group"};
+b.onclick=function(){var l=grp(),tot=0,sg,ids;if(!l.length)return;
+ l.forEach(function(it){tot+=sellVal(it)});
+ sg=l.map(function(it){return it.id}).join(",")+"|sell";
+ if(GCONF!==sg){GCONF=sg;GPREV=l.map(function(it){return[it.c,it.r]});drawAll();toast("The yellow tiles are the group ("+l.length+"). Tap Sell group again to sell them all for +"+tot+"\uD83E\uDE99");return}
+ GCONF=null;GPREV=null;
+ ids={};l.forEach(function(it){ids[it.id]=1});
+ S.coins+=tot;S.dc=S.dc.filter(function(x){return!ids[x.id]});
+ sendMany(l.map(function(it){return["farmSell",[TOKEN,it.id]]}));
+ SEL=null;paint();editUI();drawAll();
+ try{FarmAudio.play("sell")}catch(e){}
+ toast("\uD83D\uDCB0 Sold a group of "+l.length+" for +"+tot+"\uD83E\uDE99")};
+})();
+
 /* ===== HOUSE SIZES: a house covers n x n tiles (same table as the server). The barn is about 1 tile, so a cottage is barn size and a mega mansion is huge. ===== */
 var FOOT={h_mint:2,h_lav:2,h_farm:2,h_yellow:2,h_brick:2,h_tudor:2,h_chalet:2,h_barnh:2,h_townO:2,h_townG:2,h_terra:2,h_modern:3,h_lodge:3,h_white:3,h_towerh:2,h_lighthouse:2,h_manor:3,h_mansion:4,hh_grandfarm:3,hh_bahay:3,hh_villa:4,hh_lodge:4,hh_estate:4,hh_hotel:4,hh_palace:5,hh_castle:5,hh_skyscr:4,hh_mega:6,h_river:3,h_japanese:3,h_coastal:3,h_green:3,h_pavilion:3,h_french:3,h_swiss:3,h_desert:3,h_tropical:3,h_lakeside:4,h_clock:3,h_mill:3,h_oriental:3,h_victorian:4,h_courtyard:4,h_terrace:4,h_observatory:3,hh_skyvilla:4,h_mediterranean:4,hh_royalestate:5},BSC={};
 function footN(k){return FOOT[k]||1}
