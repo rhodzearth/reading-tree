@@ -1799,11 +1799,11 @@ $("hAll").onclick=function(){var n=0,co=0,xp=0;S.plots.forEach(function(p,i){if(
  if(!n){toast("Nothing is ripe yet. Wait for the timer, or read a chapter to speed things up by 6 hours!");return}
  S.coins+=co;S.xp+=xp;lvlUp();paint();toast("Collected "+n+" things! +"+co+"\uD83E\uDE99");send("farmHarvest",[TOKEN,-1])};
 // plant the selected seed in every empty plot
-$("plAll").onclick=function(){var c=cr(sel),n=0,i,free;if(!c)return;
+$("plAll").onclick=function(){var c=cr(sel),n=0,i,free,ops=[];if(!c)return;
  if(S.level<c.lvl){toast(c.name+" unlocks at level "+c.lvl);return}
  for(i=0;i<S.np;i++){if(!S.pp[i]||S.plots[i])continue;free=c.id===S.crops[0].id&&S.coins<c.cost;
-  if(S.coins<c.cost&&!free)break;if(!free)S.coins-=c.cost;S.plots[i]={c:c.id,t:nowT(),b:0,hb:[]};send("farmPlant",[TOKEN,i,sel]);n++}
- if(!n)toast("No empty plot, or not enough coins.");else{paint();toast("\uD83C\uDF31 Planted "+n+" "+c.name)}};
+  if(S.coins<c.cost&&!free)break;if(!free)S.coins-=c.cost;S.plots[i]={c:c.id,t:nowT(),b:0,hb:[]};ops.push(["farmPlant",[TOKEN,i,sel]]);n++}
+ if(!n)toast("No empty plot, or not enough coins.");else{sendMany(ops);paint();toast("\uD83C\uDF31 Planted "+n+" "+c.name)}};
 $("buyPlot").onclick=function(){
  if(S.np>=S.max){infoDlg("\uD83D\uDFEB","Maximum plots reached","You already have the most plots your land allows. Expand your land for more.",["Plots "+S.np+"/"+S.max]);return}
  if(S.coins<S.plotCost){toast("A new plot costs "+S.plotCost+" coins. You have "+S.coins+".");return}
@@ -4132,14 +4132,14 @@ document.addEventListener("click",function(e){
   (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&!it.s&&nowT()-it.t>=f.ms)L.push({k:"d",it:it,t0:it.t,v:f.sell})});
   setTimeout(function(){try{
    if(S.coins<=c0)return;var out=[];
-   L.forEach(function(o){var done=o.k==="p"?!S.plots[o.i]:o.it.t!==o.t0;if(!done)return;
+   L.forEach(function(o){if(out.length>=40)return;var done=o.k==="p"?!S.plots[o.i]:o.it.t!==o.t0;if(!done)return;
     var s=o.k==="p"?scr(o.q[0],o.q[1],CROP_TOP):scr(o.it.c,o.it.r,itemTop(o.it.k));
-    if(s)out.push({p:s,v:o.v,big:!!o.big})});
+    if(s&&onScr(s))out.push({p:s,v:o.v,big:!!o.big})});
    fxHarvest(out,S.xp-x0)}catch(e){}},0)}
  else if(b.id==="plAll"){
   var before=S.plots.map(function(p){return !!p});
   setTimeout(function(){try{var L=[];
-   S.plots.forEach(function(p,i){if(p&&!before[i]&&S.pp[i]){var s=scr(S.pp[i][0],S.pp[i][1],-8);if(s)L.push(s)}});
+S.plots.forEach(function(p,i){if(L.length<150&&p&&!before[i]&&S.pp[i]){var s=scr(S.pp[i][0],S.pp[i][1],-8);if(s&&onScr(s))L.push(s)}});
    if(L.length)fxPlant(L)}catch(e){}},0)}
  }catch(err){}
 },true);
