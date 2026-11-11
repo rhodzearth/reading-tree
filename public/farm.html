@@ -2830,7 +2830,7 @@ function pthumb(id){var key="pt|"+id,u=PSP[key],dpr=2,c,cx,oX,ow,r,k;if(u)return
  return PSP[key]=c.toDataURL()}
 
 // ===== FLOORS =====
-var FTS={},FLC={gr:"#78bd42",ds:"#dcb46c",sn:"#eef3f8",bc:"#f2ead3",dt:"#85603c",gv:"#9a9893",cb:"#807d77",wd:"#a8794a",pv:"#b4b6b8",br:"#b8553d",au:"#a8742c",hw:"#4a4d53",wt:"#2b86b6"};
+var FTS={},FLC={gr:"#78bd42",ds:"#dcb46c",sn:"#eef3f8",bc:"#f2ead3",dt:"#85603c",gv:"#9a9893",cb:"#807d77",wd:"#a8794a",pv:"#b4b6b8",br:"#b8553d",au:"#a8742c",hw:"#4a4d53",hc:"#4a4d53",wt:"#2b86b6"};
 function flKey(c,r){return(c+2048)*4096+r+2048}
 function flAt(c,r){return S&&S.fl?S.fl[flKey(c,r)]:undefined}
 function fu(){X.transform(57,29,-57,29,57,0)} // from here on, 0..1 = the whole tile
@@ -2875,7 +2875,13 @@ au:function(){var rn=mk(18),i,x,y,P=["#c8462a","#e08a22","#e8c040","#a85a1e","#d
 hw:function(){var rn=mk(23),i;fu();X.fillStyle=lg(0,0,1,1,[[0,"#55585e"],[1,"#41444b"]]);X.fillRect(0,0,1,1);
  for(i=0;i<60;i++){X.fillStyle=rn()<.5?"rgba(255,255,255,.07)":"rgba(0,0,0,.2)";X.fillRect(rn(),rn(),.012,.012)}
  X.fillStyle="#f4f4f0";X.fillRect(0,.07,1,.034);X.fillRect(0,.896,1,.034);
- X.fillRect(0,.483,.25,.034);X.fillRect(.5,.483,.25,.034)},
+ X.fillRect(.125,.483,.25,.034);X.fillRect(.625,.483,.25,.034)},
+ hc:function(){var rn=mk(29),i,a,P2=Math.PI/2;fu();X.save();X.beginPath();X.moveTo(0,1);X.arc(0,1,1,-P2,0,false);X.closePath();X.clip();
+ X.fillStyle=lg(0,0,1,1,[[0,"#55585e"],[1,"#41444b"]]);X.fillRect(0,0,1,1);
+ for(i=0;i<60;i++){X.fillStyle=rn()<.5?"rgba(255,255,255,.07)":"rgba(0,0,0,.2)";X.fillRect(rn(),rn(),.012,.012)}
+ X.restore();X.lineCap="butt";X.strokeStyle="#f4f4f0";X.lineWidth=.034;
+ X.beginPath();X.arc(0,1,.913,-P2,0,false);X.stroke();X.beginPath();X.arc(0,1,.087,-P2,0,false);X.stroke();
+ [[.125,.295],[.49,.66]].forEach(function(d){X.beginPath();X.arc(0,1,.5,-P2+d[0]/.5,-P2+d[1]/.5,false);X.stroke()})},
  wt:function(fr){var ph=fr/6*6.2832,i,j,x,y,yy;fu();X.fillStyle=lg(0,0,1,1,[[0,"#46aed2"],[.5,"#2a86b8"],[1,"#1b6592"]]);X.fillRect(0,0,1,1);
  for(i=0;i<3;i++){X.fillStyle="rgba(150,225,245,.22)";X.beginPath();X.ellipse(.25+i*.25+.05*Math.sin(ph+i*2),.3+i*.2+.04*Math.cos(ph+i),.13,.07,.6,0,7);X.fill()}
  for(i=0;i<6;i++){y=(i/6+fr/36)%1;X.strokeStyle="rgba(255,255,255,"+(.18+.14*Math.sin(ph+i))+")";X.lineWidth=.014;X.beginPath();
@@ -2945,7 +2951,7 @@ function floorMap(F){var fm=FMAP,keys,k,n,c,r,id,key,minc=1e9,maxc=-1e9,minr=1e9
  if(fm&&fm.F===F&&fm.n===FLN)return fm;
  keys=Object.keys(F);n=keys.length;
  for(k=0;k<n;k++){id=F[keys[k]];if(!id)continue;key=+keys[k];c=Math.floor(key/4096)-2048;r=key%4096-2048;
-  if(id==="wt"){W.push(c,r);continue}
+  if(id==="wt"){W.push(c,r);continue}if(id==="hc")continue;
   L.push(c,r,id);if(c<minc)minc=c;if(c>maxc)maxc=c;if(r<minr)minr=r;if(r>maxr)maxr=r}
  if(!L.length)return FMAP={F:F,n:FLN,cv:null,W:W};
  w=maxc-minc+1;h=maxr-minr+1;cv=document.createElement("canvas");cv.width=w;cv.height=h;cx=cv.getContext("2d");im=cx.createImageData(w,h);d=im.data;
