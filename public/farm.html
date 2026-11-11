@@ -1589,7 +1589,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
   if(ft){el=nowT()-(it.t||0);st=el>=ft.ms?2:el/ft.ms>=.35?1:0;if(kz>=.4&&!QL)labels.push({C:p,txt:st===2?(ft.animal?"Ready! +":"Ripe! +")+ft.sell:fmtDur(ft.ms-el),ripe:st===2,big:false,t:t,up:Math.max(96,-(HB[it.k]||[0,-86])[1]+10)})}
   var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=qd?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st)),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
   if(qd){drawQuad(it,p,t,fl,sdp)}
-  else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0;X.save();X.translate(p[0],p[1]+bb*BOAT_SCALE*1.2);X.rotate(bb*.018);X.scale(fl?-BOAT_SCALE:BOAT_SCALE,BOAT_SCALE);DEC[it.k]([0,0]);X.restore()}
+  else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0,osz=OSC[it.k]||1;X.save();X.translate(p[0],p[1]+bb*osz*1.2);X.rotate(bb*.018);X.scale(fl?-osz:osz,osz);DEC[it.k]([0,0]);X.restore()
   else if(an){X.save();X.translate(p[0],p[1]);X.rotate(fl?-an.r:an.r);X.scale(fl?-an.sx:an.sx,an.sy);X.drawImage(im,-130,-170+an.dy,260,220);X.restore()}
   else if(SWY&&LOD===1&&!edit&&FLG[it.k]){X.save();X.translate(p[0],0);if(fl)X.scale(-1,1);flagDraw([0,p[1]],FLG[it.k],t,2.2+1.8*Math.max(0,wnd(t)),aph(it.id)*6.283);X.restore()}
   else if(SWY&&LOD===1&&!edit&&swayOk(it.k)){var sk=swayK(it,t),s1=sk*.3;X.save();X.translate(p[0],p[1]);if(fl)X.scale(-1,1);
@@ -1600,7 +1600,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
  var list=[],q2;
  function onS(c,r,m){m=m||0;var sx=ox+(c-r)*TW/2,sy=oy+(c+r+1)*TH/2;return sx>wx0-m&&sx<wx1+m&&sy>wy0-m&&sy<wy1+m}
  for(i=0;i<np;i++){q2=pp[i];if(q2&&q2[0]>=VT.c0&&q2[0]<=VT.c1&&q2[1]>=VT.r0&&q2[1]<=VT.r1&&onS(q2[0],q2[1]))list.push([q2[0]+q2[1]+1,i,null])}
- (items||[]).forEach(function(it){if(!it.s&&(OUTI[it.k]||(it.c+footN(it.k)>VTF.c0&&it.c<=VTF.c1&&it.r+footN(it.k)>VTF.r0&&it.r<=VTF.r1))&&onS(it.c,it.r,OUTI[it.k]==="w"?BOAT_SCALE*70:footN(it.k)>1?footN(it.k)*130:0))list.push([it.c+it.r+footN(it.k)+(isF(it.k)?fKey(it):0),-1,it])});
+ (items||[]).forEach(function(it){if(!it.s&&(OUTI[it.k]||(it.c+footN(it.k)>VTF.c0&&it.c<=VTF.c1&&it.r+footN(it.k)>VTF.r0&&it.r<=VTF.r1))&&onS(it.c,it.r,OUTI[it.k]==="w"?(OSC[it.k]||1)*70:OUTI[it.k]==="w"?BOAT_SCALE*70:footN(it.k)>1?footN(it.k)*130:0))list.push([it.c+it.r+footN(it.k)+(isF(it.k)?fKey(it):0),-1,it])});
  list.sort(function(a,b){return a[0]-b[0]});
  list.forEach(function(o){if(o[2])drawDeco(o[2]);else drawPlot(o[1])});
  drawFront();
@@ -3243,8 +3243,8 @@ HB.o_surfrack=[-34,-76,34,8];HB.o_volley=[-36,-62,38,16];HB.o_palm=[-46,-132,50,
 HB.o_tiki=[-46,-92,46,10];HB.o_lifeguard=[-24,-94,24,8];
 HB.o_buoy=[-14,-60,14,8];HB.o_raft=[-34,-34,34,14];HB.o_kayak=[-42,-38,44,8];HB.o_rowboat=[-32,-26,32,8];HB.o_dock=[-46,-40,46,14];
 HB.o_bangka=[-40,-52,40,12];HB.o_fishing=[-36,-58,44,8];HB.o_jetski=[-30,-34,36,8];HB.o_sailboat=[-34,-70,36,8];HB.o_speedboat=[-36,-30,36,8];
-var BOAT_SCALE=10; // how many times bigger the sea items are drawn. Lower it (4 or 5) if 10 is too large.
-OUTDEF.forEach(function(d){if(d.out==="w"){var b=HB[d.id];HB[d.id]=[b[0]*BOAT_SCALE,-26*BOAT_SCALE,b[2]*BOAT_SCALE,10*BOAT_SCALE]}});
+var OSC={o_buoy:.7,o_raft:1,o_kayak:.95,o_rowboat:1.3,o_dock:2.5,o_bangka:2.3,o_fishing:2.9,o_jetski:1.2,o_sailboat:3,o_speedboat:2.3}; // sea item sizes (1 = the original drawing)
+OUTDEF.forEach(function(d){if(d.out==="w"){var b=HB[d.id],s=OSC[d.id]||1;HB[d.id]=[b[0]*s,b[1]*s,b[2]*s,Math.max(b[3],10)*s]}});
 
 // ---- drawing helpers ----
 function oWake(x,y,w){X.fillStyle="rgba(10,70,110,.22)";X.beginPath();X.ellipse(x+2,y+1,w*.9,w*.3,0,0,7);X.fill();
@@ -3621,7 +3621,9 @@ function footN(k){return FOOT[k]||1}
 (function(){var ids=[],k;for(k in FOOT)ids.push(k);
  // every house is drawn bigger so its width fits its tiles (width of a barn = 87px). Houses that cover 1 tile get a small boost.
  ids.concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
-function bigSprite(kind,dpr){var key=kind+"@B@"+dpr,s=SPR[key],bs=BSC[kind],q,c,cx,oX,oG,p=[130,170];if(s)return s;
+var BSC_O={o_umbrella:.6,o_lounger:.75,o_shells:.5,o_driftwood:.85,o_surfrack:.7,o_volley:.9,o_palm:.85,o_sandcastle:.4,o_tiki:.65,o_lifeguard:.8}; // beach item sizes (1 = the original drawing)
+Object.keys(BSC_O).forEach(function(k){var s=BSC_O[k],b=HB[k];if(!b||BSC[k])return;BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
+ function bigSprite(kind,dpr){var key=kind+"@B@"+dpr,s=SPR[key],bs=BSC[kind],q,c,cx,oX,oG,p=[130,170];if(s)return s;
  q=Math.min(dpr,1200/(260*bs));c=document.createElement("canvas");c.width=Math.max(8,Math.round(260*bs*q));c.height=Math.max(8,Math.round(220*bs*q));cx=c.getContext("2d");cx.setTransform(q*bs,0,0,q*bs,0,0);
  oX=X;oG=G;X=cx;G={ox:130,oy:170,TW:112,TH:56,cols:4,rows:2};if(DEC[kind])DEC[kind](p,0);X=oX;G=oG;SPR[key]=c;SPRN++;return c}
 function coveredByBig(c,r,ig){var L=S.dc||[],i,x,n;for(i=0;i<L.length;i++){x=L[i];n=FOOT[x.k];if(n&&!x.s&&!(ig&&ig.t==="d"&&ig.id===x.id)&&c>=x.c&&c<x.c+n&&r>=x.r&&r<x.r+n)return true}return false}
