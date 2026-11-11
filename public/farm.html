@@ -1589,7 +1589,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
   if(ft){el=nowT()-(it.t||0);st=el>=ft.ms?2:el/ft.ms>=.35?1:0;if(kz>=.4&&!QL)labels.push({C:p,txt:st===2?(ft.animal?"Ready! +":"Ripe! +")+ft.sell:fmtDur(ft.ms-el),ripe:st===2,big:false,t:t,up:Math.max(96,-(HB[it.k]||[0,-86])[1]+10)})}
   var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=qd?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st)),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
   if(qd){drawQuad(it,p,t,fl,sdp)}
-  else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0,osz=OSC[it.k]||1;X.save();X.translate(p[0],p[1]+bb*osz*1.2);X.rotate(bb*.018);X.scale(fl?-osz:osz,osz);DEC[it.k]([0,0]);X.restore()
+    else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0,osz=OSC[it.k]||1;X.save();X.translate(p[0],p[1]+bb*osz*1.2);X.rotate(bb*.018);X.scale(fl?-osz:osz,osz);DEC[it.k]([0,0]);X.restore()}
   else if(an){X.save();X.translate(p[0],p[1]);X.rotate(fl?-an.r:an.r);X.scale(fl?-an.sx:an.sx,an.sy);X.drawImage(im,-130,-170+an.dy,260,220);X.restore()}
   else if(SWY&&LOD===1&&!edit&&FLG[it.k]){X.save();X.translate(p[0],0);if(fl)X.scale(-1,1);flagDraw([0,p[1]],FLG[it.k],t,2.2+1.8*Math.max(0,wnd(t)),aph(it.id)*6.283);X.restore()}
   else if(SWY&&LOD===1&&!edit&&swayOk(it.k)){var sk=swayK(it,t),s1=sk*.3;X.save();X.translate(p[0],p[1]);if(fl)X.scale(-1,1);
