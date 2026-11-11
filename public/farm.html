@@ -150,6 +150,11 @@ body:has(#barnP[style*="block"]) #hud{visibility:hidden}
 body.edit-top #dlg{align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
 body.edit-top #dlg .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
 body.edit-top:has(#dlg[style*="flex"]) #hud{visibility:hidden}
+body.paint-top #editbar{top:calc(6px + env(safe-area-inset-top));bottom:auto!important;z-index:20;background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none}
+body.paint-top #hud{visibility:hidden}
+#dlg:has(#fbN){align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
+#dlg:has(#fbN) .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
+body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -3538,7 +3543,7 @@ function renderFloors(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRa
   else{b.className="btn";b.textContent=f.id==="gr"?"Store tiles":"Paint";b.onclick=function(){startPaint(f)};d.appendChild(b)}
   frag.appendChild(d)});
  box.appendChild(frag)}
-function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.keys(S.ft||{}).filter(function(id){return (S.ft[id]|0)>0});box.innerHTML="";
+function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.keys(S.ft||{}).filter(function(id){return (S.ft[id]|0)>0});box.innerHTML="";$("edBarn").textContent="\uD83C\uDFE1 Barn ("+(l.length+tl.reduce(function(a,id){return a+(S.ft[id]|0)},0))+")";
  $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none";
  if(!l.length&&!tl.length){box.textContent="Barn is empty.";return}
  l.forEach(function(s){var k=gkey(s);if(!G2[k]){G2[k]=[];ks.push(k)}G2[k].push(s)});
@@ -3551,7 +3556,7 @@ function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.key
 (function(){var b=document.createElement("button");b.className="btn alt";b.id="edFRot";b.style.display="none";$("edAll").parentNode.insertBefore(b,$("edAll"));
  b.onclick=function(){if(!PAINT)return;var s=PAINT.turn?4:(PAINT.rot|0);s=(s+1)%5;PAINT.turn=s===4?1:0;PAINT.rot=s===4?0:s;editUI();drawAll()}})();
 var _editUI0=editUI;
-editUI=function(){_editUI0.apply(this,arguments);var f,tile,b=$("edFRot");
+editUI=function(){_editUI0.apply(this,arguments);document.body.classList.toggle("paint-top",!!PAINT);var f,tile,b=$("edFRot");
  if(!PAINT){b.style.display="none";return}
  f=floorDef(PAINT.id)||{id:"",name:""};tile=isTileF(f.id);
  b.style.display=(tile||PAINT.turn)?"":"none";
