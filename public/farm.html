@@ -2830,7 +2830,7 @@ function pthumb(id){var key="pt|"+id,u=PSP[key],dpr=2,c,cx,oX,ow,r,k;if(u)return
  return PSP[key]=c.toDataURL()}
 
 // ===== FLOORS =====
-var FTS={},FLC={gr:"#78bd42",ds:"#dcb46c",sn:"#eef3f8",bc:"#f2ead3",dt:"#85603c",gv:"#9a9893",cb:"#807d77",wd:"#a8794a",pv:"#b4b6b8",br:"#b8553d",au:"#a8742c",wt:"#2b86b6"};
+var FTS={},FLC={gr:"#78bd42",ds:"#dcb46c",sn:"#eef3f8",bc:"#f2ead3",dt:"#85603c",gv:"#9a9893",cb:"#807d77",wd:"#a8794a",pv:"#b4b6b8",br:"#b8553d",au:"#a8742c",hw:"#4a4d53",wt:"#2b86b6"};
 function flKey(c,r){return(c+2048)*4096+r+2048}
 function flAt(c,r){return S&&S.fl?S.fl[flKey(c,r)]:undefined}
 function fu(){X.transform(57,29,-57,29,57,0)} // from here on, 0..1 = the whole tile
@@ -2872,7 +2872,11 @@ br:function(){var rn=mk(16),r,i,t,g;fu();X.fillStyle="#cfc3ad";X.fillRect(0,0,1,
 au:function(){var rn=mk(18),i,x,y,P=["#c8462a","#e08a22","#e8c040","#a85a1e","#d2692a"];fu();X.fillStyle=lg(0,0,1,1,[[0,"#a07030"],[1,"#80561f"]]);X.fillRect(0,0,1,1);
  for(i=0;i<34;i++){X.fillStyle=P[i%5];X.beginPath();X.ellipse(rn(),rn(),.045,.022,rn()*3.14,0,7);X.fill()}
  X.strokeStyle="rgba(60,30,10,.3)";X.lineWidth=.006;for(i=0;i<6;i++){x=rn();y=rn();X.beginPath();X.moveTo(x-.03,y);X.lineTo(x+.03,y);X.stroke()}},
-wt:function(fr){var ph=fr/6*6.2832,i,j,x,y,yy;fu();X.fillStyle=lg(0,0,1,1,[[0,"#46aed2"],[.5,"#2a86b8"],[1,"#1b6592"]]);X.fillRect(0,0,1,1);
+hw:function(){var rn=mk(23),i;fu();X.fillStyle=lg(0,0,1,1,[[0,"#55585e"],[1,"#41444b"]]);X.fillRect(0,0,1,1);
+ for(i=0;i<60;i++){X.fillStyle=rn()<.5?"rgba(255,255,255,.07)":"rgba(0,0,0,.2)";X.fillRect(rn(),rn(),.012,.012)}
+ X.fillStyle="#f4f4f0";X.fillRect(0,.07,1,.034);X.fillRect(0,.896,1,.034);
+ X.fillRect(0,.483,.25,.034);X.fillRect(.5,.483,.25,.034)},
+ wt:function(fr){var ph=fr/6*6.2832,i,j,x,y,yy;fu();X.fillStyle=lg(0,0,1,1,[[0,"#46aed2"],[.5,"#2a86b8"],[1,"#1b6592"]]);X.fillRect(0,0,1,1);
  for(i=0;i<3;i++){X.fillStyle="rgba(150,225,245,.22)";X.beginPath();X.ellipse(.25+i*.25+.05*Math.sin(ph+i*2),.3+i*.2+.04*Math.cos(ph+i),.13,.07,.6,0,7);X.fill()}
  for(i=0;i<6;i++){y=(i/6+fr/36)%1;X.strokeStyle="rgba(255,255,255,"+(.18+.14*Math.sin(ph+i))+")";X.lineWidth=.014;X.beginPath();
   for(j=0;j<=10;j++){x=j/10;yy=y+.03*Math.sin(x*9+ph+i*1.7);if(j)X.lineTo(x,yy);else X.moveTo(x,yy)}X.stroke()}
