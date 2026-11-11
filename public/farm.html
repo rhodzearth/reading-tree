@@ -3623,9 +3623,11 @@ function footN(k){return FOOT[k]||1}
  ids.concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
 var BSC_O={o_umbrella:.6,o_lounger:.75,o_shells:.5,o_driftwood:.85,o_surfrack:.7,o_volley:.9,o_palm:.85,o_sandcastle:.4,o_tiki:.65,o_lifeguard:.8}; // beach item sizes (1 = the original drawing)
 Object.keys(BSC_O).forEach(function(k){var s=BSC_O[k],b=HB[k];if(!b||BSC[k])return;BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
- function bigSprite(kind,dpr){var key=kind+"@B@"+dpr,s=SPR[key],bs=BSC[kind],q,c,cx,oX,oG,p=[130,170];if(s)return s;
+var BSC_D={bench:.75,flowers:.6,bale:1.4,scarecrow:.75,well:.85,pond:1.35,silo:1.4,mailbox:.55,lamp:.9,signpost:.85,rocks:.7,logs:.65,pumpkins:.7,crates:.65,trough:.95,doghouse:.6,beehive:.5,birdhouse:.6,wheelbarrow:.6,campfire:.55,picnic:.7,fountain:.85,greenhouse:2.2,windmill:1.3,stonebridge:1.1,d_rosearch:.8,d_birdbath:.5,d_sundial:.65,d_mushroom:.5,d_windchime:.8,d_cart:.55,d_planter:.65,d_tulips:.7,d_swing:.9,d_waterwheel:1.2,d_archway:1.1,d_flagpole:1.4,d_butterfly:.7};
+Object.keys(BSC_D).forEach(function(k){var s=BSC_D[k],b=HB[k];if(!b||BSC[k])return;BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]}); 
+function bigSprite(kind,dpr){var key=kind+"@B@"+dpr,s=SPR[key],bs=BSC[kind],q,c,cx,oX,oG,p=[130,170];if(s)return s;
  q=Math.min(dpr,1200/(260*bs));c=document.createElement("canvas");c.width=Math.max(8,Math.round(260*bs*q));c.height=Math.max(8,Math.round(220*bs*q));cx=c.getContext("2d");cx.setTransform(q*bs,0,0,q*bs,0,0);
- oX=X;oG=G;X=cx;G={ox:130,oy:170,TW:112,TH:56,cols:4,rows:2};if(DEC[kind])DEC[kind](p,0);X=oX;G=oG;SPR[key]=c;SPRN++;return c}
+ oX=X;oG=G;X=cx;G={ox:130,oy:170,TW:112,TH:56,cols:4,rows:2};if(kind==="silo")silo(p);else if(kind==="pond")pond(p);else if(kind==="bale")bale(p);else if(kind==="flowers")flowers(p);else if(kind==="bench")bench(p);else if(kind==="well")well(p);else if(kind==="scarecrow")scarecrow(p);else if(DEC[kind])DEC[kind](p,0);X=oX;G=oG;SPR[key]=c;SPRN++;return c}
 function coveredByBig(c,r,ig){var L=S.dc||[],i,x,n;for(i=0;i<L.length;i++){x=L[i];n=FOOT[x.k];if(n&&!x.s&&!(ig&&ig.t==="d"&&ig.id===x.id)&&c>=x.c&&c<x.c+n&&r>=x.r&&r<x.r+n)return true}return false}
 var _tileFree4=tileFree;
 tileFree=function(c,r,ig,k){var n,i,j;if(k===undefined)k=curK(ig);n=footN(k);
