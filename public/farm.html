@@ -38,7 +38,7 @@ canvas{display:block;touch-action:none;cursor:pointer}
 .seed.on{border-color:var(--gr);background:#e9f5d8;color:#222}.seed.lock{opacity:.5}.seed b{display:block;font-size:21px;line-height:1.1}
 #editbar{position:fixed;left:50%;transform:translateX(-50%);z-index:12;display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;background:var(--hud);padding:6px 12px;border-radius:22px;box-shadow:0 2px 10px rgba(0,0,0,.3);max-width:96vw}
 #edTxt{font-size:12px;max-width:60vw}#edTxt:empty{display:none}
-#barnP{position:fixed;left:50%;transform:translateX(-50%);z-index:12;width:min(520px,94vw);background:var(--card);border-radius:14px;padding:10px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+#barnP{position:fixed;top:calc(6px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:20;width:min(520px,94vw);max-height:70vh;overflow-y:auto;background:var(--card);border-radius:14px;padding:10px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
 #barnList{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;font-size:12px}
 #side{position:fixed;top:0;right:0;bottom:0;width:min(340px,92vw);z-index:30;background:var(--card);padding:calc(12px + env(safe-area-inset-top)) 12px 12px;overflow-y:auto;box-shadow:-4px 0 20px rgba(0,0,0,.3);transform:translateX(108%);transition:transform .25s;-webkit-user-select:text;user-select:text}
 #side.open{transform:none}
@@ -144,6 +144,11 @@ html,body{touch-action:pan-x pan-y;overscroll-behavior:none}
 #idBar #iId{max-width:34vw}
 .hr{gap:5px}
 .hr .btn{padding:5px 8px}
+#barnP{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none}
+body:has(#barnP[style*="block"]) #hud{visibility:hidden}
+body.edit-top #dlg{align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
+body.edit-top #dlg .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
+body.edit-top:has(#dlg[style*="flex"]) #hud{visibility:hidden}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -1647,7 +1652,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
  cv._view={L:L0+px,T:T0+py,k:k};
  cv.style.width=aw+"px";cv.style.height=(rel?ah:window.innerHeight)+"px";cv.style.left="0px";cv.style.top="0px";cv.style.marginTop="0"}
 function fitAll(){var hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight,eb=$("editbar").offsetHeight,f,vc,vh,lc,lh,lb;MHT=hud;
- $("buyBar").style.bottom=(dh+14)+"px";$("editbar").style.bottom=(dh+10)+"px";$("barnP").style.bottom=(dh+eb+20)+"px";$("toast").style.bottom=(dh+12)+"px";
+ $("buyBar").style.bottom=(dh+14)+"px";$("editbar").style.bottom=(dh+10)+"px";$("barnP").style.bottom="auto";$("toast").style.bottom=(dh+12)+"px";
  if(S){PERF=(S.sz||8)>=36||!!(S.ls&&S.ls.length)||S.np>150;
   f=$("field");if(!f._kabs||!f._box)f._box=lvl1Box(f);
   fit(f,S.np,hud,dh,f._box);f._fp=[S.np,hud,dh,f._box,0,"bgGrass",0]}
@@ -1960,7 +1965,7 @@ function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  $("edStop").style.display=PLACING||PAINT?"":"none";$("edBrush").style.display=PAINT?"":"none";$("edAll").style.display=PAINT?"":"none";if(PAINT)$("edBrush").textContent="\uD83D\uDD8C Brush "+PAINT.size+"x"+PAINT.size;
  if(GMOVE){$("edTxt").textContent="Moving a group of "+GMOVE.list.length+": tap the new spot for the selected item";$("edStop").style.display="";$("edMoveG").style.display="none"}
  renderBarn()}
-function setEdit0(on){GMOVE=null;GPREV=null;GCONF=null;if($("field")._rot){$("field")._pan=[0,0];$("field")._box=null}EDIT=on;SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
+function setEdit0(on){GMOVE=null;GPREV=null;GCONF=null;if($("field")._rot){$("field")._pan=[0,0];$("field")._box=null}EDIT=on;document.body.classList.toggle("edit-top",!!on);SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
 function setEdit(on){var b=!on&&BUYING;setEdit0(on);if(b){BUYING=0;$("mkt").style.display="flex";renderMkt()}}
 $("edBtn").onclick=function(){PEND=null;$("buyBar").style.display="none";BUYING=0;setEdit(!EDIT)};$("edDone").onclick=function(){setEdit(false)};
 $("edBarn").onclick=function(){var p=$("barnP");p.style.display=p.style.display==="none"?"block":"none"};
