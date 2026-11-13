@@ -2093,7 +2093,7 @@ $("edAll").onclick=function(){
    paint();drawAll();
    toast("\uD83D\uDD8C "+f.name+" x"+n+(cost?" (-"+cost+"\uD83E\uDE99)":""))},
   "Paint all")};
-$("edRot").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;if(FOOTR[it.k]){toast("The court cannot be turned. Buy the other-way court instead.");return}$("edRot").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;it.rot=isF(it.k)?((it.rot||0)+1)&3:(it.rot?0:1);send("farmRotate",[TOKEN,it.id,it.rot]);drawAll()};
+$("edRot").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;if(FOOTR[it.k]){toast("The court cannot be turned. Buy the other-way court instead.");return}it.rot=isF(it.k)?((it.rot||0)+1)&3:(it.rot?0:1);send("farmRotate",[TOKEN,it.id,it.rot]);drawAll()};
 $("edSell").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;
  if(!SELL1){SELL1=1;this.textContent="Tap again to sell";setTimeout(function(){if(SELL1){SELL1=0;editUI()}},2500);return}
  SELL1=0;S.coins+=sellVal(it);S.dc=S.dc.filter(function(x){return x.id!==it.id});SEL=null;send("farmSell",[TOKEN,it.id]);paint();drawAll()};
