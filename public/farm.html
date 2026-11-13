@@ -1547,7 +1547,7 @@ function aniXf(it,t){var ph=aph(it.id),k=it.k,u,x,o={r:0,sx:1,sy:1,dy:0};
  x=Math.sin(t/(1100+ph*500)+ph*6.28);o.sy=1+.012*x;o.sx=1-.006*x;o.r=.01*Math.sin(t/2400+ph*9);return o}
 function selIs(t,v){return SEL&&SEL.t===t&&(t==="p"?SEL.i===v:SEL.id===v)}
 function occMap(ig){var m={},i,q,PP=LAY?LAY.pp:S.pp;for(i=0;i<S.np;i++){q=PP[i];if(q&&!(ig&&ig.t==="p"&&ig.i===i))m[q[0]*64+q[1]]=1}
- (LAY?LAY.dc:(S.dc||[])).forEach(function(o){if(!o.s&&!isF(o.k)&&!(ig&&ig.t==="d"&&ig.id===o.id)){var n=footN(o.k),a,b;for(a=0;a<n;a++)for(b=0;b<n;b++)m[(o.c+a)*64+o.r+b]=1}});return m}
+ (LAY?LAY.dc:(S.dc||[])).forEach(function(o){if(!o.s&&!isF(o.k)&&!(ig&&ig.t==="d"&&ig.id===o.id)){var nw=footW(o.k),nh=footH(o.k),a,b;for(a=0;a<nw;a++)for(b=0;b<nh;b++)m[(o.c+a)*64+o.r+b]=1}});return m}
 function iso(cv,plots,pp,np,hov,items,edit){
  var v=cv._view;if(!v)return;
  var cols=szOf(cv),rows=cols,TW=112,TH=56,i,kz=v.k,dpr=Math.min(PERF?1.2:1.5,window.devicePixelRatio||1),
@@ -1574,7 +1574,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
   if(gB.length){gridPath(gB);X.fillStyle="rgba(190,255,150,.16)";X.fill()}
   gridPath(gA);X.strokeStyle="rgba(255,255,255,.22)";X.lineWidth=1;X.stroke();
   if(GPREV&&GPREV.length){gridPath(GPREV);X.fillStyle="rgba(255,190,0,.38)";X.fill();X.strokeStyle="#ffb300";X.lineWidth=2;X.stroke()}
-  if(sf&&HOVT&&(inLandP(G.P,HOVT[0],HOVT[1])||OUTSEL())){var dc=HOVT[0],dr=HOVT[1],fk=curK(PLACING||SEL),fn=footN(fk),bad=OUTSEL()?!tileFree(dc,dr,SEL):fn>1?!tileFree(dc,dr,PLACING||SEL,fk):!!occ[dc*64+dr];poly([Pp(dc,dr),Pp(dc+fn,dr),Pp(dc+fn,dr+fn),Pp(dc,dr+fn)],bad?"rgba(255,70,70,.4)":"rgba(255,255,255,.3)",bad?"#ff4d4d":"#fff",2)}}
+  if(sf&&HOVT&&(inLandP(G.P,HOVT[0],HOVT[1])||OUTSEL())){var dc=HOVT[0],dr=HOVT[1],fk=curK(PLACING||SEL),fw=footW(fk),fh=footH(fk),bad=OUTSEL()?!tileFree(dc,dr,SEL):fw*fh>1?!tileFree(dc,dr,PLACING||SEL,fk):!!occ[dc*64+dr];poly([Pp(dc,dr),Pp(dc+fw,dr),Pp(dc+fw,dr+fh),Pp(dc,dr+fh)],bad?"rgba(255,70,70,.4)":"rgba(255,255,255,.3)",bad?"#ff4d4d":"#fff",2)}}
  function drawPlot(i){var q=pp[i];if(!q)return;var c=q[0],r=q[1],k;
   var a=Pp(c+.07,r+.07),b=Pp(c+.93,r+.07),d=Pp(c+.93,r+.93),e=Pp(c+.07,r+.93),p=plots[i],C=Pp(c+.5,r+.5);
   if(hov===i)poly([a,b,d,e],"rgba(255,255,255,.2)","#fff",2);
@@ -1585,10 +1585,10 @@ function iso(cv,plots,pp,np,hov,items,edit){
   for(k=0;k<PLS.length;k+=(LOD>1?4:kz<.6?2:1))plantS(p.c,Pp(c+PLS[k][0],r+PLS[k][1]),pr,ripe,t,big);
   if(kz>=.4&&!QL)labels.push({C:C,txt:ripe?(big?"BIG! +"+cc2.sell*(S.bigMult||2):"Ripe! +"+cc2.sell):fmtDur(cc2.ms-el),ripe:ripe,big:big,t:t});
  }
- function drawDeco(it){var fn=footN(it.k),bs=BSC[it.k]||1,p=Pp(it.c+fn/2,it.r+fn/2),ft=FTD[it.k],st=0,el;if(isF(it.k))st=(it.rot||0)&3;if(isF(it.k))st=(it.rot||0)&3;
+ function drawDeco(it){var fw=footW(it.k),fh=footH(it.k),bs=BSC[it.k]||1,p=Pp(it.c+fw/2,it.r+fh/2),ft=FTD[it.k],st=0,el;if(isF(it.k))st=(it.rot||0)&3;if(isF(it.k))st=(it.rot||0)&3;
   if(ft){el=nowT()-(it.t||0);st=el>=ft.ms?2:el/ft.ms>=.35?1:0;if(kz>=.4&&!QL)labels.push({C:p,txt:st===2?(ft.animal?"Ready! +":"Ripe! +")+ft.sell:fmtDur(ft.ms-el),ripe:st===2,big:false,t:t,up:Math.max(96,-(HB[it.k]||[0,-86])[1]+10)})}
-  var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=qd?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st)),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
-  if(qd){drawQuad(it,p,t,fl,sdp)}
+  var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=(qd||DRAWV[it.k])?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st))im=qd?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st)),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
+  if(DRAWV[it.k]){drawCourt(it,fw,fh)}else if(qd){drawQuad(it,p,t,fl,sdp)}
     else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0,osz=OSC[it.k]||1;X.save();X.translate(p[0],p[1]+bb*osz*1.2);X.rotate(bb*.018);X.scale(fl?-osz:osz,osz);DEC[it.k]([0,0]);X.restore()}
   else if(an){X.save();X.translate(p[0],p[1]);X.rotate(fl?-an.r:an.r);X.scale(fl?-an.sx:an.sx,an.sy);X.drawImage(im,-130,-170+an.dy,260,220);X.restore()}
   else if(SWY&&LOD===1&&!edit&&FLG[it.k]){X.save();X.translate(p[0],0);if(fl)X.scale(-1,1);flagDraw([0,p[1]],FLG[it.k],t,2.2+1.8*Math.max(0,wnd(t)),aph(it.id)*6.283);X.restore()}
@@ -1596,11 +1596,11 @@ function iso(cv,plots,pp,np,hov,items,edit){
    X.save();X.transform(1,0,s1,1,0,0);X.drawImage(im,0,120*sdp,260*sdp,100*sdp,-130,-50,260,100);X.restore();
    X.transform(1,0,sk,1,(sk-s1)*50,0);X.drawImage(im,0,0,260*sdp,121*sdp,-130,-170,260,121);X.restore()}
   else if(fl){X.save();X.translate(p[0],0);X.scale(-1,1);X.drawImage(im,-130*bs,p[1]-170*bs+lf,260*bs,220*bs);X.restore()}else X.drawImage(im,p[0]-130*bs,p[1]-170*bs+lf,260*bs,220*bs);
-  if(edit){var s2=selIs("d",it.id);X.save();X.strokeStyle=s2?"#fff":"rgba(255,255,255,.5)";X.lineWidth=s2?3:1.5;X.setLineDash(s2?[]:[4,4]);X.beginPath();var fo=isF(it.k)?fOff(it):[0,0];if(fn>1){[Pp(it.c,it.r),Pp(it.c+fn,it.r),Pp(it.c+fn,it.r+fn),Pp(it.c,it.r+fn)].forEach(function(q,i){if(i)X.lineTo(q[0],q[1]);else X.moveTo(q[0],q[1])});X.closePath()}else X.ellipse(p[0]+fo[0],p[1]+fo[1],isF(it.k)?18:26,isF(it.k)?9:13,0,0,7);X.stroke();X.restore()}}
+  if(edit){var s2=selIs("d",it.id);X.save();X.strokeStyle=s2?"#fff":"rgba(255,255,255,.5)";X.lineWidth=s2?3:1.5;X.setLineDash(s2?[]:[4,4]);X.beginPath();var fo=isF(it.k)?fOff(it):[0,0];if(fw*fh>1){[Pp(it.c,it.r),Pp(it.c+fw,it.r),Pp(it.c+fw,it.r+fh),Pp(it.c,it.r+fh)].forEach(function(q,i){if(i)X.lineTo(q[0],q[1]);else X.moveTo(q[0],q[1])});X.closePath()}else X.ellipse(p[0]+fo[0],p[1]+fo[1],isF(it.k)?18:26,isF(it.k)?9:13,0,0,7);X.stroke();X.restore()}}
  var list=[],q2;
  function onS(c,r,m){m=m||0;var sx=ox+(c-r)*TW/2,sy=oy+(c+r+1)*TH/2;return sx>wx0-m&&sx<wx1+m&&sy>wy0-m&&sy<wy1+m}
  for(i=0;i<np;i++){q2=pp[i];if(q2&&q2[0]>=VT.c0&&q2[0]<=VT.c1&&q2[1]>=VT.r0&&q2[1]<=VT.r1&&onS(q2[0],q2[1]))list.push([q2[0]+q2[1]+1,i,null])}
- (items||[]).forEach(function(it){if(!it.s&&(OUTI[it.k]||(it.c+footN(it.k)>VTF.c0&&it.c<=VTF.c1&&it.r+footN(it.k)>VTF.r0&&it.r<=VTF.r1))&&onS(it.c,it.r,OUTI[it.k]==="w"?(OSC[it.k]||1)*70:OUTI[it.k]==="w"?BOAT_SCALE*70:footN(it.k)>1?footN(it.k)*130:0))list.push([it.c+it.r+footN(it.k)+(isF(it.k)?fKey(it):0),-1,it])});
+ (items||[]).forEach(function(it){if(!it.s&&(OUTI[it.k]||(it.c+footW(it.k)>VTF.c0&&it.c<=VTF.c1&&it.r+footH(it.k)>VTF.r0&&it.r<=VTF.r1))&&onS(it.c,it.r,OUTI[it.k]==="w"?(OSC[it.k]||1)*70:OUTI[it.k]==="w"?BOAT_SCALE*70:footN(it.k)>1?footN(it.k)*130:0))list.push([it.c+it.r+(footW(it.k)+footH(it.k))/2+(isF(it.k)?fKey(it):0),-1,it])});
  list.sort(function(a,b){return a[0]-b[0]});
  list.forEach(function(o){if(o[2])drawDeco(o[2]);else drawPlot(o[1])});
  drawFront();
@@ -1935,8 +1935,9 @@ function nameOf(s){return s.t==="p"?"plot":KN[dcById(s.id).k][1]}
 function stored(){var l=[],i;for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});(S.dc||[]).forEach(function(x){if(x.s)l.push({t:"d",id:x.id})});return l}
 function ptr(cv,ev){var g=cv._g,rc=cv.getBoundingClientRect();return[(ev.clientX-rc.left-g.L)/g.k,(ev.clientY-rc.top-g.T)/g.k]}
 function toTile(cv,p){var g=cv._g,dx=(p[0]-g.ox)/(g.TW/2),dy=(p[1]-g.oy)/(g.TH/2);return[(dx+dy)/2,(dy-dx)/2]}
-function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]);arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+footN(it.k))*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+footN(it.k)-1+(f?fKey(it):0);x+=fo[0];y+=fo[1];
- if(p[0]>=x+(m?-b[2]:b[0])&&p[0]<=x+(m?-b[0]:b[2])&&p[1]>=y+b[1]&&p[1]<=y+b[3]&&k>bd){bd=k;best=it._o||it}});return best}
+function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]),ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=footW(it.k),fh=footH(it.k),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
+ hit=p[0]>=x+(m?-b[2]:b[0])&&p[0]<=x+(m?-b[0]:b[2])&&p[1]>=y+b[1]&&p[1]<=y+b[3];if(!hit&&fw*fh>1)hit=tc>=it.c&&tc<it.c+fw&&tr>=it.r&&tr<it.r+fh;
+ if(hit&&k>bd){bd=k;best=it._o||it}});return best}
 function gkey(s){return s.t==="p"?"p":(dcById(s.id)||{}).k}
 function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[];box.innerHTML="";
  $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none";
@@ -2092,7 +2093,7 @@ $("edAll").onclick=function(){
    paint();drawAll();
    toast("\uD83D\uDD8C "+f.name+" x"+n+(cost?" (-"+cost+"\uD83E\uDE99)":""))},
   "Paint all")};
-$("edRot").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;it.rot=isF(it.k)?((it.rot||0)+1)&3:(it.rot?0:1);send("farmRotate",[TOKEN,it.id,it.rot]);drawAll()};
+$("edRot").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;if(FOOTR[it.k]){toast("The court cannot be turned. Buy the other-way court instead.");return}$("edRot").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;it.rot=isF(it.k)?((it.rot||0)+1)&3:(it.rot?0:1);send("farmRotate",[TOKEN,it.id,it.rot]);drawAll()};
 $("edSell").onclick=function(){if(!SEL||SEL.t!=="d")return;var it=dcById(SEL.id);if(!it)return;
  if(!SELL1){SELL1=1;this.textContent="Tap again to sell";setTimeout(function(){if(SELL1){SELL1=0;editUI()}},2500);return}
  SELL1=0;S.coins+=sellVal(it);S.dc=S.dc.filter(function(x){return x.id!==it.id});SEL=null;send("farmSell",[TOKEN,it.id]);paint();drawAll()};
@@ -2106,7 +2107,7 @@ function gmoveTap(tc,tr){
  if(!dc&&!dr){GMOVE=null;GPREV=null;SEL=null;editUI();drawAll();return}
  L.forEach(function(s){ig[s.t==="p"?"p"+s.i:"d"+s.id]=1});
  for(i=0;i<S.np;i++){q=S.pp[i];if(q&&!ig["p"+i])occ[flKey(q[0],q[1])]=1}
- (S.dc||[]).forEach(function(x){if(!x.s&&!isF(x.k)&&!ig["d"+x.id]){var n=footN(x.k),a,b;for(a=0;a<n;a++)for(b=0;b<n;b++)occ[flKey(x.c+a,x.r+b)]=1}});
+ (S.dc||[]).forEach(function(x){if(!x.s&&!isF(x.k)&&!ig["d"+x.id]){var nw=footW(x.k),nh=footH(x.k),a,b;for(a=0;a<nw;a++)for(b=0;b<nh;b++)occ[flKey(x.c+a,x.r+b)]=1}});
  L.forEach(function(s){var p=getPos(s),nc,nr,fe;if(!p||bad)return;nc=p[0]+dc;nr=p[1]+dr;
   fe=s.t==="d"&&isF((dcById(s.id)||{}).k);
   if(!inLandP(parS(),nc,nr)||(!fe&&(flAt(nc,nr)==="wt"||occ[flKey(nc,nr)])))bad=[nc,nr];
@@ -2240,7 +2241,7 @@ function layExit(){if(!LAY)return;
  if(LAY.dirty){infoDlg("\u26A0\uFE0F","Discard changes?","Your edits to this layout are not saved.",["Layout "+(LAY.slot+1)],function(){layClose();layMenu()},"Discard");return}
  layClose();layMenu()}
 function layPos(s){if(s.t==="p")return LAY.pp[s.i];var o=layDc(s.id);return o?[o.c,o.r]:null}
-function lpick(p){var g=$("lCanvas")._g,best=null,bd=-1e9;LAY.dc.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+footN(it.k))*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+footN(it.k)-1+(f?fKey(it):0);x+=fo[0];y+=fo[1];
+function lpick(p){var g=$("lCanvas")._g,best=null,bd=-1e9;LAY.dc.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(footW(it.k)+footH(it.k))/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(footW(it.k)+footH(it.k))/2-1+(f?fKey(it):0);x+=fo[0];y+=fo[1];
  if(p[0]>=x+(m?-b[2]:b[0])&&p[0]<=x+(m?-b[0]:b[2])&&p[1]>=y+b[1]&&p[1]<=y+b[3]&&k>bd){bd=k;best=it}});return best}
 function layTap(e){var cv=$("lCanvas"),p=ptr(cv,e),t=toTile(cv,p),tc=Math.floor(t[0]),tr=Math.floor(t[1]),it,pl,h,o,GK,nr,cur;
  if(PLACING){o=PLACING.t==="d"?layDc(PLACING.id):null;GK=layGk(PLACING);
@@ -3104,7 +3105,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   var lock=S.level<i.lvl,d=document.createElement("div"),v=document.createElement("div"),t=document.createElement("b"),sm=document.createElement("div"),b=document.createElement("button"),th=MTH[i.id+"@"+dpr];
   d.className="mc"+(lock?" lock":"");v.className="mcv";if(th)v.appendChild(th);else q.push([i,v]);
   t.textContent=i.icon+" "+i.name;sm.className="small";
-  sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):i.house?"Housing &middot; takes "+footN(i.id)+"\u00D7"+footN(i.id)+" tiles":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":"Decoration";
+  sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):i.house?"Housing &middot; takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":"Decoration";
   b.className="btn";b.textContent=lock?"\uD83D\uDD12 Level "+i.lvl:"Buy "+i.cost+"\uD83E\uDE99";b.onclick=function(){buyItem(i)};
   d.appendChild(v);d.appendChild(t);d.appendChild(sm);d.appendChild(b);frag.appendChild(d)});
  box.appendChild(frag);if(MK==="fence")box.insertBefore(perimBanner(),box.firstChild);
@@ -3625,42 +3626,74 @@ b.onclick=function(){if(!LAY)return;var n=0,skip=0,i;
  toast("\uD83D\uDCE6 Stored "+n+" items in this layout"+(skip?" ("+skip+" planted plots skipped)":"")+". Tap Undo to bring them back, or Close to throw this away.")};
 })();
 
-/* ===== HOUSE SIZES: a house covers n x n tiles (same table as the server). The barn is about 1 tile, so a cottage is barn size and a mega mansion is huge. ===== */
-var FOOT={h_mint:2,h_lav:2,h_farm:2,h_yellow:2,h_brick:2,h_tudor:2,h_chalet:2,h_barnh:2,h_townO:2,h_townG:2,h_terra:2,h_modern:3,h_lodge:3,h_white:3,h_towerh:2,h_lighthouse:2,h_manor:3,h_mansion:4,hh_grandfarm:3,hh_bahay:3,hh_villa:4,hh_lodge:4,hh_estate:4,hh_hotel:4,hh_palace:5,hh_castle:5,hh_skyscr:4,hh_mega:6,h_river:3,h_japanese:3,h_coastal:3,h_green:3,h_pavilion:3,h_french:3,h_swiss:3,h_desert:3,h_tropical:3,h_lakeside:4,h_clock:3,h_mill:3,h_oriental:3,h_victorian:4,h_courtyard:4,h_terrace:4,h_observatory:3,hh_skyvilla:4,h_mediterranean:4,hh_royalestate:5},BSC={};
-function footN(k){return FOOT[k]||1}
-(function(){var ids=[],k;for(k in FOOT)ids.push(k);
- // every house is drawn bigger so its width fits its tiles (width of a barn = 87px). Houses that cover 1 tile get a small boost.
- ids.concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
-var BSC_O={o_umbrella:.6,o_lounger:.75,o_shells:.5,o_driftwood:.85,o_surfrack:.7,o_volley:.9,o_palm:.85,o_sandcastle:.4,o_tiki:.65,o_lifeguard:.8}; // beach item sizes (1 = the original drawing)
-Object.keys(BSC_O).forEach(function(k){var s=BSC_O[k],b=HB[k];if(!b||BSC[k])return;BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
-var BSC_D={bench:.75,flowers:.6,bale:1.4,scarecrow:.75,well:.85,pond:1.35,silo:1.4,mailbox:.55,lamp:.9,signpost:.85,rocks:.7,logs:.65,pumpkins:.7,crates:.65,trough:.95,doghouse:.6,beehive:.5,birdhouse:.6,wheelbarrow:.6,campfire:.55,picnic:.7,fountain:.85,greenhouse:2.2,windmill:1.3,stonebridge:1.1,d_rosearch:.8,d_birdbath:.5,d_sundial:.65,d_mushroom:.5,d_windchime:.8,d_cart:.55,d_planter:.65,d_tulips:.7,d_swing:.9,d_waterwheel:1.2,d_archway:1.1,d_flagpole:1.4,d_butterfly:.7};
-Object.keys(BSC_D).forEach(function(k){var s=BSC_D[k],b=HB[k];if(!b||BSC[k])return;BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]}); 
+/* ===== BUILDING SIZES v2: a building covers w x h tiles (same table as the server). The barn is about 1 tile, so a cottage is barn size. A tile is about 2.5 metres (a person is half a tree tall). ===== */
+var FOOT={h_mint:2,h_lav:2,h_farm:2,h_yellow:2,h_brick:2,h_tudor:2,h_chalet:2,h_barnh:2,h_townO:2,h_townG:2,h_terra:2,h_modern:3,h_lodge:3,h_white:3,h_towerh:2,h_lighthouse:2,h_manor:3,h_mansion:4,hh_grandfarm:3,hh_bahay:3,hh_villa:4,hh_lodge:4,hh_estate:4,hh_hotel:4,hh_palace:5,hh_castle:5,hh_skyscr:4,hh_mega:6,h_river:3,h_japanese:3,h_coastal:3,h_green:3,h_pavilion:3,h_french:3,h_swiss:3,h_desert:3,h_tropical:3,h_clock:3,h_mill:3,h_oriental:3,h_victorian:4,h_courtyard:4,h_terrace:4,h_observatory:3,hh_skyvilla:4,h_mediterranean:4,hh_royalestate:5},FOOTR={bb_court:[11,6],bb_court2:[6,11]},BSC={};
+function footW(k){return FOOTR[k]?FOOTR[k][0]:(FOOT[k]||1)}
+function footH(k){return FOOTR[k]?FOOTR[k][1]:(FOOT[k]||1)}
+function footN(k){return Math.max(footW(k),footH(k))}
+(function(){
+ Object.keys(FOOT).concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
 function bigSprite(kind,dpr){var key=kind+"@B@"+dpr,s=SPR[key],bs=BSC[kind],q,c,cx,oX,oG,p=[130,170];if(s)return s;
  q=Math.min(dpr,1200/(260*bs));c=document.createElement("canvas");c.width=Math.max(8,Math.round(260*bs*q));c.height=Math.max(8,Math.round(220*bs*q));cx=c.getContext("2d");cx.setTransform(q*bs,0,0,q*bs,0,0);
- oX=X;oG=G;X=cx;G={ox:130,oy:170,TW:112,TH:56,cols:4,rows:2};if(kind==="silo")silo(p);else if(kind==="pond")pond(p);else if(kind==="bale")bale(p);else if(kind==="flowers")flowers(p);else if(kind==="bench")bench(p);else if(kind==="well")well(p);else if(kind==="scarecrow")scarecrow(p);else if(DEC[kind])DEC[kind](p,0);X=oX;G=oG;SPR[key]=c;SPRN++;return c}
-function coveredByBig(c,r,ig){var L=S.dc||[],i,x,n;for(i=0;i<L.length;i++){x=L[i];n=FOOT[x.k];if(n&&!x.s&&!(ig&&ig.t==="d"&&ig.id===x.id)&&c>=x.c&&c<x.c+n&&r>=x.r&&r<x.r+n)return true}return false}
+ oX=X;oG=G;X=cx;G={ox:130,oy:170,TW:112,TH:56,cols:4,rows:2};if(DEC[kind])DEC[kind](p,0);X=oX;G=oG;SPR[key]=c;SPRN++;return c}
+function coveredByBig(c,r,ig){var L=S.dc||[],i,x,w,h;for(i=0;i<L.length;i++){x=L[i];w=footW(x.k);h=footH(x.k);if(w*h>1&&!x.s&&!(ig&&ig.t==="d"&&ig.id===x.id)&&c>=x.c&&c<x.c+w&&r>=x.r&&r<x.r+h)return true}return false}
 var _tileFree4=tileFree;
-tileFree=function(c,r,ig,k){var n,i,j;if(k===undefined)k=curK(ig);n=footN(k);
+tileFree=function(c,r,ig,k){var w,h,i,j;if(k===undefined)k=curK(ig);w=footW(k);h=footH(k);
  if(OUTI[k]||(isFlagK(k)&&!inLandP(parS(),c,r)))return _tileFree4(c,r,ig,k);
- for(i=0;i<n;i++)for(j=0;j<n;j++){if(!_tileFree4(c+i,r+j,ig,k))return false;if(coveredByBig(c+i,r+j,ig))return false}
+ for(i=0;i<w;i++)for(j=0;j<h;j++){if(!_tileFree4(c+i,r+j,ig,k))return false;if(coveredByBig(c+i,r+j,ig))return false}
  return true};
 var _freeTile0=freeTile;
-freeTile=function(k){var n=footN(k),P=parS(),BX=wbox0(FW,S.ls),occ={},i,q,sx=0,sy=0,cnt=0,mc,mr,best=null,bd=1e18,c,r,v,a,b,ok;
+freeTile=function(k){var nw=footW(k),nh=footH(k),P=parS(),BX=wbox0(FW,S.ls),occ={},i,q,sx=0,sy=0,cnt=0,mc,mr,best=null,bd=1e18,c,r,v,a,b,ok;
  for(i=0;i<S.np;i++){q=S.pp[i];if(q){sx+=q[0];sy+=q[1];cnt++;occ[flKey(q[0],q[1])]=1}}
- (S.dc||[]).forEach(function(o){var m,a2,b2;if(o.s)return;sx+=o.c;sy+=o.r;cnt++;if(isF(o.k))return;m=footN(o.k);for(a2=0;a2<m;a2++)for(b2=0;b2<m;b2++)occ[flKey(o.c+a2,o.r+b2)]=1});
+ (S.dc||[]).forEach(function(o){var mw,mh,a2,b2;if(o.s)return;sx+=o.c;sy+=o.r;cnt++;if(isF(o.k))return;mw=footW(o.k);mh=footH(o.k);for(a2=0;a2<mw;a2++)for(b2=0;b2<mh;b2++)occ[flKey(o.c+a2,o.r+b2)]=1});
  mc=cnt?sx/cnt:(FW-1)/2;mr=cnt?sy/cnt:(FH-1)/2;
  for(r=BX.r0;r<BX.r1;r++)for(c=BX.c0;c<BX.c1;c++){ok=1;
-  for(a=0;a<n&&ok;a++)for(b=0;b<n;b++){if(!inLandP(P,c+a,r+b)||occ[flKey(c+a,r+b)]||flAt(c+a,r+b)==="wt"){ok=0;break}}
+  for(a=0;a<nw&&ok;a++)for(b=0;b<nh;b++){if(!inLandP(P,c+a,r+b)||occ[flKey(c+a,r+b)]||flAt(c+a,r+b)==="wt"){ok=0;break}}
   if(!ok)continue;v=(c-mc)*(c-mc)+(r-mr)*(r-mr);if(v<bd){bd=v;best=[c,r]}}
  return best};
 var _grpOf0=grpOf;
-grpOf=function(s){var k=gkey(s);if(k&&footN(k)>1)return[s];return _grpOf0(s)};
+grpOf=function(s){var k=gkey(s);if(k&&footW(k)*footH(k)>1)return[s];return _grpOf0(s)};
 var _layFreeAt0=layFreeAt;
-layFreeAt=function(c,r,ig){var o=ig&&ig.t==="d"?LAY.dc.filter(function(x){return x.id===ig.id})[0]:null,n=footN(o&&o.k),i,j;
- for(i=0;i<n;i++)for(j=0;j<n;j++){if(!_layFreeAt0(c+i,r+j,ig))return false;
-  if(LAY.dc.some(function(x){var m=FOOT[x.k];return m&&!x.s&&!(ig&&ig.t==="d"&&ig.id===x.id)&&c+i>=x.c&&c+i<x.c+m&&r+j>=x.r&&r+j<x.r+m}))return false}
+layFreeAt=function(c,r,ig){var o=ig&&ig.t==="d"?LAY.dc.filter(function(x){return x.id===ig.id})[0]:null,w=footW(o&&o.k),h=footH(o&&o.k),i,j;
+ for(i=0;i<w;i++)for(j=0;j<h;j++){if(!_layFreeAt0(c+i,r+j,ig))return false;
+  if(LAY.dc.some(function(x){var mw=footW(x.k),mh=footH(x.k);return mw*mh>1&&!x.s&&!(ig&&ig.t==="d"&&ig.id===x.id)&&c+i>=x.c&&c+i<x.c+mw&&r+j>=x.r&&r+j<x.r+mh}))return false}
  return true};
-
+/* ===== BASKETBALL COURT: a full court (28 x 15 m) with two hoops. 11 x 6 tiles, or 6 x 11 the other way. ===== */
+var DRAWV={bb_court:1,bb_court2:1};
+HB.bb_court=[0,0,0,0];HB.bb_court2=[0,0,0,0];
+function courtDraw(P,fw,fh,ZP,lk){
+ var al=fw>=fh;
+ function K(x,y,z){return al?P(x/28*fw,y/15*fh,(z||0)*ZP):P(y/15*fw,x/28*fh,(z||0)*ZP)}
+ function pl(a,fill,stroke,lw){X.beginPath();a.forEach(function(q,i){if(i)X.lineTo(q[0],q[1]);else X.moveTo(q[0],q[1])});if(fill){X.fillStyle=fill;X.fill()}if(stroke){X.strokeStyle=stroke;X.lineWidth=(lw||1.6)*lk;X.stroke()}}
+ function arc(cx,cy,r,a0,a1,n){var a=[],i,t;for(i=0;i<=n;i++){t=a0+(a1-a0)*i/n;a.push(K(cx+r*Math.cos(t),cy+r*Math.sin(t),0))}return a}
+ var A=K(0,0),B=K(28,0),C=K(28,15),D=K(0,15),W="#f6f6f2",PI=Math.PI,side,i,y;
+ X.save();X.lineJoin="round";X.lineCap="round";
+ pl([[A[0],A[1]+5*lk],[B[0],B[1]+5*lk],[C[0],C[1]+5*lk],[D[0],D[1]+5*lk]],"#1d4a63");
+ pl([A,B,C,D],"#d9a460");
+ for(i=1;i<25;i++){y=i*.6;pl([K(0,y),K(28,y)],0,"rgba(110,64,20,.13)",1)}
+ pl([K(0,5.05),K(5.8,5.05),K(5.8,9.95),K(0,9.95)],"#2d62ad");pl([K(28,5.05),K(22.2,5.05),K(22.2,9.95),K(28,9.95)],"#2d62ad");
+ pl(arc(14,7.5,1.8,0,2*PI,30),"rgba(45,98,173,.92)");
+ pl([A,B,C,D,A],0,W,2);pl([K(14,0),K(14,15)],0,W,2);pl(arc(14,7.5,1.8,0,2*PI,30),0,W,2);
+ [0,1].forEach(function(s){var sg=s?-1:1,X0=s?28:0;
+  function Q(x,yy){return K(s?28-x:x,yy)}
+  pl([Q(0,5.05),Q(5.8,5.05),Q(5.8,9.95),Q(0,9.95)],0,W,2);
+  var fa=[],t,k;for(k=0;k<=18;k++){t=-PI/2+PI*k/18;fa.push(Q(5.8+1.8*Math.cos(t),7.5+1.8*Math.sin(t)))}pl(fa,0,W,2);
+  var th=Math.asin(6.6/6.75),tp=[Q(0,.9),Q(1.575+6.75*Math.cos(th),.9)];for(k=0;k<=24;k++){t=-th+2*th*k/24;tp.push(Q(1.575+6.75*Math.cos(t),7.5+6.75*Math.sin(t)))}tp.push(Q(1.575+6.75*Math.cos(th),14.1),Q(0,14.1));pl(tp,0,W,2);
+  var ra=[];for(k=0;k<=14;k++){t=-PI/2+PI*k/14;ra.push(Q(1.575+1.25*Math.cos(t),7.5+1.25*Math.sin(t)))}pl(ra,0,W,1.6)});
+ [0,1].forEach(function(s){
+  function H(x,yy,z){return K(s?28-x:x,yy,z)}
+  var ring=[],k,t,a,b;
+  pl([H(.35,7.5,0),H(.35,7.5,3.35)],0,"#4b505a",4);pl([H(.35,7.5,3.3),H(1.2,7.5,3.3)],0,"#4b505a",3);
+  pl([H(1.2,6.6,2.9),H(1.2,8.4,2.9),H(1.2,8.4,3.95),H(1.2,6.6,3.95)],"rgba(238,246,255,.93)","#8995a6",1.4);
+  pl([H(1.2,7.2,3.05),H(1.2,7.8,3.05),H(1.2,7.8,3.5),H(1.2,7.2,3.5)],0,"#e0572a",1.3);
+  pl([H(1.2,7.5,3.05),H(1.35,7.5,3.05)],0,"#ee6a1f",2.2);
+  for(k=0;k<=20;k++){t=2*PI*k/20;ring.push(H(1.575+.225*Math.cos(t),7.5+.225*Math.sin(t),3.05))}pl(ring,0,"#ee6a1f",2.4);
+  for(k=0;k<8;k++){t=2*PI*k/8;a=H(1.575+.225*Math.cos(t),7.5+.225*Math.sin(t),3.05);b=H(1.575+.12*Math.cos(t+.4),7.5+.12*Math.sin(t+.4),2.65);pl([a,b],0,"rgba(255,255,255,.85)",1)}
+ });
+ X.restore()}
+function drawCourt(it,fw,fh){courtDraw(function(u,v,z){return Pp(it.c+u,it.r+v,z)},fw,fh,27.8,1)}
+DEC.bb_court=function(){var s=.115;courtDraw(function(u,v,z){return[130+(u-v)*56*s,112+(u+v)*28*s-z*s]},11,6,27.8,.55)};
+DEC.bb_court2=function(){var s=.115;courtDraw(function(u,v,z){return[130+(u-v)*56*s,112+(u+v)*28*s-z*s]},6,11,27.8,.55)};
 
 </script>
 
