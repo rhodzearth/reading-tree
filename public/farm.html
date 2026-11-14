@@ -3633,6 +3633,7 @@ function footH(k){return FOOTR[k]?FOOTR[k][1]:(FOOT[k]||1)}
 function footN(k){return Math.max(footW(k),footH(k))}
 (function(){
  Object.keys(FOOT).concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
+ BSC.windmill=2.9;BSC.greenhouse=2.2;["windmill","greenhouse"].forEach(function(k){var b=HB[k],s=BSC[k];HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
 function bigSprite(kind,dpr){var key=kind+"@B@"+dpr,s=SPR[key],bs=BSC[kind],q,c,cx,oX,oG,p=[130,170];if(s)return s;
  q=Math.min(dpr,1200/(260*bs));c=document.createElement("canvas");c.width=Math.max(8,Math.round(260*bs*q));c.height=Math.max(8,Math.round(220*bs*q));cx=c.getContext("2d");cx.setTransform(q*bs,0,0,q*bs,0,0);
  oX=X;oG=G;X=cx;G={ox:130,oy:170,TW:112,TH:56,cols:4,rows:2};if(DEC[kind])DEC[kind](p,0);X=oX;G=oG;SPR[key]=c;SPRN++;return c}
