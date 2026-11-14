@@ -566,9 +566,9 @@ DEC.windmill=function(p){var x=p[0],y=p[1],k,j;shade(p,26,9,.32);
  poly([[x-6,y],[x+6,y],[x+5,y-18],[x-5,y-18]],"#6b4a24","#3a2a14",1);dot(x+3,y-9,.9,"#e0cb82");
  poly([[x-3.5,y-38],[x+3.5,y-38],[x+3.5,y-46],[x-3.5,y-46]],"#27394a","#f2eee2",1);
  X.fillStyle=lg(x-14,0,x+14,0,[[0,"#8f332c"],[.5,"#d9564a"],[1,"#7a2a24"]]);X.beginPath();X.moveTo(x-14,y-62);X.quadraticCurveTo(x,y-68,x+14,y-62);X.lineTo(x,y-84);X.closePath();X.fill();
- for(k=0;k<4;k++){X.save();X.translate(x,y-68);X.rotate(.4+k*1.5708);X.fillStyle="#7a5a30";X.fillRect(0,-1.4,36,2.8);X.fillStyle="rgba(250,245,232,.95)";X.fillRect(8,-11,28,10);
+ for(k=0;k<4;k++){X.save();X.translate(x+6,y-65);X.transform(.9,-.45,0,1,0,0);X.rotate(.4+k*1.5708);X.fillStyle="#7a5a30";X.fillRect(0,-1.4,36,2.8);X.fillStyle="rgba(250,245,232,.95)";X.fillRect(8,-11,28,10);
   X.strokeStyle="#9a8a6a";X.lineWidth=.8;X.beginPath();for(j=0;j<4;j++){X.moveTo(8+j*7,-11);X.lineTo(8+j*7,-1)}X.moveTo(8,-6);X.lineTo(36,-6);X.stroke();X.restore()}
- dot(x,y-68,3.2,"#4a3418");dot(x-.8,y-68.8,1.2,"#b89a60")};
+ X.strokeStyle="#4a3418";X.lineWidth=4;X.beginPath();X.moveTo(x,y-68);X.lineTo(x+6,y-65);X.stroke();dot(x+6,y-65,3.2,"#4a3418");dot(x+5.2,y-65.8,1.2,"#b89a60")};
 
 DEC.greenhouse=function(p){var x=p[0],y=p[1],lu=32,lv=24,k,a,f=BFp(x,y-3,lu,lv),L=[f[0]-lv,f[1]-lv/2],R=[f[0]+lu,f[1]-lu/2];shade(p,34,13,.3);
  ibx(x,y,lu,lv,3,"#8c8a80","#aaa89c","#c4c2b6");
