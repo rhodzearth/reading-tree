@@ -1009,7 +1009,8 @@ function drawBack(){var c,r,h=G.TW/2,hh=G.TH/2,x,y;
   X.fillStyle="rgba(255,255,200,.07)";X.fill()}
  drawFences(0)}
 // the shoreline: dry-grass rim, sand beach, wet sand, white foam, turquoise shallows, deep blue sea (like the reference picture)
-var SHC={},SH0=7.8; // SH0 = width of the beach (doubled)
+var PHD=false;
+function phOf(cv){return !!(cv&&cv.id==="vCanvas"?(V&&V.ph):(S&&S.ph))} // SH0 = width of the beach (doubled)
 function wob(t,d){return(.12*Math.sin(t*.5+.7)+.07*Math.sin(t*1.3+1.5))*Math.min(1,d/5)}
 function shoreCurve(n,mode,ex){var key=n+"|"+mode+"|"+ex,C=SHC[key],E,st,P,o,R,ca,s,c,a,g;if(C)return C;
  E=Math.min(34,6+n*.5);st=Math.max(.5,(2*n+2*E)/200);P=[];
@@ -1099,7 +1100,7 @@ function fenceSegs(P){var out=[];
    var nc=[];cut.forEach(function(s){if(b<=s[0]||a>=s[1]){nc.push(s);return}if(a>s[0])nc.push([s[0],a]);if(b<s[1])nc.push([b,s[1]])});cut=nc});
   cut.forEach(function(s){out.push({ed:ed,a:s[0],b:s[1],q:q})})})});
  return out}
-function drawFences(front){FS.forEach(function(s){var fr=s.ed==="r1"||s.ed==="c1";if(fr!==!!front)return;var q=s.q,A,B,r,c;
+function drawFences(front){if(PHD)return;FS.forEach(function(s){var fr=s.ed==="r1"||s.ed==="c1";if(fr!==!!front)return;var q=s.q,A,B,r,c;
  if(s.ed==="r0"||s.ed==="r1"){r=s.ed==="r0"?q.r0:q.r1;A=Pp(s.a,r);B=Pp(s.b,r)}else{c=s.ed==="c0"?q.c0:q.c1;A=Pp(c,s.a);B=Pp(c,s.b)}
  if(PFN!=="wood"&&FSTY[PFN])fenceP(s,front);else fence(A,B,Math.round((s.b-s.a)*2),front)})}
 
@@ -1578,7 +1579,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
   cw=parseFloat(cv.style.width)||window.innerWidth,ch=parseFloat(cv.style.height)||window.innerHeight,
   ox=(rows+2)*TW/2+30,oy=130+TH,W=(rows+cols+4)*TW/2+60,H=oy+(cols+rows+2)*TH/2+60;
  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr)}
- NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);
+ NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);PHD=phOf(cv);
  if(CR){pp=pp.map(function(q){return q?rtile(q[0],q[1]):q});
   items=(items||[]).map(function(it){var o=Object.create(it),t=rtile(it.c,it.r);o.c=t[0];o.r=t[1];o._o=it;
    if(isF(it.k))o.rot=isCorner(it.k)?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;return o})}
@@ -3108,7 +3109,11 @@ function renderFloors(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRa
 function perimBanner(){var d=document.createElement("div"),b=document.createElement("button"),ok=(S.sz||8)>=60;d.className="mc";d.style.gridColumn="1/-1";
  d.innerHTML="<b>\uD83C\uDFDE\uFE0F Perimeter fence</b><div class='small'>The fence around all your land. Change its design (concrete, brick, iron and more) once your main land is 60 x 60."+(ok?"":" Yours is "+(S.sz||8)+" x "+(S.sz||8)+".")+"</div>";
  b.className="btn"+(ok?"":" alt");b.textContent=ok?"Choose perimeter design":"\uD83D\uDD12 Needs 60 x 60 land";
- b.onclick=function(){if(!ok){toast("Expand your main land to 60 x 60 first.");return}perimDlg()};d.appendChild(b);return d}
+b.onclick=function(){if(!ok){toast("Expand your main land to 60 x 60 first.");return}perimDlg()};d.appendChild(b);
+var t=document.createElement("button");t.style.marginTop="6px";paintPerimBtn(t);
+t.onclick=function(){togglePerim(t)};d.appendChild(t);return d}
+function paintPerimBtn(t){t.className="btn"+(S.ph?"":" alt");t.textContent=S.ph?"\uD83D\uDC41\uFE0F Perimeter fence: HIDDEN (tap to show)":"\uD83D\uDEA7 Perimeter fence: SHOWN (tap to hide)"}
+function togglePerim(t){S.ph=S.ph?0:1;send("farmPerim",[TOKEN,S.ph?"off":"on"]);paintPerimBtn(t);drawAll();toast(S.ph?"Perimeter fence hidden. Place your own fences!":"Perimeter fence shown again.")}
 function perimDlg(){var dlg=$("dlg"),P=S.pfs||[],own=S.pfo||["wood"],cur=S.pf||"wood",rows="";
  function shut(){dlg.style.display="none"}
  P.forEach(function(p){var has=own.indexOf(p.id)>=0,on=p.id===cur;
