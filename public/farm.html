@@ -3163,7 +3163,19 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
  box.innerHTML="";MKL=S.level;$("mCoins").textContent="\uD83E\uDE99 "+S.coins;
  $("mtG").className="btn"+(MK==="flag"?"":" alt");$("mtG").className="btn"+(MK==="flag"?"":" alt");$("mtT").className="btn"+(MK==="tree"?"":" alt");$("mtA").className="btn"+(MK==="animal"?"":" alt");$("mtH").className="btn"+(MK==="house"?"":" alt");$("mtD").className="btn"+(MK==="decor"?"":" alt");$("mtN").className="btn"+(MK==="fence"?"":" alt");$("mtF").className="btn"+(MK==="floor"?"":" alt");
  if(MK==="floor"){renderFloors();return}
- (S.items||[]).filter(function(i){if(i.out)return MK==="out";if(MK==="out")return false;if(/^fl_/.test(i.id))return MK==="flag";if(MK==="flag")return false;if(/^v_/.test(i.id))return MK==="veh";if(MK==="veh")return false;return MK==="tree"?if(MK==="flag")return false;return MK==="tree"?(!!i.fruit&&!i.animal):MK==="animal"?!!i.animal:MK==="fence"?/^f_/.test(i.id):MK==="house"?!!i.house:(!i.fruit&&!i.house&&!/^f_/.test(i.id))}).sort(function(a,b){return MK==="flag"?0:a.lvl-b.lvl||a.cost-b.cost}).forEach(function(i){
+(S.items||[]).filter(function(i){
+  if(i.out)return MK==="out";
+  if(MK==="out")return false;
+  if(/^fl_/.test(i.id))return MK==="flag";
+  if(MK==="flag")return false;
+  if(/^v_/.test(i.id))return MK==="veh";
+  if(MK==="veh")return false;
+  if(MK==="tree")return !!i.fruit&&!i.animal;
+  if(MK==="animal")return !!i.animal;
+  if(MK==="fence")return /^f_/.test(i.id);
+  if(MK==="house")return !!i.house;
+  return !i.fruit&&!i.house&&!/^f_/.test(i.id);
+}).sort(function(a,b){return MK==="flag"?0:a.lvl-b.lvl||a.cost-b.cost}).forEach(function(i){
   var lock=S.level<i.lvl,d=document.createElement("div"),v=document.createElement("div"),t=document.createElement("b"),sm=document.createElement("div"),b=document.createElement("button"),th=MTH[i.id+"@"+dpr];
   d.className="mc"+(lock?" lock":"");v.className="mcv";if(th)v.appendChild(th);else q.push([i,v]);
   t.textContent=i.icon+" "+i.name;sm.className="small";
