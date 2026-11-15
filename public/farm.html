@@ -3773,7 +3773,7 @@ function drawCourt(it,fw,fh){courtDraw(function(u,v,z){return Pp(it.c+u,it.r+v,z
 DEC.bb_court=function(){var s=.115;courtDraw(function(u,v,z){return[130+(u-v)*56*s,112+(u+v)*28*s-z*s]},11,6,27.8,.55)};
 DEC.bb_court2=function(){var s=.115;courtDraw(function(u,v,z){return[130+(u-v)*56*s,112+(u+v)*28*s-z*s]},6,11,27.8,.55)};
 /* ===== VEHICLES (real size): 1 tile = 2.5 m, so 1 m = 25 px. A 1.7 m driver is about 42 px tall. ===== */
-FOOT.v_wagon=2;FOOT.v_car=2;FOOT.v_pickup=2;FOOT.v_tractor=2;FOOT.v_van=2;FOOT.v_jeepney=3;
+FOOT.v_wagon=1;FOOT.v_car=1;FOOT.v_pickup=1;FOOT.v_tractor=1;FOOT.v_van=1;FOOT.v_jeepney=1;
 var VEH={},VLEN={v_bike:"1.8 m long",v_moto:"2.1 m long",v_trike:"2.6 m long",v_wagon:"4.2 m long",v_cart:"2.4 m long",v_car:"4.0 m long",v_pickup:"5.0 m long",v_tractor:"4.0 m long",v_van:"4.9 m long",v_jeepney:"6.2 m long"};
 function vxcrop(id){var n=footN(id);return n<2?[70,90,120,120]:n<3?[40,40,180,180]:[20,30,190,190]}
 // u = along the vehicle (toward the lower right), v = across (toward the lower left), z = height. All in metres.
@@ -3969,9 +3969,11 @@ VEH.v_jeepney=function(p){var o=p,c="#f2c230",gl="rgba(150,205,232,.92)",k,u,sd=
  vxwheel(o,-1.9,1.0,.37,"#c9ced4",.22,0,1);vxwheel(o,2.3,.93,.37,"#c9ced4",.22,0,1)};
 
 // every drawing is wrapped so a mistake in one vehicle can never break the whole farm
-Object.keys(VEH).forEach(function(id){DEC[id]=function(p,st){try{VEH[id](p,st)}catch(e){}}});
+var VSC={v_bike:1,v_moto:1,v_trike:.83,v_cart:.92,v_wagon:.55,v_car:.57,v_pickup:.46,v_tractor:.55,v_van:.48,v_jeepney:.375};
+Object.keys(VEH).forEach(function(id){DEC[id]=function(p,st){var s=VSC[id]||1;try{X.save();X.translate(p[0],p[1]);X.scale(s,s);VEH[id]([0,0],st)}catch(e){}X.restore()}});
 HB.v_bike=[-34,-60,34,14];HB.v_moto=[-38,-66,38,14];HB.v_trike=[-50,-66,50,22];HB.v_cart=[-44,-62,44,18];
 HB.v_wagon=[-92,-90,92,40];HB.v_car=[-92,-70,92,42];HB.v_pickup=[-110,-80,110,44];HB.v_tractor=[-96,-92,96,42];HB.v_van=[-110,-90,110,44];HB.v_jeepney=[-120,-100,120,48];
+Object.keys(VSC).forEach(function(id){var b=HB[id],s=VSC[id];if(b)HB[id]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
