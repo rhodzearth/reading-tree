@@ -1583,7 +1583,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
  NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);PHD=phOf(cv);
  if(CR){pp=pp.map(function(q){return q?rtile(q[0],q[1]):q});
   items=(items||[]).map(function(it){var o=Object.create(it),t=rtile(it.c,it.r);o.c=t[0];o.r=t[1];o._o=it;
-   if(isF(it.k))o.rot=isCorner(it.k)?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;return o})}
+   if(isF(it.k))o.rot=(isCorner(it.k)||it.k==="stoplight")?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;return o})}
  cv._g={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,np:np,W:W,pp:pp,items:items,cr:CR,rc:RC.slice(),L:v.L,T:v.T,k:kz};
  var x=cv.getContext("2d"),t=Date.now(),labels=[],sdp=MOVING&&LSDP?LSDP:Math.min(1.5,Math.max(1,Math.ceil(dpr*kz*2)/2)),
   wx0=-v.L/kz-150,wx1=(cw-v.L)/kz+150,wy0=-v.T/kz-40,wy1=(ch-v.T)/kz+150,cs,cc,rr;
@@ -1994,7 +1994,7 @@ function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  $("edHarvG").style.display=SEL&&((SEL.t==="p"&&S.plots[SEL.i])||(isD&&itx&&FTD[itx.k]))?"":"none";
  $("edTxt").textContent=PAINT?"Painting "+(floorDef(PAINT.id)||{name:""}).name+" ("+((floorDef(PAINT.id)||{cost:0}).cost)+"\uD83E\uDE99 per tile) - brush "+PAINT.size+"x"+PAINT.size:PBUY?"Tap a free tile to buy & place a plot (\uD83E\uDE99 "+S.plotCost+")":PLACING?"Placing: "+nameOf(PLACING)+" ("+stored().length+" in barn)":SEL?nameOf(SEL):"";
  SELL1=0;
- $("edRot").style.display=isD?"":"none";$("edSell").style.display=isD&&!barnSel?"":"none";$("edUp").style.display=isD&&itx&&isF(itx.k)?"":"none";
+ $("edRot").style.display=isD?"":"none";$("edSell").style.display=isD&&!barnSel?"":"none";$("edUp").style.display=isD&&itx&&isF(itx.k)&&itx.k!=="stoplight"?"":"none";
  if(isD&&!barnSel&&itx)$("edSell").textContent="\uD83D\uDCB0 Sell +"+sellVal(itx);
  $("edStop").style.display=PLACING||PAINT?"":"none";$("edBrush").style.display=PAINT?"":"none";$("edAll").style.display=PAINT?"":"none";if(PAINT)$("edBrush").textContent="\uD83D\uDD8C Brush "+PAINT.size+"x"+PAINT.size;
  if(GMOVE){$("edTxt").textContent="Moving a group of "+GMOVE.list.length+": tap the new spot for the selected item";$("edStop").style.display="";$("edMoveG").style.display="none"}
@@ -2517,6 +2517,8 @@ DEC.stoplight=function(p){var x=p[0],y=p[1],g,k,cy=[-82,-71,-60],on=[0,0,1],c1=[
   if(on[k])dot(x-1.6,y+cy[k]-1.8,1.3,"rgba(255,255,255,.75)")}
  poly([[x-10,y-92],[x+10,y-92],[x+7,y-96],[x-7,y-96]],"#2a2e34","#0e1013",1)};
  HB.stoplight=[-14,-100,14,6];
+ var _stopOld=DEC.stoplight;
+DEC.stoplight=function(p,st){var fo=[[0,-28],[56,0],[0,28],[-56,0]][(st||0)&3];_stopOld([p[0]+fo[0],p[1]+fo[1]])};
 
 // ---- 2 NEW DECORATION DESIGNS ----
 DEC.gazebo=function(p){
@@ -2732,11 +2734,11 @@ HB.a_rabbit=[-18,-40,20,8];
 
 // ---------- ANIMAL FENCES (stand on the EDGE of a tile and take no space) ----------
 var FO=[[28,-14],[-28,-14],[-28,14],[28,14]]; // middle of the 4 tile edges: 0 back-right, 1 back-left, 2 front-left, 3 front-right
-function isF(k){return typeof k==="string"&&k.indexOf("f_")===0}
-function fOff(it){var r=(it.rot||0)&3;return isCorner(it.k)?[[0,-14],[28,0],[0,14],[-28,0]][r]:FO[r]}
-function fKey(it){var r=(it.rot||0)&3;return isCorner(it.k)?[-.5,0,.5,0][r]:(r<2?-.5:.5)}
+function isF(k){return typeof k==="string"&&(k.indexOf("f_")===0||k==="stoplight")}
+function fOff(it){var r=(it.rot||0)&3;if(it.k==="stoplight")return[[0,-28],[56,0],[0,28],[-56,0]][r];return isCorner(it.k)?[[0,-14],[28,0],[0,14],[-28,0]][r]:FO[r]}
+function fKey(it){var r=(it.rot||0)&3;if(it.k==="stoplight")return[-.9,0,.9,0][r];return isCorner(it.k)?[-.5,0,.5,0][r]:(r<2?-.5:.5)}
 function fRot(k,t){var fx=t[0]-Math.floor(t[0]),fy=t[1]-Math.floor(t[1]),d=[fy,fx,1-fy,1-fx],b=0,i; // the edge (or corner) nearest to where you tapped
- if(isCorner(k))return fy<.5?(fx<.5?0:1):(fx<.5?3:2);
+ if(isCorner(k)||k==="stoplight")return fy<.5?(fx<.5?0:1):(fx<.5?3:2);
  for(i=1;i<4;i++)if(d[i]<d[b])b=i;return b}
 function fpost(x,y,h){X.fillStyle="rgba(10,25,5,.3)";X.beginPath();X.ellipse(x+2,y+1,4,1.8,0,0,7);X.fill();
  X.fillStyle="#8c6334";X.fillRect(x-3,y-h,3,h+1);X.fillStyle="#5f4122";X.fillRect(x,y-h,3,h+1);
@@ -3156,7 +3158,7 @@ $("buyYes").onclick=function(){var P=PEND;if(!P)return;var d=(S.items||[]).filte
  S.coins-=d.cost;S.dc.push(o);send("farmBuyAt",[TOKEN,P.id,P.k,P.c,P.r]);if(P.rot)send("farmRotate",[TOKEN,P.id,P.rot]);buyEnd();paint()};
 function mThumb(i,dpr){var key=i.id+"@"+dpr,c=MTH[key],a;if(c)return c;
  a=i.animal?[85,95,90,90]:/^fl_/.test(i.id)?[85,65,110,110]:/^f_/.test(i.id)?(isCorner(i.id)?[74,100,112,112]:[103,98,110,110]):/^hh_/.test(i.id)?[30,30,180,180]:/^v_/.test(i.id)?vxcrop(i.id):[60,40,140,140];c=document.createElement("canvas");c.width=c.height=Math.round(84*dpr);c.style.cssText="width:84px;height:84px";
- c.getContext("2d").drawImage(sprite(i.id,dpr,/^f_/.test(i.id)?0:2,1),a[0]*dpr,a[1]*dpr,a[2]*dpr,a[3]*dpr,0,0,c.width,c.height);return MTH[key]=c}
+ c.getContext("2d").drawImage(sprite(i.id,dpr,/^f_/.test(i.id)||i.id==="stoplight"?0:2,1),a[0]*dpr,a[1]*dpr,a[2]*dpr,a[3]*dpr,0,0,c.width,c.height);return MTH[key]=c}
 function warmMkt(){if(warmMkt.on||!S||!S.items)return;warmMkt.on=1;var dpr=Math.min(1.5,window.devicePixelRatio||1),L=S.items.slice(),k=0;
  (function st(){if(document.hidden){setTimeout(st,500);return}var t0=Date.now();while(k<L.length&&Date.now()-t0<8)mThumb(L[k++],dpr);if(k<L.length)setTimeout(st,50);else warmMkt.on=0})()}
 function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio||1),rid=++MKR,q=[],frag=document.createDocumentFragment();
@@ -3179,7 +3181,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   var lock=S.level<i.lvl,d=document.createElement("div"),v=document.createElement("div"),t=document.createElement("b"),sm=document.createElement("div"),b=document.createElement("button"),th=MTH[i.id+"@"+dpr];
   d.className="mc"+(lock?" lock":"");v.className="mcv";if(th)v.appendChild(th);else q.push([i,v]);
   t.textContent=i.icon+" "+i.name;sm.className="small";
-  sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):/^v_/.test(i.id)?"Vehicle &middot; "+(VLEN[i.id]||"")+"<br>takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.house?"Housing &middot; takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":"Decoration";
+  sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):/^v_/.test(i.id)?"Vehicle &middot; "+(VLEN[i.id]||"")+"<br>takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.house?"Housing &middot; takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.id==="stoplight"?"Stands on a tile corner, takes no space":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":"Decoration";
   b.className="btn";b.textContent=lock?"\uD83D\uDD12 Level "+i.lvl:"Buy "+i.cost+"\uD83E\uDE99";b.onclick=function(){buyItem(i)};
   d.appendChild(v);d.appendChild(t);d.appendChild(sm);d.appendChild(b);frag.appendChild(d)});
  box.appendChild(frag);if(MK==="fence")box.insertBefore(perimBanner(),box.firstChild);
