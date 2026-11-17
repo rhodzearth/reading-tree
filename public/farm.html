@@ -159,6 +159,7 @@ body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
 #zoomNote{position:fixed;left:50%;top:100px;transform:translateX(-50%);z-index:60;display:none;background:var(--dk);color:#fff;padding:6px 14px;border-radius:99px;font-weight:700;font-size:14px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.35)}
 body.night #zoomNote{color:#111}
 body.cam #zoomNote{visibility:hidden!important}
+#mini{width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5)}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -1681,7 +1682,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
   if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
   if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx;
   if(box.l1&&box.vb){k=Math.min(3.2,aw/L1SPAN);mx=ox;my=oy+(box.vb[0]+box.vb[1])*28-(ah/2-L1MARG)/k}} // first view: a bit closer, land sitting low so its bottom fence corner is near the bottom
- var kmn=PERF?3.2*Math.pow(k0*.6/3.2,ZOUT):k0*.6;kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
+ var kmn=(PERF&&cv.id!=="lCanvas")?3.2*Math.pow(k0*.6/3.2,ZOUT):k0*.6;var kmn=PERF?3.2*Math.pow(k0*.6/3.2,ZOUT):k0*.6;kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
   nx=aw-pad-L0-(ox+(B.c1-B.r0)*56+2200)*k,xx=pad-L0-(ox+(B.c0-B.r1)*56-2200)*k,ny=vt+ah-pad-T0-(oy+(B.c1+B.r1)*28+1600)*k,xy=vt+pad-T0-(oy+(B.c0+B.r0)*28-1600)*k,px,py;
  if(cv._anc){var a=cv._anc;cv._anc=null;pn=[a.sx-a.cx*k-L0,a.sy-a.cy*k-T0]}
@@ -1711,20 +1712,38 @@ function drawNow(){ANIM=false;
 setInterval(function(){var fv=$("field")._view,zo=!!fv&&fv.k<.9;if(ANIM&&!document.hidden&&!MOVING&&$("mkt").style.display==="none"&&$("dlg").style.display!=="flex"&&Date.now()-LASTEND>(LASTMS>45?(zo?400:250):Math.max(PERF?120:34,LASTMS*(zo?4:2))))drawAll()},34);
 function mmap(z){if(z)CR=0;else setRot($("field"));var n=(S&&S.sz)||8,B=wbox(n,S&&S.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
  return{n:n,ox:ox,oy:oy,x0:x0,y0:y0,m:m,fx:(124-(x1-x0)*m)/2,fy:(65-(y1-y0)*m)/2}}
+var MSC=1.4; // minimap size multiplier (the CSS size below must match: 124*MSC and 65*MSC)
 function drawMini(){var cv=$("mini"),f=$("field"),v=f._view;
  if(!S||(S.sz||8)<14||!v||!SHOWMINI){cv.style.display="none";return}
- var dpr=Math.min(1.5,window.devicePixelRatio||1),w=124,h=65,M=mmap(),x,i,q,o,cw=parseFloat(f.style.width)||window.innerWidth,ch=parseFloat(f.style.height)||window.innerHeight;
+ var dpr=Math.min(2,window.devicePixelRatio||1),sc=dpr*MSC,w=124,h=65,M=mmap(),x,i,q,o,cw=parseFloat(f.style.width)||window.innerWidth,ch=parseFloat(f.style.height)||window.innerHeight,vx,vy,vw,vh,rx,ry,rx2,ry2;
  if(MOVING&&Date.now()-MMT<90)return;MMT=Date.now();cv.style.display="block";if(cv._ht!==MHT){cv._ht=MHT;cv.style.top=(MHT+8)+"px"}
- if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
- x=cv.getContext("2d");x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,w,h);
+ if(cv.width!==Math.round(w*sc)){cv.width=Math.round(w*sc);cv.height=Math.round(h*sc)}
+ x=cv.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);
  function P(c,r){return[M.fx+(M.ox+(c-r)*56-M.x0)*M.m,M.fy+(M.oy+(c+r)*28-M.y0)*M.m]}
-  function Q(c,r){var t=rp(c,r);return P(t[0],t[1])}
- parcels(M.n,S.ls).forEach(function(q){x.beginPath();[P(q.c0,q.r0),P(q.c1,q.r0),P(q.c1,q.r1),P(q.c0,q.r1)].forEach(function(a,j){j?x.lineTo(a[0],a[1]):x.moveTo(a[0],a[1])});x.closePath();x.fillStyle=NIGHT?"#2f6a2a":"#79bd45";x.fill();x.strokeStyle="#8a6234";x.lineWidth=1.5;x.stroke()});
- for(i=0;i<S.np;i++){q=S.pp[i];if(!q)continue;o=Q(q[0]+.5,q[1]+.5);x.fillStyle=S.plots[i]?(isRipe(S.plots[i])?"#f0b429":"#2d5a1a"):"#8a5c34";x.fillRect(o[0]-1.2,o[1]-1.2,2.4,2.4)}
- (S.dc||[]).forEach(function(it){if(it.s)return;o=Q(it.c+.5,it.r+.5);x.fillStyle=it.k==="barn"?"#c0392b":"#fff";x.fillRect(o[0]-1.6,o[1]-1.6,3.2,3.2)});
- x.strokeStyle="#fff";x.lineWidth=1.6;x.strokeRect(M.fx+((-v.L/v.k)-M.x0)*M.m,M.fy+((-v.T/v.k)-M.y0)*M.m,cw/v.k*M.m,ch/v.k*M.m)}
+ function Q(c,r){var t=rp(c,r);return P(t[0],t[1])}
+ function path(a){x.beginPath();a.forEach(function(p,j){j?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath()}
+ // lands: green with a sandy edge
+ parcels(M.n,S.ls).forEach(function(q){path([P(q.c0,q.r0),P(q.c1,q.r0),P(q.c1,q.r1),P(q.c0,q.r1)]);
+  x.fillStyle=NIGHT?"#2f6a2a":"#86d452";x.fill();x.strokeStyle="#efdba8";x.lineWidth=1.6;x.lineJoin="round";x.stroke()});
+ // plots
+ for(i=0;i<S.np;i++){q=S.pp[i];if(!q)continue;o=Q(q[0]+.5,q[1]+.5);
+  if(S.plots[i]&&isRipe(S.plots[i])){x.fillStyle="#ffd23a";x.fillRect(o[0]-1.8,o[1]-1.8,3.6,3.6)}
+  else{x.fillStyle=S.plots[i]?"#1b5e20":"#a0693a";x.fillRect(o[0]-1.3,o[1]-1.3,2.6,2.6)}}
+ // buildings, trees, animals, decorations
+ (S.dc||[]).forEach(function(it){var f2,s2,col;if(it.s||isF(it.k))return;f2=FTD[it.k];
+  col=it.k==="barn"?"#e53935":f2?(f2.animal?"#ff9800":"#00897b"):"#ab47bc";
+  s2=Math.max(2.6,Math.min(8,footN(it.k)*1.7));o=Q(it.c+.5,it.r+.5);
+  x.fillStyle=col;x.fillRect(o[0]-s2/2,o[1]-s2/2,s2,s2);x.strokeStyle="rgba(0,0,0,.5)";x.lineWidth=.6;x.strokeRect(o[0]-s2/2,o[1]-s2/2,s2,s2)});
+ // your screen view: everything outside is darkened, the view gets a bright cyan frame
+ vx=M.fx+((-v.L/v.k)-M.x0)*M.m;vy=M.fy+((-v.T/v.k)-M.y0)*M.m;vw=cw/v.k*M.m;vh=ch/v.k*M.m;
+ rx=Math.max(1,vx);ry=Math.max(1,vy);rx2=Math.min(w-1,vx+vw);ry2=Math.min(h-1,vy+vh);
+ if(rx2-rx<3)rx2=rx+3;if(ry2-ry<3)ry2=ry+3;
+ x.save();x.beginPath();x.rect(0,0,w,h);x.rect(rx,ry,rx2-rx,ry2-ry);x.fillStyle="rgba(0,25,45,.42)";x.fill("evenodd");x.restore();
+ x.fillStyle="rgba(0,229,255,.14)";x.fillRect(rx,ry,rx2-rx,ry2-ry);
+ x.lineJoin="round";x.strokeStyle="rgba(0,0,0,.8)";x.lineWidth=3.6;x.strokeRect(rx,ry,rx2-rx,ry2-ry);
+ x.strokeStyle="#00e5ff";x.lineWidth=2;x.strokeRect(rx,ry,rx2-rx,ry2-ry)}
 function miniGo(e){var cv=$("mini"),r=cv.getBoundingClientRect(),M=mmap(),hh=$("hud").offsetHeight,
- wx=(e.clientX-r.left-M.fx)/M.m+M.x0,wy=(e.clientY-r.top-M.fy)/M.m+M.y0;
+ wx=((e.clientX-r.left)/MSC-M.fx)/M.m+M.x0,wy=((e.clientY-r.top)/MSC-M.fy)/M.m+M.y0;
  $("field")._anc={sx:window.innerWidth/2,sy:hh+(window.innerHeight-hh)/2,cx:wx,cy:wy};fitMove($("field"))}
 (function(){var cv=$("mini"),on=false;
  cv.addEventListener("pointerdown",function(e){on=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}miniGo(e);e.preventDefault()});
@@ -3094,7 +3113,7 @@ function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G
   X.beginPath();waterBlobPath(WSa,S2s,1);X.fillStyle="#cdbd8c";X.fill();X.save();X.clip(); // sandy bottom on the beach part only
  bx0=Math.max(minX,VW.x0);bx1=Math.min(maxX,VW.x1);by0=Math.max(minY,VW.y0);by1=Math.min(maxY,VW.y1);
   // clear water: pebbles on the bottom (fixed to the world), then see-through blue water on top
-  if(!cheap)for(gy=Math.floor(by0/20)-1;gy<=Math.floor(by1/20)+1;gy++)for(gx=Math.floor(bx0/26)-1;gx<=Math.floor(bx1/26)+1;gx++){
+  for(gy=Math.floor(by0/20)-1;gy<=Math.floor(by1/20)+1;gy++)for(gx=Math.floor(bx0/26)-1;gx<=Math.floor(bx1/26)+1;gx++){
    h=wh(gx+5,gy+9);if(h<.5)continue;px=gx*26+((h*17)%1)*24;py=gy*20+((h*29)%1)*18;
   X.fillStyle=h>.78?"rgba(238,228,196,.75)":h>.64?"rgba(112,98,72,.38)":"rgba(150,134,100,.30)";
   X.beginPath();X.ellipse(px,py,1.4+h*2.6,.9+h*1.5,0,0,7);X.fill()}
@@ -3102,7 +3121,7 @@ function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G
   var gr=X.createLinearGradient(G.ox-500,G.oy,G.ox+500,G.oy+720);gr.addColorStop(0,"rgba(79,184,220,.52)");gr.addColorStop(.5,"rgba(58,159,204,.60)");gr.addColorStop(1,"rgba(43,134,186,.68)");
  X.fillStyle=gr;X.fillRect(bx0-20,by0-20,bx1-bx0+40,by1-by0+40);
  // 3) big soft light / deep patches that drift slowly (fixed to the world, so they stay when you scroll)
-  if(!cheap)for(gy=Math.floor(by0/90)-1;gy<=Math.floor(by1/90)+1;gy++)for(gx=Math.floor(bx0/150)-1;gx<=Math.floor(bx1/150)+1;gx++){
+  for(gy=Math.floor(by0/90)-1;gy<=Math.floor(by1/90)+1;gy++)for(gx=Math.floor(bx0/150)-1;gx<=Math.floor(bx1/150)+1;gx++){
    h=wh(gx,gy);px=gx*150+h*150+16*Math.sin(t/3200+h*9);py=gy*90+((h*7.3)%1)*90+6*Math.cos(t/3700+h*5);
   X.fillStyle="rgba(165,232,248,.10)";
   X.beginPath();X.ellipse(px,py,70+h*45,24+h*16,0,0,7);X.fill()}
@@ -3160,7 +3179,7 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
    if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
    chunkDraw(F,hw,hh);
    for(k=0;k<fm.W.length;k+=2)if(fm.W[k]>=VTF.c0&&fm.W[k]<=VTF.c1&&fm.W[k+1]>=VTF.r0&&fm.W[k+1]<=VTF.r1)wp.push(fm.W[k],fm.W[k+1]);
-   if(wp.length){X.beginPath();pe2=wp.concat(waterExt(wp));S3={};for(k=0;k<pe2.length;k+=2)S3[flKey(pe2[k],pe2[k+1])]=1;waterBlobPath(pe2,S3,1);X.fillStyle=FLC.wt;X.fill()}
+   if(wp.length)drawWaterBody(F,wp,t,waterExt(wp));
    return}
   if(flat){P={};
    for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(id){if(!P[id])P[id]=[];P[id].push(c,r)}}
