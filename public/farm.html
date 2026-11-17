@@ -3182,7 +3182,7 @@ function waterBlobPath(W,S2,sc){var hw=G.TW/2,hh=G.TH/2,k,c,r,cx,cy,rx=hw*.6*sc,
   if(S2[flKey(c+1,r)])blob(cx+hw/2,cy+hh/2);
   if(S2[flKey(c,r+1)])blob(cx-hw/2,cy+hh/2);
   if(S2[flKey(c+1,r+1)])blob(cx,cy+hh)}}
-function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G.TW/2,hh=G.TH/2,k,c,r,x0,y0,minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,bx0,bx1,by0,by1,gx,gy,h,px,py,x,y,yy,row,al,ph,S2={};
+function drawWaterBodyFull(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G.TW/2,hh=G.TH/2,k,c,r,x0,y0,minX=1e9,maxX=-1e9,minY=1e9,maxY=-1e9,bx0,bx1,by0,by1,gx,gy,h,px,py,x,y,yy,row,al,ph,S2={};
  for(k=0;k<WA.length;k+=2){S2A[flKey(WA[k],WA[k+1])]=1;if(k<W.length)S2[flKey(W[k],W[k+1])]=1;c=WA[k];r=WA[k+1];x0=G.ox+(c-r)*hw;y0=G.oy+(c+r)*hh;
   if(x0-hw<minX)minX=x0-hw;if(x0+hw>maxX)maxX=x0+hw;if(y0<minY)minY=y0;if(y0+2*hh>maxY)maxY=y0+2*hh}
  X.save();
@@ -3221,6 +3221,32 @@ function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G
    h=wh(gx+31,gy+17);if(h<.72)continue;ph=Math.sin(t/520+h*60);if(ph<.35)continue;
   X.fillStyle="rgba(255,255,255,"+((ph-.35)*.95).toFixed(2)+")";X.fillRect(gx*40+h*34,gy*26+((h*13)%1)*22,2.2,1.6)}
  X.restore();X.restore()}
+ // FAST WATER: dragging = one flat blue shape; big ponds are painted once and reused
+var WPIC={};
+function drawWaterBody(F,W,t,WE){
+ var WA=WE&&WE.length?W.concat(WE):W,S2A={},k,m,key,pc,id,hs=0,oc,cx,oX,om;
+ if(MOVING){
+  for(k=0;k<WA.length;k+=2)S2A[flKey(WA[k],WA[k+1])]=1;
+  X.save();X.beginPath();waterBlobPath(WA,S2A,1);X.fillStyle="#49a6cc";X.fill();X.restore();return}
+ if(W.length<=300){drawWaterBodyFull(F,W,t,WE);return}
+ try{m=X.getTransform()}catch(e){drawWaterBodyFull(F,W,t,WE);return}
+ for(k=0;k<W.length;k++)hs=(hs*31+W[k])|0;
+ id=X.canvas.id||"c";key=id+"|"+X.canvas.width+"|"+X.canvas.height+"|"+m.a+"|"+m.e+"|"+m.f+"|"+G.ox+"|"+G.oy+"|"+W.length+"|"+WA.length+"|"+hs;
+ pc=WPIC[id]||(WPIC[id]={});
+ if(pc.key!==key||!pc.oc){
+  oc=pc.oc||(pc.oc=document.createElement("canvas"));
+  if(oc.width!==X.canvas.width||oc.height!==X.canvas.height){oc.width=X.canvas.width;oc.height=X.canvas.height}
+  cx=oc.getContext("2d");cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,oc.width,oc.height);cx.setTransform(m);
+  oX=X;om=MOVING;X=cx;MOVING=true;
+  try{drawWaterBodyFull(F,W,0,WE)}finally{X=oX;MOVING=om}
+  pc.key=key}
+ X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(pc.oc,0,0);X.restore()}
+var WXC={k:"",v:null};
+function waterExt(W){var k,hs=0,key;
+ for(k=0;k<W.length;k++)hs=(hs*31+W[k])|0;
+ key=W.length+"|"+hs+"|"+G.P.map(function(q){return q.c0+","+q.c1+","+q.r0+","+q.r1}).join(";");
+ if(WXC.k===key)return WXC.v;
+ WXC.v=waterExt0(W);WXC.k=key;return WXC.v}
 var WSET={}; // tiles that are water (so the light checker pattern is not drawn over them)
 function wkey(c,r){if(!CR)return flKey(c,r);var t=utile(c,r);return flKey(t[0],t[1])}
 // ===== FLOOR MAP: the whole floor as 1 pixel per tile, drawn with ONE call while you drag or zoom =====
@@ -3256,7 +3282,7 @@ function chunkDraw(F,hw,hh){var ver=FLN+"|"+CSD+"|"+G.ox+"|"+G.oy+"|"+hw+"|"+hh,
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
   var flat=LOD>1,cnt=0,FRm=frOf(cv)||{},rot;
-  if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=3500;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=3500;r++)if(F[wkey(c,r)])cnt++;flat=cnt>3500}
+  if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=3500;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=3500;r++)if(F[wkey(c,r)])cnt++;flat=cnt>400}
   if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
    if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
    chunkDraw(F,hw,hh);
@@ -3292,7 +3318,7 @@ var FLV={},VTF={c0:0,c1:0,r0:0,r1:0};
 // distance from the middle of a tile to the nearest land square (in the same tile numbers the picture uses)
 function wDist(c,r){var P=G.P,x=c+.5,y=r+.5,d=1e9,i,q,dx,dy;for(i=0;i<P.length;i++){q=P[i];dx=Math.max(q.c0-x,0,x-q.c1);dy=Math.max(q.r0-y,0,y-q.r1);d=Math.min(d,Math.sqrt(dx*dx+dy*dy))}return d}
 // water painted on the far edge of the beach reaches the sea: add 2 invisible water tiles outward so the pond joins the shallows
-function waterExt(W){var out=[],have={},seen={},q=[],k,c,r,st,d,N=[[1,0],[-1,0],[0,1],[0,-1]];
+function waterExt0(W){var out=[],have={},seen={},q=[],k,c,r,st,d,N=[[1,0],[-1,0],[0,1],[0,-1]];
  for(k=0;k<W.length;k+=2)have[flKey(W[k],W[k+1])]=1;
  for(k=0;k<W.length;k+=2){c=W[k];r=W[k+1];if(inLandP(G.P,c,r))continue;d=wDist(c,r);if(d>=6.2)q.push([c,r,d])}
  for(st=0;st<8&&q.length;st++){var nq=[];q.forEach(function(e){N.forEach(function(v){var a=e[0]+v[0],b=e[1]+v[1],key=flKey(a,b),dd;
