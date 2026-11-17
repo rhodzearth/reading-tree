@@ -2115,7 +2115,7 @@ function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
 function setEdit0(on){GMOVE=null;GPREV=null;GCONF=null;if($("field")._rot){$("field")._pan=[0,0];$("field")._box=null}EDIT=on;document.body.classList.toggle("edit-top",!!on);SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
 function setEdit(on){var b=!on&&BUYING;setEdit0(on);if(b){BUYING=0;$("mkt").style.display="flex";renderMkt()}}
 $("edBtn").onclick=function(){PEND=null;$("buyBar").style.display="none";BUYING=0;setEdit(!EDIT)};$("edDone").onclick=function(){setEdit(false)};
-$("edBarn").onclick=function(){var p=$("barnP");p.style.display=p.style.display==="none"?"block":"none"};
+$("edBarn").onclick=function(){var p=$("barnP"),e=$("editbar");p.style.display=p.style.display==="none"?"block":"none";p.style.top=(e.getBoundingClientRect().bottom+6)+"px"};
 $("edStore").onclick=function(){if(!SEL)return;
  if(SEL.t==="p"&&S.plots[SEL.i]){toast("Harvest this plot first, then store it.");return}
  doStore([SEL]);SEL=null;editUI();drawAll()};
@@ -3904,7 +3904,7 @@ function sellFloorDlg(f){var dlg=$("dlg"),inp,tot,have=haveTiles(f.id),rate=S.se
 (function(){var b=document.createElement("button");b.className="btn alt";b.id="edFRot";b.style.display="none";$("edAll").parentNode.insertBefore(b,$("edAll"));
  b.onclick=function(){if(!PAINT)return;var s=PAINT.turn?4:(PAINT.rot|0);s=(s+1)%5;PAINT.turn=s===4?1:0;PAINT.rot=s===4?0:s;editUI();drawAll()}})();
 var _editUI0=editUI;
-editUI=function(){_editUI0.apply(this,arguments);document.body.classList.toggle("paint-top",!!(PAINT||PLACING||SEL));var f,tile,b=$("edFRot");
+editUI=function(){_editUI0.apply(this,arguments);document.body.classList.toggle("paint-top",!!(EDIT||PAINT||PLACING||SEL));var f,tile,b=$("edFRot");
  if(!PAINT){b.style.display="none";return}
  f=floorDef(PAINT.id)||{id:"",name:""};tile=isTileF(f.id);
  b.style.display=(tile||PAINT.turn)?"":"none";
