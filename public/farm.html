@@ -216,7 +216,7 @@ window.onerror=function(m,u,l,c){var d=document.createElement("div");d.style.css
 <script>
 var $=function(i){return document.getElementById(i)},TOKEN="",S=null,sel="strawberry",V=null,lastLvl=0,HV={f:-1,v:-1},ANIM=false;
 var FW=8,FH=8,STAB="c";
-var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.55;
+var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.9;
 function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++)delete C[k[i]];return k.length-m} // drop the oldest third instead of everything
 // while you drag or pinch: cheap drawing + only the geometry is recalculated
 function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
@@ -1579,7 +1579,7 @@ function occMap(ig){var m={},i,q,PP=LAY?LAY.pp:S.pp;for(i=0;i<S.np;i++){q=PP[i];
  (LAY?LAY.dc:(S.dc||[])).forEach(function(o){if(!o.s&&!isF(o.k)&&!(ig&&ig.t==="d"&&ig.id===o.id)){var nw=footW(o.k),nh=footH(o.k),a,b;for(a=0;a<nw;a++)for(b=0;b<nh;b++)m[(o.c+a)*64+o.r+b]=1}});return m}
 function iso(cv,plots,pp,np,hov,items,edit){
  var v=cv._view;if(!v)return;
- var cols=szOf(cv),rows=cols,TW=112,TH=56,i,kz=v.k,dpr=Math.min(PERF?1.2:1.5,window.devicePixelRatio||1),
+ var cols=szOf(cv),rows=cols,TW=112,TH=56,i,kz=v.k,dprB=Math.min(PERF?1.2:1.5,window.devicePixelRatio||1),dpr=kz<.5?Math.max(.85,dprB*.7):kz<.8?Math.max(1,dprB*.85):dprB,
   cw=parseFloat(cv.style.width)||window.innerWidth,ch=parseFloat(cv.style.height)||window.innerHeight,
   ox=(rows+2)*TW/2+30,oy=130+TH,W=(rows+cols+4)*TW/2+60,H=oy+(cols+rows+2)*TH/2+60;
  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr)}
@@ -1707,7 +1707,7 @@ function drawNow(){ANIM=false;
  if(S&&!vis)iso($("field"),S.plots,S.pp,S.np,HV.f,PEND?S.dc.concat([PEND]):S.dc,EDIT);
  if(vis)iso($("vCanvas"),V.plots,V.pp||[],V.np,HV.v,V.dc,false);
  else drawMini()}
-setInterval(function(){if(ANIM&&!document.hidden&&!MOVING&&$("mkt").style.display==="none"&&$("dlg").style.display!=="flex"&&Date.now()-LASTEND>(LASTMS>45?250:Math.max(PERF?120:34,LASTMS*2)))drawAll()},34);
+setInterval(function(){var fv=$("field")._view,zo=!!fv&&fv.k<.9;if(ANIM&&!document.hidden&&!MOVING&&$("mkt").style.display==="none"&&$("dlg").style.display!=="flex"&&Date.now()-LASTEND>(LASTMS>45?(zo?400:250):Math.max(PERF?120:34,LASTMS*(zo?4:2))))drawAll()},34);
 function mmap(z){if(z)CR=0;else setRot($("field"));var n=(S&&S.sz)||8,B=wbox(n,S&&S.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
  return{n:n,ox:ox,oy:oy,x0:x0,y0:y0,m:m,fx:(124-(x1-x0)*m)/2,fy:(65-(y1-y0)*m)/2}}
 function drawMini(){var cv=$("mini"),f=$("field"),v=f._view;
