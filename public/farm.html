@@ -226,7 +226,10 @@ function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
  MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll();saveView()},170);
  fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
  var ZOUT=.5; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
-var DEFP=60; // default zoom on the notifier (1 = max in, 100 = max out). It can't go past the ZOUT cap.
+ var MIRCR=[0,1,0,1]; // which rotations (0,90,180,270) mirror the items. [0,1,1,0] makes 180 look different too
+var ROTTHR=.6;       // how far two fingers must twist (radians, .6 = about 35 degrees) to turn the farm
+var ROTDIR=1;        // change to -1 if the twist feels reversed
+ var DEFP=60; // default zoom on the notifier (1 = max in, 100 = max out). It can't go past the ZOUT cap.
  var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
 try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
@@ -254,7 +257,16 @@ function flush(cb){kick();var n=0;(function w(){if((Q.length||busy)&&n++<80){set
 $("goRead").onclick=function(){flush(openTree)};
 $("camBtn").onclick=function(){CAM=true;document.body.classList.add("cam");dock(false);side(false);drawAll()};
 $("camOff").onclick=function(e){e.stopPropagation();CAM=false;document.body.classList.remove("cam");drawAll()};
-function rotView(cv){cv._rot=((cv._rot||0)+1)&3;cv._pan=[0,0];cv._box=null;fitAll();drawAll()}
+function rotView(cv,dir){var v=cv._view,sx=window.innerWidth/2,sy,n,ox=0,oy=186,px,py,dx,dy,w=null,p,hh;
+ dir=dir||1;
+ if(v){setRot(cv);n=szOf(cv);ox=(n+2)*56+30;
+  if(cv.id==="vCanvas"){hh=$("vHead").offsetHeight;sy=hh+(window.innerHeight-hh)/2}
+  else{hh=$("hud").offsetHeight;sy=hh+(window.innerHeight-hh-$("botBar").offsetHeight)/2}
+  px=(sx-v.L)/v.k;py=(sy-v.T)/v.k;dx=(px-ox)/56;dy=(py-oy)/28;w=ur((dx+dy)/2,(dy-dx)/2)}
+ cv._rot=((cv._rot||0)+dir+4)&3;cv._pan=[0,0];cv._box=null;
+ if(w){setRot(cv);p=rp(w[0],w[1]);cv._anc={sx:sx,sy:sy,cx:ox+(p[0]-p[1])*56,cy:oy+(p[0]+p[1])*28}}
+ fitAll();drawAll()}
+function canRot(cv){return cv.id==="vCanvas"||(cv.id==="field"&&!(PEND||EDIT||LAY||PAINT||PBUY))}
 $("rotBtn").onclick=function(){if(PEND||EDIT||LAY){toast("Tap Done first. Rotate works in the normal farm view.");return}rotView($("field"))};
 $("vRot").onclick=function(){rotView($("vCanvas"))};
 $("wfBtn").onclick=function(){boostDlg()};
@@ -1599,7 +1611,7 @@ function ih(it){return it.fh||footH(it.k)}
    if(!isF(it.k)&&!OUTI[it.k]&&w*h>1){p=rp(it.c+w/2,it.r+h/2);nw=(CR&1)?h:w;nh=(CR&1)?w:h;o.fw=nw;o.fh=nh;t=[Math.round(p[0]-nw/2),Math.round(p[1]-nh/2)]}
    o.c=t[0];o.r=t[1];
    if(isF(it.k))o.rot=(isCorner(it.k)||it.k==="stoplight")?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;
-   else if((CR&1)&&!isFlagK(it.k)&&it.k!=="signpost")o.rot=it.rot?0:1;
+   else if(MIRCR[CR])o.rot=it.rot?0:1;
    return o})}
  cv._g={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,np:np,W:W,pp:pp,items:items,cr:CR,rc:RC.slice(),L:v.L,T:v.T,k:kz};
  var x=cv.getContext("2d"),t=Date.now(),labels=[],sdp=MOVING&&LSDP?LSDP:Math.min(1.5,Math.max(1,Math.ceil(dpr*kz*2)/2)),
@@ -1840,7 +1852,9 @@ function addPan(cv){var P={},st=null,pz=null,PR=0;
   else if(cnt()===2){var ids=Object.keys(P),a=P[ids[0]],b=P[ids[1]];pz={ids:ids,d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,m:[(a[0]+b[0])/2,(a[1]+b[1])/2]};st=null;cv._drag=true;
    ids.forEach(function(id){try{cv.setPointerCapture(Number(id))}catch(x){}})}});
  cv.addEventListener("pointermove",function(e){if(!P[e.pointerId])return;P[e.pointerId]=[e.clientX,e.clientY];
-  if(pz){var a=P[pz.ids[0]],b=P[pz.ids[1]];if(!a||!b)return;var r=bx(),d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+  if(pz){var a=P[pz.ids[0]],b=P[pz.ids[1]];if(!a||!b)return;var r=bx(),d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2],an=Math.atan2(b[1]-a[1],b[0]-a[0]),da;
+   if(pz.an===undefined)pz.an=an;da=an-pz.an;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;pz.an=an;pz.acc=(pz.acc||0)+da;
+   if(!pz.rl&&Math.abs(pz.acc)>ROTTHR&&canRot(cv)){pz.rl=true;rotView(cv,pz.acc>0?ROTDIR:-ROTDIR);pz.d=d;pz.m=m;return}
    zoomAt(d/pz.d,m[0]-r.left,m[1]-r.top,pz.m[0]-r.left,pz.m[1]-r.top);pz.d=d;pz.m=m;return}
   if(!st||e.pointerId!==st.id)return;var dx=e.clientX-st.x,dy=e.clientY-st.y;
   if(!st.m){if(Math.abs(dx)+Math.abs(dy)<8)return;st.m=true;cv._drag=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}}
