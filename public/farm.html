@@ -171,7 +171,7 @@ body.cam #zoomNote{visibility:hidden!important}
   <div id="idBar"><span class="pill" id="iUser"></span><span class="pill" id="iId"></span><span class="pill" id="iTok"></span><button class="btn alt" id="layBtn" title="Edit farm layout" style="padding:3px 9px"><svg width="18" height="18" viewBox="0 0 24 24" style="display:block"><path d="M2 5l6-2 8 2 6-2v16l-6 2-8-2-6 2z" fill="#e9d8a6" stroke="#6b4a24" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 3v16M16 5v16" stroke="#6b4a24" stroke-width="1" opacity=".6"/><path d="M3.5 8.5l3.5-1.2v5l-3.5 1.2z" fill="#7bbf4a"/><path d="M9.5 8.2l5 1.3v4.5l-5-1.3z" fill="#8a5c34"/><path d="M17.5 7.5l3-1v5l-3 1z" fill="#4aa3cf"/><path d="M13 18l6.5-6.5 2.2 2.2L15.2 20l-3 .8z" fill="#f2c230" stroke="#6b4a24" stroke-width="1" stroke-linejoin="round"/></svg></button><button class="btn alt" id="saveBtn" title="Save">&#128190;</button></div>
   <div class="hl"><span class="pill" id="sLvl"></span><div class="xp"><i id="xpBar"></i></div><span class="small" id="xpTxt"></span></div>
   <div class="hr"><span class="pill" id="sCoins"></span>
-   <button class="btn alt" id="goRead" title="Read">&#128214;</button><button class="btn alt" id="miniBtn" title="Show / hide mini map">&#128506;&#65039;</button><button class="btn alt" id="nbBtn" title="Neighbors">&#128101;</button><button class="btn alt" id="camBtn" title="Camera view">&#128247;</button><button class="btn alt" id="nightBtn" title="Day / night">&#127769;</button></div>
+   <button class="btn alt" id="goRead" title="Read">&#128214;</button><button class="btn alt" id="miniBtn" title="Show / hide mini map">&#128506;&#65039;</button><button class="btn alt" id="nbBtn" title="Neighbors">&#128101;</button><button class="btn alt" id="rotBtn" title="Rotate view">&#129517;</button><button class="btn alt" id="camBtn" title="Camera view">&#128247;</button><button class="btn alt" id="nightBtn" title="Day / night">&#127769;</button></div>
  </div>
 
  <div id="dock">
@@ -196,7 +196,7 @@ body.cam #zoomNote{visibility:hidden!important}
  </div>
  <div id="visit" style="display:none">
   <canvas id="vBg"></canvas>
-  <div id="vHead"><b id="vName"></b><button class="btn alt" id="vHint" title="Show / hide mini map">&#128506;&#65039;</button><button class="btn alt" id="vCopy" title="Copy this layout to a slot">&#128203;</button><button class="btn alt" id="vClose" title="Leave this farm">&#128682;</button></div>
+  <div id="vHead"><b id="vName"></b><button class="btn alt" id="vHint" title="Show / hide mini map">&#128506;&#65039;</button><button class="btn alt" id="vRot" title="Rotate view">&#129517;</button><button class="btn alt" id="vCopy" title="Copy this layout to a slot">&#128203;</button><button class="btn alt" id="vClose" title="Leave this farm">&#128682;</button></div>
   <div id="vScene"><canvas id="vCanvas"></canvas></div>
  <canvas id="vmini"></canvas>
  </div>
@@ -226,6 +226,9 @@ function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
  MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll();saveView()},170);
  fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
  var ZOUT=.5; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
+ var MIRCR=[0,1,0,1]; // which rotations (0,90,180,270) mirror the items. [0,1,1,0] makes 180 look different too
+var ROTTHR=.6;       // how far two fingers must twist (radians, .6 = about 35 degrees) to turn the farm
+var ROTDIR=1;        // change to -1 if the twist feels reversed
  var DEFP=60; // default zoom on the notifier (1 = max in, 100 = max out). It can't go past the ZOUT cap.
  var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
@@ -254,6 +257,18 @@ function flush(cb){kick();var n=0;(function w(){if((Q.length||busy)&&n++<80){set
 $("goRead").onclick=function(){flush(openTree)};
 $("camBtn").onclick=function(){CAM=true;document.body.classList.add("cam");dock(false);side(false);drawAll()};
 $("camOff").onclick=function(e){e.stopPropagation();CAM=false;document.body.classList.remove("cam");drawAll()};
+function rotView(cv,dir){var v=cv._view,sx=window.innerWidth/2,sy,n,ox=0,oy=186,px,py,dx,dy,w=null,p,hh;
+ dir=dir||1;
+ if(v){setRot(cv);n=szOf(cv);ox=(n+2)*56+30;
+  if(cv.id==="vCanvas"){hh=$("vHead").offsetHeight;sy=hh+(window.innerHeight-hh)/2}
+  else{hh=$("hud").offsetHeight;sy=hh+(window.innerHeight-hh-$("botBar").offsetHeight)/2}
+  px=(sx-v.L)/v.k;py=(sy-v.T)/v.k;dx=(px-ox)/56;dy=(py-oy)/28;w=ur((dx+dy)/2,(dy-dx)/2)}
+ cv._rot=((cv._rot||0)+dir+4)&3;cv._pan=[0,0];cv._box=null;
+ if(w){setRot(cv);p=rp(w[0],w[1]);cv._anc={sx:sx,sy:sy,cx:ox+(p[0]-p[1])*56,cy:oy+(p[0]+p[1])*28}}
+ fitAll();drawAll()}
+function canRot(cv){return cv.id==="vCanvas"||(cv.id==="field"&&!(PEND||EDIT||LAY||PAINT||PBUY))}
+$("rotBtn").onclick=function(){if(PEND||EDIT||LAY){toast("Tap Done first. Rotate works in the normal farm view.");return}rotView($("field"))};
+$("vRot").onclick=function(){rotView($("vCanvas"))};
 $("wfBtn").onclick=function(){boostDlg()};
 function boostDlg(){
  var w=S.wf||0,dlg=$("dlg"),PER=30,HRS=6;
@@ -1086,7 +1101,17 @@ strokeP(isleRaw(r,12+.9*Math.sin(t*.55+3)),"rgba(255,255,255,.22)",1.4);
 
  var FS=[],WBX=null,LMAX=60;
 function landRect(L){var i=L.i,j=L.j,z=L.z,n,c1,r1;if(i===undefined){n=L.n||0;if(L.s==="R"){i=0;j=n+1}else{i=n+1;j=0}}c1=LMAX-LMAX*i;r1=LMAX-LMAX*j;return{c0:c1-z,c1:c1,r0:r1-z,r1:r1}}
-function parcels(n,ls){return parcels0(n,ls)}
+var CR=0,RC=[0,0]; // CR = current view rotation 0-3, RC = centre it turns around
+function rpx(cr,rc,c,r){var dc=c-rc[0],dr=r-rc[1];return cr===1?[rc[0]-dr,rc[1]+dc]:cr===2?[rc[0]-dc,rc[1]-dr]:cr===3?[rc[0]+dr,rc[1]-dc]:[c,r]}
+function rp(c,r){return rpx(CR,RC,c,r)}
+function ur(c,r){return rpx((4-CR)&3,RC,c,r)}
+function rtile(c,r){var p=rp(c+.5,r+.5);return[Math.round(p[0]-.5),Math.round(p[1]-.5)]}   // world tile -> view tile
+function utile(c,r){var p=ur(c+.5,r+.5);return[Math.round(p[0]-.5),Math.round(p[1]-.5)]}   // view tile -> world tile
+function rtv(g,c,r){if(!g.cr)return[c,r];var p=rpx(g.cr,g.rc,c+.5,r+.5);return[Math.round(p[0]-.5),Math.round(p[1]-.5)]}
+function rotOf(cv){if(!cv||cv.id==="lCanvas")return 0;if(cv.id==="field"&&(EDIT||PEND||PAINT||PBUY))return 0;return(cv._rot||0)&3}
+function setRot(cv){CR=rotOf(cv);if(CR){var B=wbox0(szOf(cv),LSof(cv));RC=[Math.round((B.c0+B.c1)/2),Math.round((B.r0+B.r1)/2)]}}
+function parcels0(n,ls){var P=[{c0:0,c1:n,r0:0,r1:n}];(ls||[]).forEach(function(L){P.push(landRect(L))});return P}
+function parcels(n,ls){var P=parcels0(n,ls);if(!CR)return P;return P.map(function(q){var a=rp(q.c0,q.r0),b=rp(q.c1,q.r1);return{c0:Math.min(a[0],b[0]),c1:Math.max(a[0],b[0]),r0:Math.min(a[1],b[1]),r1:Math.max(a[1],b[1])}})}
 function inLandP(P,c,r){for(var i=0;i<P.length;i++){var q=P[i];if(c>=q.c0&&c<q.c1&&r>=q.r0&&r<q.r1)return true}return false}
 function wbox0(n,ls){var B={c0:0,c1:n,r0:0,r1:n};(ls||[]).forEach(function(L){var q=landRect(L);B.c0=Math.min(B.c0,q.c0);B.c1=Math.max(B.c1,q.c1);B.r0=Math.min(B.r0,q.r0);B.r1=Math.max(B.r1,q.r1)});return B}
 function wbox(n,ls){var P=parcels(n,ls),B={c0:1e9,c1:-1e9,r0:1e9,r1:-1e9};P.forEach(function(q){B.c0=Math.min(B.c0,q.c0);B.c1=Math.max(B.c1,q.c1);B.r0=Math.min(B.r0,q.r0);B.r1=Math.max(B.r1,q.r1)});return B}
@@ -1580,8 +1605,15 @@ function ih(it){return it.fh||footH(it.k)}
   cw=parseFloat(cv.style.width)||window.innerWidth,ch=parseFloat(cv.style.height)||window.innerHeight,
   ox=(rows+2)*TW/2+30,oy=130+TH,W=(rows+cols+4)*TW/2+60,H=oy+(cols+rows+2)*TH/2+60;
  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr)}
- NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);PHD=phOf(cv);
- cv._g={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,np:np,W:W,pp:pp,items:items,L:v.L,T:v.T,k:kz};
+ NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);PHD=phOf(cv);
+ if(CR){pp=pp.map(function(q){return q?rtile(q[0],q[1]):q});
+  items=(items||[]).map(function(it){var o=Object.create(it),t=rtile(it.c,it.r),w=footW(it.k),h=footH(it.k),p,nw,nh;o._o=it;
+   if(!isF(it.k)&&!OUTI[it.k]&&w*h>1){p=rp(it.c+w/2,it.r+h/2);nw=(CR&1)?h:w;nh=(CR&1)?w:h;o.fw=nw;o.fh=nh;t=[Math.round(p[0]-nw/2),Math.round(p[1]-nh/2)]}
+   o.c=t[0];o.r=t[1];
+   if(isF(it.k))o.rot=(isCorner(it.k)||it.k==="stoplight")?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;
+   else if(MIRCR[CR])o.rot=it.rot?0:1;
+   return o})}
+ cv._g={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,np:np,W:W,pp:pp,items:items,cr:CR,rc:RC.slice(),L:v.L,T:v.T,k:kz};
  var x=cv.getContext("2d"),t=Date.now(),labels=[],sdp=MOVING&&LSDP?LSDP:Math.min(1.5,Math.max(1,Math.ceil(dpr*kz*2)/2)),
   wx0=-v.L/kz-150,wx1=(cw-v.L)/kz+150,wy0=-v.T/kz-40,wy1=(ch-v.T)/kz+150,cs,cc,rr;
  x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,cv.width,cv.height);x.setTransform(dpr*kz,0,0,dpr*kz,dpr*v.L,dpr*v.T);X=x;ANIM=true;CSD=sdp;if(!MOVING)LSDP=sdp;QL=MOVING&&kz<DRAG_KEEP;LOD=(kz<.3||QL)?4:1;
@@ -1608,9 +1640,18 @@ function ih(it){return it.fh||footH(it.k)}
   for(k=0;k<PLS.length;k+=(LOD>1?4:kz<.6?2:1))plantS(p.c,Pp(c+PLS[k][0],r+PLS[k][1]),pr,ripe,t,big);
   if(kz>=.4&&!QL)labels.push({C:C,txt:ripe?(big?"BIG! +"+cc2.sell*(S.bigMult||2):"Ripe! +"+cc2.sell):fmtDur(cc2.ms-el),ripe:ripe,big:big,t:t});
  }
+ function viewIm(k,im,st,dpr){
+ if(!CR||!im||isF(k)||OUTI[k])return im;
+ var key=k+"@V"+CR+"@"+dpr+"@"+(st||0),s=SPR[key];if(s)return s;
+ var c=document.createElement("canvas");c.width=im.width;c.height=im.height;
+ var x=c.getContext("2d");
+ if(CR===2){x.drawImage(im,0,0);x.globalCompositeOperation="source-atop";x.fillStyle="rgba(40,40,60,.38)";x.fillRect(0,0,c.width,c.height)}
+ else{x.translate(c.width/2,0);x.scale(.72,1);x.drawImage(im,-c.width/2,0);x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation="source-atop";x.fillStyle="rgba(40,40,60,.18)";x.fillRect(0,0,c.width,c.height)}
+ SPR[key]=c;SPRN++;return c
+}
  function drawDeco(it){var fw=iw(it),fh=ih(it),bs=BSC[it.k]||1,p=Pp(it.c+fw/2,it.r+fh/2),ft=FTD[it.k],st=0,el;if(isF(it.k))st=(it.rot||0)&3;if(isF(it.k))st=(it.rot||0)&3;
   if(ft){el=nowT()-(it.t||0);st=el>=ft.ms?2:el/ft.ms>=.35?1:0;if(kz>=.4&&!QL)labels.push({C:p,txt:st===2?(ft.animal?"Ready! +":"Ripe! +")+ft.sell:fmtDur(ft.ms-el),ripe:st===2,big:false,t:t,up:Math.max(96,-(HB[it.k]||[0,-86])[1]+10)})}
-  var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=(qd||DRAWV[it.k])?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st)),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
+  var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=(qd||DRAWV[it.k])?null:viewIm(it.k,BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st),st,sdp),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
   if(DRAWV[it.k]){drawCourt(it,fw,fh)}else if(qd){drawQuad(it,p,t,fl,sdp)}
     else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0,osz=OSC[it.k]||1;X.save();X.translate(p[0],p[1]+bb*osz*1.2);X.rotate(bb*.018);X.scale(fl?-osz:osz,osz);DEC[it.k]([0,0]);X.restore()}
   else if(an){X.save();X.translate(p[0],p[1]);X.rotate(fl?-an.r:an.r);X.scale(fl?-an.sx:an.sx,an.sy);X.drawImage(im,-130,-170+an.dy,260,220);X.restore()}
@@ -1656,16 +1697,16 @@ function grassBg(cv,ref,offY){var night=document.body.classList.contains("night"
 function dims(n,ls){n=n||8;var B=wbox(n,ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28;
  return{W:x1-x0+284,H:y1-y0+302,mx:(x0+x1)/2,my:(y0+y1)/2-35}}
 function szOf(cv){return((cv&&cv.id==="vCanvas")?(V&&V.sz):(S&&S.sz))||8}
-function camBox(pp,np,dc,n,m,ls,cv){m=m==null?1:m;var c0=999,c1=-999,r0=999,r1=-999,i,B=wbox(n,ls);
- function add(c,r){c0=Math.min(c0,c);c1=Math.max(c1,c);r0=Math.min(r0,r);r1=Math.max(r1,r)}
+function camBox(pp,np,dc,n,m,ls,cv){m=m==null?1:m;setRot(cv);var c0=999,c1=-999,r0=999,r1=-999,i,B=wbox(n,ls);
+ function add(c,r){if(CR){var t=rtile(c,r);c=t[0];r=t[1]}c0=Math.min(c0,c);c1=Math.max(c1,c);r0=Math.min(r0,r);r1=Math.max(r1,r)}
  for(i=0;i<np;i++)if(pp&&pp[i])add(pp[i][0],pp[i][1]);
  (dc||[]).forEach(function(x){if(!x.s)add(x.c,x.r)});
  if(c1<-900)return null;
  return[Math.max(B.c0,c0-m),Math.min(B.c1,c1+m+1),Math.max(B.r0,r0-m),Math.min(B.r1,r1+m+1)]}
 var L1SPAN=560,L1MARG=36; // L1SPAN = how much of the farm is seen across the screen (smaller = closer); L1MARG = pixels between the bottom fence corner and the bottom of the farm area
-function lvl1Box(cv){var n=szOf(cv),B=wbox(n,LSof(cv)),a=[0,0],b=[Math.min(7,n-1),Math.min(7,n-1)],
- c0=Math.min(a[0],b[0]),c1=Math.max(a[0],b[0]),r0=Math.min(a[1],b[1]),r1=Math.max(a[1],b[1]),x=[Math.max(B.c0,c0-1),Math.min(B.c1,c1+2),Math.max(B.r0,r0-1),Math.min(B.r1,r1+2)];x.l1=1;var cq=[[0,0],[n-1,0],[0,n-1],[n-1,n-1]];x.vb=[Math.max(cq[0][0],cq[1][0],cq[2][0],cq[3][0])+1,Math.max(cq[0][1],cq[1][1],cq[2][1],cq[3][1])+1];return x}
-function fit(cv,np,top,bot,box,rel){var n=szOf(cv),ls=LSof(cv),B=wbox(n,ls),d=dims(n,ls),aw=window.innerWidth,ah=window.innerHeight-top-bot,
+function lvl1Box(cv){setRot(cv);var n=szOf(cv),B=wbox(n,LSof(cv)),a=rtile(0,0),b=rtile(Math.min(7,n-1),Math.min(7,n-1)),
+ c0=Math.min(a[0],b[0]),c1=Math.max(a[0],b[0]),r0=Math.min(a[1],b[1]),r1=Math.max(a[1],b[1]),x=[Math.max(B.c0,c0-1),Math.min(B.c1,c1+2),Math.max(B.r0,r0-1),Math.min(B.r1,r1+2)];x.l1=1;var cq=[rtile(0,0),rtile(n-1,0),rtile(0,n-1),rtile(n-1,n-1)];x.vb=[Math.max(cq[0][0],cq[1][0],cq[2][0],cq[3][0])+1,Math.max(cq[0][1],cq[1][1],cq[2][1],cq[3][1])+1];return x}
+function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox(n,ls),d=dims(n,ls),aw=window.innerWidth,ah=window.innerHeight-top-bot,
  k0=Math.max(.08,Math.min(aw/(d.W-120),ah/d.H,2.4)),k=k0,mx=d.mx,my=d.my,ox=(n+2)*56+30,oy=186,z=cv._z||1,kd;
  if(box){var xs=[],ys=[],kz,cap;
   [[box[0],box[2]],[box[1],box[2]],[box[1],box[3]],[box[0],box[3]]].forEach(function(q){xs.push(ox+(q[0]-q[1])*56);ys.push(oy+(q[0]+q[1])*28)});
@@ -1684,11 +1725,11 @@ function fit(cv,np,top,bot,box,rel){var n=szOf(cv),ls=LSof(cv),B=wbox(n,ls),d=di
 function saveView(){var f=$("field"),v=f._view,hud,dh,sy;
  if(!v||!S||!TOKEN)return;
  hud=$("hud").offsetHeight;dh=$("botBar").offsetHeight;sy=hud+(window.innerHeight-hud-dh)/2;
- try{localStorage.setItem("farmView_"+TOKEN.slice(-12),JSON.stringify({k:v.k,cx:(window.innerWidth/2-v.L)/v.k,cy:(sy-v.T)/v.k,sz:S.sz||8}))}catch(e){}}
+ try{localStorage.setItem("farmView_"+TOKEN.slice(-12),JSON.stringify({k:v.k,cx:(window.innerWidth/2-v.L)/v.k,cy:(sy-v.T)/v.k,rot:f._rot||0,sz:S.sz||8}))}catch(e){}}
 function restoreView(){var f=$("field"),o=null,hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight;
  try{o=JSON.parse(localStorage.getItem("farmView_"+TOKEN.slice(-12))||"null")}catch(e){}
  if(!o||o.sz!==(S.sz||8)||!isFinite(o.k)||!isFinite(o.cx)||!isFinite(o.cy))return;
- f._kabs=o.k;
+ f._rot=o.rot&3;f._kabs=o.k;
  f._anc={sx:window.innerWidth/2,sy:hud+(window.innerHeight-hud-dh)/2,cx:o.cx,cy:o.cy}}
 window.addEventListener("pagehide",saveView);
 document.addEventListener("visibilitychange",function(){if(document.hidden)saveView()});
@@ -1713,7 +1754,7 @@ function drawNow(){ANIM=false;
  if(vis){iso($("vCanvas"),V.plots,V.pp||[],V.np,HV.v,V.dc,false);drawVMini()}
  else drawMini()}
 setInterval(function(){var fv=$("field")._view,zo=!!fv&&fv.k<.9;if(ANIM&&!document.hidden&&!MOVING&&$("mkt").style.display==="none"&&$("dlg").style.display!=="flex"&&Date.now()-LASTEND>(LASTMS>45?(zo?400:250):Math.max(PERF?120:34,LASTMS*(zo?4:2))))drawAll()},34);
-function mmap(z){var n=(S&&S.sz)||8,B=wbox(n,S&&S.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
+function mmap(z){if(z)CR=0;else setRot($("field"));var n=(S&&S.sz)||8,B=wbox(n,S&&S.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
  return{n:n,ox:ox,oy:oy,x0:x0,y0:y0,m:m,fx:(124-(x1-x0)*m)/2,fy:(65-(y1-y0)*m)/2}}
 var MSC=1.4; // minimap size multiplier (the CSS size below must match: 124*MSC and 65*MSC)
 function drawMini(){var cv=$("mini"),f=$("field"),v=f._view;
@@ -1723,7 +1764,7 @@ function drawMini(){var cv=$("mini"),f=$("field"),v=f._view;
  if(cv.width!==Math.round(w*sc)){cv.width=Math.round(w*sc);cv.height=Math.round(h*sc)}
  x=cv.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);
  function P(c,r){return[M.fx+(M.ox+(c-r)*56-M.x0)*M.m,M.fy+(M.oy+(c+r)*28-M.y0)*M.m]}
- function Q(c,r){return P(c,r)}
+ function Q(c,r){var t=rp(c,r);return P(t[0],t[1])}
  function path(a){x.beginPath();a.forEach(function(p,j){j?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath()}
  // lands: green with a sandy edge
  parcels(M.n,S.ls).forEach(function(q){path([P(q.c0,q.r0),P(q.c1,q.r0),P(q.c1,q.r1),P(q.c0,q.r1)]);
@@ -1757,14 +1798,14 @@ $("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(
 $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 // ===== MINI MAP IN VISIT MODE =====
 var VMINI=true,VMT=0;try{VMINI=localStorage.getItem("vminiHide")!=="1"}catch(e){}
-function vmmap(){var n=(V&&V.sz)||8,B=wbox(n,V&&V.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
+function vmmap(){setRot($("vCanvas"));var n=(V&&V.sz)||8,B=wbox(n,V&&V.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
  return{n:n,ox:ox,oy:oy,x0:x0,y0:y0,m:m,fx:(124-(x1-x0)*m)/2,fy:(65-(y1-y0)*m)/2}}
 var VMC=null;
 function buildVMC(M,sc,w,h,key){var c=VMC&&VMC.c||document.createElement("canvas"),x,i,q,o,PL=V.plots||[],PP=V.pp||[];
  if(c.width!==Math.round(w*sc)||c.height!==Math.round(h*sc)){c.width=Math.round(w*sc);c.height=Math.round(h*sc)}
  x=c.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);
  function P(c2,r){return[M.fx+(M.ox+(c2-r)*56-M.x0)*M.m,M.fy+(M.oy+(c2+r)*28-M.y0)*M.m]}
- function Q(c2,r){return P(c2,r)}
+ function Q(c2,r){var t=rp(c2,r);return P(t[0],t[1])}
  function path(a){x.beginPath();a.forEach(function(p,j){j?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath()}
  parcels(M.n,V.ls).forEach(function(q2){path([P(q2.c0,q2.r0),P(q2.c1,q2.r0),P(q2.c1,q2.r1),P(q2.c0,q2.r1)]);
   x.fillStyle=NIGHT?"#2f6a2a":"#86d452";x.fill();x.strokeStyle="#efdba8";x.lineWidth=1.6;x.lineJoin="round";x.stroke()});
@@ -1781,7 +1822,7 @@ function drawVMini(){var cv=$("vmini"),f=$("vCanvas"),v=f._view,hb=$("vHint");
  if(!V||(V.sz||8)<14||!v||!VMINI){cv.style.display="none";return}
  if(MOVING&&Date.now()-VMT<120)return;
  var dpr=Math.min(2,window.devicePixelRatio||1),sc=dpr*MSC,w=124,h=65,M=vmmap(),x,cw=parseFloat(f.style.width)||window.innerWidth,ch=parseFloat(f.style.height)||window.innerHeight,vx,vy,vw,vh,rx,ry,rx2,ry2,hh=$("vHead").offsetHeight,
-  key=[V.sz,V.np,(V.dc||[]).length,(V.ls||[]).length,NIGHT?1:0,sc].join("|");
+  key=[V.sz,V.np,(V.dc||[]).length,(V.ls||[]).length,CR,NIGHT?1:0,sc].join("|");
  VMT=Date.now();cv.style.display="block";if(cv._ht!==hh){cv._ht=hh;cv.style.top=(hh+8)+"px"}
  if(cv.width!==Math.round(w*sc)){cv.width=Math.round(w*sc);cv.height=Math.round(h*sc)}
  if(!VMC||VMC.v!==V||VMC.k!==key||Date.now()-VMC.t>3000)buildVMC(M,sc,w,h,key);
@@ -1820,8 +1861,10 @@ function addPan(cv){var P={},st=null,pz=null,PR=0;
   else if(cnt()===2){var ids=Object.keys(P),a=P[ids[0]],b=P[ids[1]];pz={ids:ids,d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,m:[(a[0]+b[0])/2,(a[1]+b[1])/2]};st=null;cv._drag=true;
    ids.forEach(function(id){try{cv.setPointerCapture(Number(id))}catch(x){}})}});
  cv.addEventListener("pointermove",function(e){if(!P[e.pointerId])return;P[e.pointerId]=[e.clientX,e.clientY];
-  if(pz){var a=P[pz.ids[0]],b=P[pz.ids[1]];if(!a||!b)return;var r=bx(),d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
-      zoomAt(d/pz.d,m[0]-r.left,m[1]-r.top,pz.m[0]-r.left,pz.m[1]-r.top);pz.d=d;pz.m=m;return}
+  if(pz){var a=P[pz.ids[0]],b=P[pz.ids[1]];if(!a||!b)return;var r=bx(),d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2],an=Math.atan2(b[1]-a[1],b[0]-a[0]),da;
+   if(pz.an===undefined)pz.an=an;da=an-pz.an;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;pz.an=an;pz.acc=(pz.acc||0)+da;
+   if(!pz.rl&&Math.abs(pz.acc)>ROTTHR&&canRot(cv)){pz.rl=true;rotView(cv,pz.acc>0?ROTDIR:-ROTDIR);pz.d=d;pz.m=m;return}
+   zoomAt(d/pz.d,m[0]-r.left,m[1]-r.top,pz.m[0]-r.left,pz.m[1]-r.top);pz.d=d;pz.m=m;return}
   if(!st||e.pointerId!==st.id)return;var dx=e.clientX-st.x,dy=e.clientY-st.y;
   if(!st.m){if(Math.abs(dx)+Math.abs(dy)<8)return;st.m=true;cv._drag=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}}
   cv._pan=[st.px+dx,st.py+dy];if(!PR)PR=requestAnimationFrame(function(){PR=0;fitMove(cv)})});
@@ -2039,7 +2082,7 @@ function nameOf(s){return s.t==="p"?"plot":KN[dcById(s.id).k][1]}
 function stored(){var l=[],i;for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});(S.dc||[]).forEach(function(x){if(x.s)l.push({t:"d",id:x.id})});return l}
 function ptr(cv,ev){var g=cv._g,rc=cv.getBoundingClientRect();return[(ev.clientX-rc.left-g.L)/g.k,(ev.clientY-rc.top-g.T)/g.k]}
 function toTile(cv,p){var g=cv._g,dx=(p[0]-g.ox)/(g.TW/2),dy=(p[1]-g.oy)/(g.TH/2);return[(dx+dy)/2,(dy-dx)/2]}
-function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=S.dc||[],ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=iw(it),fh=ih(it),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
+function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]),ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=iw(it),fh=ih(it),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
  hit=p[0]>=x+(m?-b[2]:b[0])&&p[0]<=x+(m?-b[0]:b[2])&&p[1]>=y+b[1]&&p[1]<=y+b[3];if(!hit&&fw*fh>1)hit=tc>=it.c&&tc<it.c+fw&&tr>=it.r&&tr<it.r+fh;
  if(hit&&k>bd){bd=k;best=it._o||it}});return best}
 function gkey(s){return s.t==="p"?"p":(dcById(s.id)||{}).k}
@@ -2078,7 +2121,7 @@ function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  $("edStop").style.display=PLACING||PAINT?"":"none";$("edBrush").style.display=PAINT?"":"none";$("edAll").style.display=PAINT?"":"none";if(PAINT)$("edBrush").textContent="\uD83D\uDD8C Brush "+PAINT.size+"x"+PAINT.size;
  if(GMOVE){$("edTxt").textContent="Moving a group of "+GMOVE.list.length+": tap the new spot for the selected item";$("edStop").style.display="";$("edMoveG").style.display="none"}
  renderBarn()}
-function setEdit0(on){GMOVE=null;GPREV=null;GCONF=null;EDIT=on;document.body.classList.toggle("edit-top",!!on);SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
+function setEdit0(on){GMOVE=null;GPREV=null;GCONF=null;if($("field")._rot){$("field")._pan=[0,0];$("field")._box=null}EDIT=on;document.body.classList.toggle("edit-top",!!on);SEL=null;PLACING=null;DRAG=null;HOVT=null;PBUY=0;PAINT=null;HV.f=-1;$("editbar").style.display=on&&!PEND?"flex":"none";$("barnP").style.display="none";$("field").style.touchAction="none";if(on){side(false);dock(false)}editUI();fitAll();drawAll()}
 function setEdit(on){var b=!on&&BUYING;setEdit0(on);if(b){BUYING=0;$("mkt").style.display="flex";renderMkt()}}
 $("edBtn").onclick=function(){PEND=null;$("buyBar").style.display="none";BUYING=0;setEdit(!EDIT)};$("edDone").onclick=function(){setEdit(false)};
 $("edBarn").onclick=function(){var p=$("barnP");p.style.display=p.style.display==="none"?"block":"none"};
@@ -3188,7 +3231,7 @@ function drawWaterBody(F,W,t,WE){var WA=WE&&WE.length?W.concat(WE):W,S2A={},hw=G
   X.fillStyle="rgba(255,255,255,"+((ph-.35)*.95).toFixed(2)+")";X.fillRect(gx*40+h*34,gy*26+((h*13)%1)*22,2.2,1.6)}
  X.restore();X.restore()}
 var WSET={}; // tiles that are water (so the light checker pattern is not drawn over them)
-function wkey(c,r){return flKey(c,r)}
+function wkey(c,r){if(!CR)return flKey(c,r);var t=utile(c,r);return flKey(t[0],t[1])}
 // ===== FLOOR MAP: the whole floor as 1 pixel per tile, drawn with ONE call while you drag or zoom =====
 var FMAP=null,FLN=0,FRGB={};
 function flRGB(id){var h=FLC[id]||"#888888",v=FRGB[id];if(v)return v;v=[parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)];return FRGB[id]=v}
@@ -3223,7 +3266,7 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
   var flat=LOD>1,cnt=0,FRm=frOf(cv)||{},rot;
   if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=3500;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=3500;r++)if(F[wkey(c,r)])cnt++;flat=cnt>3500}
-  if(flat){var fm=floorMap(F),wp=[],pe2,S3;
+  if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
    if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
    chunkDraw(F,hw,hh);
    for(k=0;k<fm.W.length;k+=2)if(fm.W[k]>=VTF.c0&&fm.W[k]<=VTF.c1&&fm.W[k+1]>=VTF.r0&&fm.W[k+1]<=VTF.r1)wp.push(fm.W[k],fm.W[k+1]);
@@ -3239,9 +3282,9 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
  var T=[],hs=0,fc,m,key,fv,oc,ox_;
  for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(!id||!FLD[id])continue;
   if(id==="wt"){W.push(c,r);WSET[flKey(c,r)]=1;continue} // water is drawn later as ONE rounded body
-  rot=(FRm[wkey(c,r)]|0)&3;T.push(c,r,rot?id+rot:id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r+rot*17)|0}
+  rot=((FRm[wkey(c,r)]|0)+CR)&3;T.push(c,r,rot?id+rot:id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r+rot*17)|0}
  // When the view stands still (the game keeps redrawing for swaying crops), the finished floor picture is reused.
- try{m=X.getTransform();key=X.canvas.id+"|"+X.canvas.width+"|"+X.canvas.height+"|"+m.a+"|"+m.e+"|"+m.f+"|"+G.ox+"|"+G.oy+"|"+CSD+"|"+T.length+"|"+hs}catch(e){key=null}
+ try{m=X.getTransform();key=X.canvas.id+"|"+X.canvas.width+"|"+X.canvas.height+"|"+m.a+"|"+m.e+"|"+m.f+"|"+G.ox+"|"+G.oy+"|"+CR+"|"+CSD+"|"+T.length+"|"+hs}catch(e){key=null}
  fv=FLV[X.canvas.id]||(FLV[X.canvas.id]={});
  if(key&&fv.key===key&&fv.oc){X.save();X.setTransform(1,0,0,1,0,0);X.drawImage(fv.oc,0,0);X.restore()}
  else{
@@ -3391,7 +3434,7 @@ function askExpand(e,yes){var cur=S.sz||8,s=cur/e.sz,x1=(112*s).toFixed(1),y1=(5
   "<div class='dbtns'><button class='btn alt' id='dNo'>Cancel</button><button class='btn ok' id='dYes'>\u2705 Expand</button></div>";
  dlg.style.display="flex";$("dNo").onclick=shut;$("dYes").onclick=function(){shut();yes()};dlg.onclick=function(ev){if(ev.target===dlg)shut()}}
  function goLand(L){var q=landRect(L),n=S.sz||8,c=(q.c0+q.c1)/2,r=(q.r0+q.r1)/2,hh=$("hud").offsetHeight,t;
- 
+ setRot($("field"));t=rp(c,r);c=t[0];r=t[1];
  $("field")._anc={sx:window.innerWidth/2,sy:hh+(window.innerHeight-$("botBar").offsetHeight-hh)/2,cx:(n+2)*56+30+(c-r)*56,cy:186+(c+r)*28};fitAll()}
 function landCall(fn,arg,msg,after){busyShow(msg);flush(function(){call(fn,[TOKEN,arg],function(s){setState(s);busyHide();if(after)after(s)},function(m){busyHide();toast(m)})})}
 function landDlg(){var dlg=$("dlg"),B=S.landBuy||{price:0,cells:[]},L=S.ls||[],E=S.landExp||[],rows="",grid="",cells=B.cells||[];
@@ -3489,7 +3532,7 @@ tileFree=function(c,r,ig,k){if(k===undefined)k=curK(ig);
  return _tileFree2(c,r,ig,k)};
 // first free spot, as close as possible to the middle of the screen
 function outFreeTile(i){var f=$("field"),g=f._g,v=f._view,B=wbox0(S.sz||8,S.ls),cc,rr,px,py,dx,dy,best=null,bd=1e18,c,r,d,M=34;
- if(g&&v){px=(window.innerWidth/2-v.L)/v.k;py=(window.innerHeight/2-v.T)/v.k;dx=(px-g.ox)/(g.TW/2);dy=(py-g.oy)/(g.TH/2);cc=(dx+dy)/2;rr=(dy-dx)/2}
+ if(g&&v&&!g.cr){px=(window.innerWidth/2-v.L)/v.k;py=(window.innerHeight/2-v.T)/v.k;dx=(px-g.ox)/(g.TW/2);dy=(py-g.oy)/(g.TH/2);cc=(dx+dy)/2;rr=(dy-dx)/2}
  else{cc=(B.c0+B.c1)/2;rr=(B.r0+B.r1)/2}
  for(c=B.c0-M;c<B.c1+M;c++)for(r=B.r0-M;r<B.r1+M;r++){
   if(zoneAt(c,r)!==i.out||!tileFree(c,r,null,i.id))continue;
@@ -4504,7 +4547,8 @@ function pulse(el){if(el&&el.animate)el.animate(
  [{transform:"scale(1)"},{transform:"scale(1.22)",offset:.4},{transform:"scale(1)"}],{duration:260,easing:"ease-out"})}
 // tile (c,r) -> screen position (same maths as the farm drawing). cid = which canvas.
 function scr(c,r,dy,cid){var f=document.getElementById(cid||"field"),g=f._g,t;if(!g)return null;
-  var rc=f.getBoundingClientRect(),k=g.k;
+ if(g.cr&&window.rtv){t=window.rtv(g,c,r);c=t[0];r=t[1]}
+ var rc=f.getBoundingClientRect(),k=g.k;
  return[rc.left+g.L+(g.ox+(c-r)*g.TW/2)*k, rc.top+g.T+(g.oy+(c+r+1)*g.TH/2+(dy||0))*k, k]}
 function itemTop(k){var b=HB[k];return b?b[1]+6:-60}   // top of a tree / animal
 function itemMid(k){var b=HB[k];return b?b[1]*.5:-30}  // middle of an object
