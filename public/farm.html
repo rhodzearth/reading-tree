@@ -223,7 +223,7 @@ function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++
 function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
  MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll()},170);
  fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
- var ZOUT=.6; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
+ var ZOUT=.5; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
 var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
 try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
