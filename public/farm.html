@@ -1988,7 +1988,7 @@ function visitTap(i){var p=V.plots[i];if(!p)return;var c=cr(p.c);p.hb=p.hb||[];
  p.t-=Math.round(c.ms*.1);p.hb.push(S.me);var hc=S.helpCoins||3,hx=S.helpXp||1;S.coins+=hc;S.xp+=hx;S.helpLeft--;lvlUp();paint();toast("\uD83D\uDCA7 Fertilized! Its time drops 10%. +"+hc+"\uD83E\uDE99 +"+hx+" XP");send("farmHelp",[TOKEN,V.id,i])}
 // same "go home" logic as before, now in its own function
 function goHome(){busyShow("Returning to your farm...");
- flush(function(){call("farmState",[TOKEN],function(s){V=null;var f0=$("field");f0._kabs=0;f0._z=1;f0._pan=[0,0];f0._box=null;$("visit").style.display="none";setState(s);busyHide()},function(m){V=null;$("visit").style.display="none";busyHide();toast(m)})})}
+ flush(function(){call("farmState",[TOKEN],function(s){V=null;var f0=$("field");f0._kabs=0;f0._z=1;f0._pan=[0,0];f0._box=null;f0._dz=0;restoreView();$("visit").style.display="none";setState(s);busyHide()},function(m){V=null;$("visit").style.display="none";busyHide();toast(m)})})}
 // the door icon opens this menu
 function visitMenu(){if(!V)return;
  var dlg=$("dlg"),others=S.nb.filter(function(n){return n.id!==V.id}),rows="";
