@@ -1072,7 +1072,7 @@ strokeP(isleRaw(r,12+.9*Math.sin(t*.55+3)),"rgba(255,255,255,.22)",1.4);
  // Cut ALL lands out of the ocean as ONE shape, so touching lands leave no seam
  X.globalCompositeOperation="destination-out";
  X.beginPath();
- G.P.forEach(function(r){if(!parVis(r,2))return;isleShape(r,0).forEach( G.P.forEach(function(r){isleShape(r,0).forEach(function(p,j){var z=Pp(p[0],p[1]);j?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])});X.closePath()});
+  G.P.forEach(function(r){if(!parVis(r,2))return;isleShape(r,0).forEach(function(p,j){var z=Pp(p[0],p[1]);j?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])});X.closePath()});
  X.fillStyle="#000";X.fill();
  X.globalCompositeOperation="source-over";
  if(LOD>1)return;
