@@ -1585,7 +1585,9 @@ function aniXf(it,t){var ph=aph(it.id),k=it.k,u,x,o={r:0,sx:1,sy:1,dy:0};
 function selIs(t,v){return SEL&&SEL.t===t&&(t==="p"?SEL.i===v:SEL.id===v)}
 function occMap(ig){var m={},i,q,PP=LAY?LAY.pp:S.pp;for(i=0;i<S.np;i++){q=PP[i];if(q&&!(ig&&ig.t==="p"&&ig.i===i))m[q[0]*64+q[1]]=1}
  (LAY?LAY.dc:(S.dc||[])).forEach(function(o){if(!o.s&&!isF(o.k)&&!(ig&&ig.t==="d"&&ig.id===o.id)){var nw=footW(o.k),nh=footH(o.k),a,b;for(a=0;a<nw;a++)for(b=0;b<nh;b++)m[(o.c+a)*64+o.r+b]=1}});return m}
-function iso(cv,plots,pp,np,hov,items,edit){
+function iw(it){return it.fw||footW(it.k)}
+function ih(it){return it.fh||footH(it.k)}
+ function iso(cv,plots,pp,np,hov,items,edit){
  var v=cv._view;if(!v)return;
  var cols=szOf(cv),rows=cols,TW=112,TH=56,i,kz=v.k,dpr=Math.min(2,window.devicePixelRatio||1),
   cw=parseFloat(cv.style.width)||window.innerWidth,ch=parseFloat(cv.style.height)||window.innerHeight,
@@ -1593,8 +1595,12 @@ function iso(cv,plots,pp,np,hov,items,edit){
  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr)}
  NIGHT=document.body.classList.contains("night");G={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,rows:rows,W:W,H:H};setRot(cv);G.P=parcels(cols,LSof(cv));FS=fenceCut(fenceSegs(G.P),flOf(cv));WBX=wbox(cols,LSof(cv));PFN=pfOf(cv);PHD=phOf(cv);
  if(CR){pp=pp.map(function(q){return q?rtile(q[0],q[1]):q});
-  items=(items||[]).map(function(it){var o=Object.create(it),t=rtile(it.c,it.r);o.c=t[0];o.r=t[1];o._o=it;
-   if(isF(it.k))o.rot=(isCorner(it.k)||it.k==="stoplight")?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;return o})}
+  items=(items||[]).map(function(it){var o=Object.create(it),t=rtile(it.c,it.r),w=footW(it.k),h=footH(it.k),p,nw,nh;o._o=it;
+   if(!isF(it.k)&&!OUTI[it.k]&&w*h>1){p=rp(it.c+w/2,it.r+h/2);nw=(CR&1)?h:w;nh=(CR&1)?w:h;o.fw=nw;o.fh=nh;t=[Math.round(p[0]-nw/2),Math.round(p[1]-nh/2)]}
+   o.c=t[0];o.r=t[1];
+   if(isF(it.k))o.rot=(isCorner(it.k)||it.k==="stoplight")?((it.rot||0)+CR)&3:((it.rot||0)-CR)&3;
+   else if((CR&1)&&!isFlagK(it.k)&&it.k!=="signpost")o.rot=it.rot?0:1;
+   return o})}
  cv._g={ox:ox,oy:oy,TW:TW,TH:TH,cols:cols,np:np,W:W,pp:pp,items:items,cr:CR,rc:RC.slice(),L:v.L,T:v.T,k:kz};
  var x=cv.getContext("2d"),t=Date.now(),labels=[],sdp=MOVING&&LSDP?LSDP:Math.min(1.5,Math.max(1,Math.ceil(dpr*kz*2)/2)),
   wx0=-v.L/kz-150,wx1=(cw-v.L)/kz+150,wy0=-v.T/kz-40,wy1=(ch-v.T)/kz+150,cs,cc,rr;
@@ -1622,7 +1628,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
   for(k=0;k<PLS.length;k+=(LOD>1?4:kz<.6?2:1))plantS(p.c,Pp(c+PLS[k][0],r+PLS[k][1]),pr,ripe,t,big);
   if(kz>=.4&&!QL)labels.push({C:C,txt:ripe?(big?"BIG! +"+cc2.sell*(S.bigMult||2):"Ripe! +"+cc2.sell):fmtDur(cc2.ms-el),ripe:ripe,big:big,t:t});
  }
- function drawDeco(it){var fw=footW(it.k),fh=footH(it.k),bs=BSC[it.k]||1,p=Pp(it.c+fw/2,it.r+fh/2),ft=FTD[it.k],st=0,el;if(isF(it.k))st=(it.rot||0)&3;if(isF(it.k))st=(it.rot||0)&3;
+ function drawDeco(it){var fw=iw(it),fh=ih(it),bs=BSC[it.k]||1,p=Pp(it.c+fw/2,it.r+fh/2),ft=FTD[it.k],st=0,el;if(isF(it.k))st=(it.rot||0)&3;if(isF(it.k))st=(it.rot||0)&3;
   if(ft){el=nowT()-(it.t||0);st=el>=ft.ms?2:el/ft.ms>=.35?1:0;if(kz>=.4&&!QL)labels.push({C:p,txt:st===2?(ft.animal?"Ready! +":"Ripe! +")+ft.sell:fmtDur(ft.ms-el),ripe:st===2,big:false,t:t,up:Math.max(96,-(HB[it.k]||[0,-86])[1]+10)})}
   var qd=!!QD[it.k]&&LOD===1&&!edit,lf=(edit&&selIs("d",it.id))?-9-3*Math.sin(t/180):0,im=(qd||DRAWV[it.k])?null:(BSC[it.k]?bigSprite(it.k,sdp):sprite(it.k,sdp,st)),an=(ft&&ft.animal&&LOD===1&&!edit)?aniXf(it,t):null,fl=it.rot&&!isF(it.k);
   if(DRAWV[it.k]){drawCourt(it,fw,fh)}else if(qd){drawQuad(it,p,t,fl,sdp)}
@@ -1637,7 +1643,7 @@ function iso(cv,plots,pp,np,hov,items,edit){
  var list=[],q2;
  function onS(c,r,m){m=m||0;var sx=ox+(c-r)*TW/2,sy=oy+(c+r+1)*TH/2;return sx>wx0-m&&sx<wx1+m&&sy>wy0-m&&sy<wy1+m}
  for(i=0;i<np;i++){q2=pp[i];if(q2&&q2[0]>=VT.c0&&q2[0]<=VT.c1&&q2[1]>=VT.r0&&q2[1]<=VT.r1&&onS(q2[0],q2[1]))list.push([q2[0]+q2[1]+1,i,null])}
- (items||[]).forEach(function(it){if(!it.s&&(OUTI[it.k]||(it.c+footW(it.k)>VTF.c0&&it.c<=VTF.c1&&it.r+footH(it.k)>VTF.r0&&it.r<=VTF.r1))&&onS(it.c,it.r,OUTI[it.k]==="w"?(OSC[it.k]||1)*70:OUTI[it.k]==="w"?BOAT_SCALE*70:footN(it.k)>1?footN(it.k)*130:0))list.push([it.c+it.r+(footW(it.k)+footH(it.k))/2+(isF(it.k)?fKey(it):0),-1,it])});
+ (items||[]).forEach(function(it){if(!it.s&&(OUTI[it.k]||(it.c+iw(it)>VTF.c0&&it.c<=VTF.c1&&it.r+ih(it)>VTF.r0&&it.r<=VTF.r1))&&onS(it.c,it.r,OUTI[it.k]==="w"?(OSC[it.k]||1)*70:OUTI[it.k]==="w"?BOAT_SCALE*70:footN(it.k)>1?footN(it.k)*130:0))list.push([it.c+it.r+(iw(it)+ih(it))/2+(isF(it.k)?fKey(it):0),-1,it])});
  list.sort(function(a,b){return a[0]-b[0]});
  list.forEach(function(o){if(o[2])drawDeco(o[2]);else drawPlot(o[1])});
  drawFront();
@@ -2053,7 +2059,7 @@ function nameOf(s){return s.t==="p"?"plot":KN[dcById(s.id).k][1]}
 function stored(){var l=[],i;for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});(S.dc||[]).forEach(function(x){if(x.s)l.push({t:"d",id:x.id})});return l}
 function ptr(cv,ev){var g=cv._g,rc=cv.getBoundingClientRect();return[(ev.clientX-rc.left-g.L)/g.k,(ev.clientY-rc.top-g.T)/g.k]}
 function toTile(cv,p){var g=cv._g,dx=(p[0]-g.ox)/(g.TW/2),dy=(p[1]-g.oy)/(g.TH/2);return[(dx+dy)/2,(dy-dx)/2]}
-function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]),ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=footW(it.k),fh=footH(it.k),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
+function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]),ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=iw(it),fh=ih(it),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
  hit=p[0]>=x+(m?-b[2]:b[0])&&p[0]<=x+(m?-b[0]:b[2])&&p[1]>=y+b[1]&&p[1]<=y+b[3];if(!hit&&fw*fh>1)hit=tc>=it.c&&tc<it.c+fw&&tr>=it.r&&tr<it.r+fh;
  if(hit&&k>bd){bd=k;best=it._o||it}});return best}
 function gkey(s){return s.t==="p"?"p":(dcById(s.id)||{}).k}
@@ -3253,7 +3259,7 @@ function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,h
  var T=[],hs=0,fc,m,key,fv,oc,ox_;
  for(c=VTF.c0;c<=VTF.c1;c++)for(r=VTF.r0;r<=VTF.r1;r++){id=F[wkey(c,r)];if(!id||!FLD[id])continue;
   if(id==="wt"){W.push(c,r);WSET[flKey(c,r)]=1;continue} // water is drawn later as ONE rounded body
-  rot=FRm[wkey(c,r)]|0;T.push(c,r,rot?id+rot:id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r+rot*17)|0}
+  rot=((FRm[wkey(c,r)]|0)+CR)&3;T.push(c,r,rot?id+rot:id);hs=(hs*31+id.charCodeAt(0)*7+id.charCodeAt(1)+c*3+r+rot*17)|0}
  // When the view stands still (the game keeps redrawing for swaying crops), the finished floor picture is reused.
  try{m=X.getTransform();key=X.canvas.id+"|"+X.canvas.width+"|"+X.canvas.height+"|"+m.a+"|"+m.e+"|"+m.f+"|"+G.ox+"|"+G.oy+"|"+CR+"|"+CSD+"|"+T.length+"|"+hs}catch(e){key=null}
  fv=FLV[X.canvas.id]||(FLV[X.canvas.id]={});
