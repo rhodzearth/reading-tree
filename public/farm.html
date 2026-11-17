@@ -225,7 +225,7 @@ function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++
 function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
  MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll();saveView()},170);
  fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
- var ZOUT=.5; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
+ var ZOUT=1; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
  var MIRCR=[0,1,0,1]; // which rotations (0,90,180,270) mirror the items. [0,1,1,0] makes 180 look different too
 var ROTTHR=.6;       // how far two fingers must twist (radians, .6 = about 35 degrees) to turn the farm
 var ROTDIR=1;        // change to -1 if the twist feels reversed
@@ -1854,7 +1854,6 @@ function addPan(cv){var P={},st=null,pz=null,PR=0;
  cv.addEventListener("pointermove",function(e){if(!P[e.pointerId])return;P[e.pointerId]=[e.clientX,e.clientY];
   if(pz){var a=P[pz.ids[0]],b=P[pz.ids[1]];if(!a||!b)return;var r=bx(),d=Math.hypot(a[0]-b[0],a[1]-b[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2],an=Math.atan2(b[1]-a[1],b[0]-a[0]),da;
    if(pz.an===undefined)pz.an=an;da=an-pz.an;if(da>Math.PI)da-=2*Math.PI;if(da<-Math.PI)da+=2*Math.PI;pz.an=an;pz.acc=(pz.acc||0)+da;
-   if(!pz.rl&&Math.abs(pz.acc)>ROTTHR&&canRot(cv)){pz.rl=true;rotView(cv,pz.acc>0?ROTDIR:-ROTDIR);pz.d=d;pz.m=m;return}
    zoomAt(d/pz.d,m[0]-r.left,m[1]-r.top,pz.m[0]-r.left,pz.m[1]-r.top);pz.d=d;pz.m=m;return}
   if(!st||e.pointerId!==st.id)return;var dx=e.clientX-st.x,dy=e.clientY-st.y;
   if(!st.m){if(Math.abs(dx)+Math.abs(dy)<8)return;st.m=true;cv._drag=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}}
