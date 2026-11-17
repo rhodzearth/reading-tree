@@ -217,7 +217,7 @@ window.onerror=function(m,u,l,c){var d=document.createElement("div");d.style.css
 <script>
 var $=function(i){return document.getElementById(i)},TOKEN="",S=null,sel="strawberry",V=null,lastLvl=0,HV={f:-1,v:-1},ANIM=false;
 var FW=8,FH=8,STAB="c";
-var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.55;
+var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.3;
 function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++)delete C[k[i]];return k.length-m} // drop the oldest third instead of everything
 // while you drag or pinch: cheap drawing + only the geometry is recalculated
 function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
@@ -3177,7 +3177,7 @@ function chunkDraw(F,hw,hh){var ver=FLN+"|"+CSD+"|"+G.ox+"|"+G.oy+"|"+hw+"|"+hh,
 function drawFloors(cv){var F=flOf(cv),c,r,id,x0,y0,t=Date.now(),W=[],k,P,p,hw,hh,fr,S2;
  WSET={};if(!F)return;hw=G.TW/2;hh=G.TH/2;
   var flat=LOD>1,cnt=0,FRm=frOf(cv)||{},rot;
-  if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=150;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=150;r++)if(F[wkey(c,r)])cnt++;flat=cnt>150}
+  if(!flat&&MOVING){for(c=VTF.c0;c<=VTF.c1&&cnt<=1500;c++)for(r=VTF.r0;r<=VTF.r1&&cnt<=1500;r++)if(F[wkey(c,r)])cnt++;flat=cnt>1500}
   if(flat&&!CR){var fm=floorMap(F),wp=[],pe2,S3;
    if(fm.cv){X.save();X.imageSmoothingEnabled=false;X.transform(hw,hh,-hw,hh,G.ox,G.oy);X.drawImage(fm.cv,fm.minc,fm.minr,fm.w,fm.h);X.restore()}
    chunkDraw(F,hw,hh);
