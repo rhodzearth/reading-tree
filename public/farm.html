@@ -3807,10 +3807,10 @@ function buyFloorDlg(f){var dlg=$("dlg"),q=[10,50,100,500,1000,5000],rows="",inp
   if(n<1){toast("Choose how many tiles to buy.");return}
   if(S.coins<cost){toast(n+" tiles cost "+cost+" coins. You have "+S.coins+".");return}
   S.coins-=cost;if(!S.ft)S.ft={};S.ft[f.id]=(S.ft[f.id]|0)+n;send("farmFloorBuy",[TOKEN,f.id,n]);
-  $("fbHave").textContent=S.ft[f.id];upd();toast("\uD83E\uDDF1 "+n+" "+f.name+" tiles are in your barn");paint();renderBarn()};
+  $("fbHave").textContent=S.ft[f.id];upd();toast("\uD83E\uDDF1 "+n+" "+f.name+" tiles are in your barn");paint();renderBarn();if(MK==="floor")renderMkt()};
  dlg.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button");if(ev.target===dlg){shut();return}if(b&&b.dataset.n){inp.value=b.dataset.n;upd()}}}
 function startPaint(f){var sz=PAINT?PAINT.size:1,rot=PAINT?PAINT.rot|0:0;
- if(isTileF(f.id)&&!haveTiles(f.id)){buyFloorDlg(f);return}
+ if(isTileF(f.id)&&!haveTiles(f.id)){toast("You have no "+f.name+" tiles in your barn. Tap Buy tiles first.");return}
  PEND=null;$("buyBar").style.display="none";BUYING=0;$("mkt").style.display="none";
  setEdit0(true);PAINT={id:f.id,size:sz,rot:rot,turn:0};editUI();drawAll();
  toast(f.id==="gr"?"\uD83D\uDCE6 Tap tiles to take floor tiles back to your barn.":f.id==="wt"?"\uD83D\uDD8C Tap tiles to paint water (\uD83E\uDE99 "+f.cost+" per tile). Use Brush for bigger areas.":"\uD83E\uDDF1 Tap tiles to place "+f.name+" from your barn ("+haveTiles(f.id)+" left). Use \u21BB to turn them, Brush for bigger areas.")}
