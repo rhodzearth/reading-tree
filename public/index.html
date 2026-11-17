@@ -534,7 +534,9 @@ class="setArrow">›</span></button>
 <path class="st" transform="translate(880 215)" style="animation-delay:.3s" d="M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z"/>
 </g>
 </g>
-
+<!-- ===== DAY BACKGROUND IMAGE (day only) ===== -->
+<rect id="dayGround" x="-3000" y="458" width="7000" height="3000" fill="#1d4a1e" pointer-events="none"/>
+<image id="dayBg" href="treebackground1.webp" x="-169" y="-1039" width="1138" height="2541" preserveAspectRatio="none" pointer-events="none"/>
 <!-- ===== MOUNTAINS (behind the tree, in front of the sky) ===== -->
 <g id="mountains" pointer-events="none">
 <defs>
@@ -2459,6 +2461,12 @@ body.night #mtnBackP { fill: #1c2b36; }
 body.night #mtnMidP { fill: #172629; }
 body.night #mtnFrontP { fill: #13241a; }
 body.night #mountains .mtnShade { display: none; }
+/* ---- BACKGROUND IMAGE: day uses the picture, night uses the dark drawn sky, mountains and grass ---- */
+#dayBg { display: block; }
+body.night #dayBg { display: none; }
+body:not(.night) #mountains, body:not(.night) #grass { display: none; }
+#sky .daysky { display: none; }
+#clouds { display: none; }
 </style>
 
 <script>
