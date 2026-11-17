@@ -2581,7 +2581,7 @@ initSwipe(); // starts the swipe feature
 </script>
 <script>
 // ===== INBOX: bell badge, inbox modal, admin "Send announcement" =====
-var IB = { timer: 0, open: false };
+var IB = { timer: 0, open: false, openIds: {} };
 function ibBadge(n) {
   ["inboxBadge", "miniBadge"].forEach(function (id) {
     var b = $(id); b.textContent = n > 99 ? "99+" : n; b.style.display = n > 0 ? "block" : "none";
@@ -2605,6 +2605,7 @@ function ibLoad() {
     if (!list || !list.length) { var e = document.createElement("div"); e.id = "ibEmpty"; e.textContent = "No messages yet."; box.appendChild(e); return; }
     list.forEach(function (m) {
       var it = document.createElement("div"); it.className = "ibItem" + (m.is_read ? "" : " unread");
+      if (IB.openIds[m.id]) it.classList.add("open");
       var h = document.createElement("div"); h.className = "ibHead";
       var dot = document.createElement("span"); dot.className = "ibDot";
       var t = document.createElement("span"); t.className = "ibTitle"; t.textContent = (m.kind === "gift" ? "\uD83C\uDF81 " : "") + m.title;
@@ -2613,7 +2614,8 @@ function ibLoad() {
       var b = document.createElement("div"); b.className = "ibBody"; b.textContent = m.body || "";
       it.appendChild(h); it.appendChild(b);
       it.onclick = function () {
-        it.classList.toggle("open");
+        var nowOpen = it.classList.toggle("open");
+        if (nowOpen) IB.openIds[m.id] = true; else delete IB.openIds[m.id];
         if (!m.is_read) {
           m.is_read = true; it.classList.remove("unread");
           call("inboxRead", [TOKEN, m.id], function () { ibRefresh(); }, function () {});
@@ -2623,7 +2625,7 @@ function ibLoad() {
     });
   }, function (m) { $("ibList").textContent = m; if (/log in/i.test(m)) { ibClose(); logout(); } });
 }
-function ibOpen() { IB.open = true; $("ibList").textContent = "Loading..."; $("inboxModal").style.display = "flex"; ibLoad(); }
+function ibOpen() { IB.open = true; IB.openIds = {}; $("ibList").textContent = "Loading..."; $("inboxModal").style.display = "flex"; ibLoad(); }
 function ibClose() { IB.open = false; $("inboxModal").style.display = "none"; ibRefresh(); }
 $("bellBtn").onclick = ibOpen;
 $("ibClose").onclick = ibClose;
