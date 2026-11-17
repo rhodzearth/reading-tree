@@ -150,7 +150,8 @@ body:has(#barnP[style*="block"]) #hud{visibility:hidden}
 body.edit-top #dlg{align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
 body.edit-top #dlg .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
 body.edit-top:has(#dlg[style*="flex"]) #hud{visibility:hidden}
-body.paint-top #editbar{top:calc(6px + env(safe-area-inset-top));bottom:auto!important;z-index:20;background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none}
+body.paint-top #editbar{top:calc(6px + env(safe-area-inset-top));bottom:auto!important;z-index:20;background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;flex-wrap:nowrap!important;justify-content:flex-start!important;width:max-content;max-width:96vw;overflow-x:auto;overflow-y:hidden;border-radius:14px;scrollbar-width:none}
+body.paint-top #editbar>*{flex:none;white-space:nowrap}
 body.paint-top #hud{visibility:hidden}
 #dlg:has(#fbN){align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
 #dlg:has(#fbN) .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
