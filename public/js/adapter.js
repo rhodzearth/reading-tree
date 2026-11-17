@@ -92,6 +92,12 @@
     authLookup: function (t, to) { return rpc("auth_lookup", { p_to: to }); },
     authGift: function (t, to, n) { return rpc("auth_gift", { p_to: to, p_amount: n }); },
 
+    inboxSummary: function () { return rpc("inbox_summary"); },
+    inboxList: function () { return rpc("inbox_list"); },
+    inboxRead: function (t, id) { return rpc("inbox_mark_read", { p_id: id }); },
+    inboxReadAll: function () { return rpc("inbox_mark_all_read"); },
+    adminSend: function (t, title, body, to) { return rpc("admin_send_announcement", { p_title: title, p_body: body, p_to: to || "" }); },
+
     getCountries: function () { return rpc("get_countries"); },
     getCities: function (c) { return rpc("get_cities", { p_country: c }); },
     getAppUrl: async function () { return location.href.split("?")[0].split("#")[0]; }

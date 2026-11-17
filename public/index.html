@@ -403,10 +403,26 @@ class="setArrow">›</span></button>
 <button id="logoutNo" type="button">Cancel</button>
 </div></div>
 
+<div id="inboxModal"><div class="acard">
+<h1>🔔 Inbox</h1>
+<div id="ibList"></div>
+<div id="ibBtns"><button id="ibAll" type="button">Mark all read</button><button id="ibClose" type="button">Close</button></div>
+</div></div>
+
+<div id="adminModal"><div class="acard">
+<h1>📣 Send announcement</h1>
+<select id="adWho"><option value="all">Everyone</option><option value="some">Specific readers</option></select>
+<input id="adTo" placeholder="Usernames or Reader IDs, separated by commas" style="display:none" autocapitalize="none" spellcheck="false">
+<input id="adTitle" placeholder="Title (up to 80 characters)" maxlength="80">
+<textarea id="adBody" placeholder="Message (plain text, up to 1000 characters)" maxlength="1000"></textarea>
+<div id="adErr"></div>
+<div id="adBtns"><button id="adGo" type="button">Send</button><button id="adBack" type="button">Cancel</button></div>
+</div></div>
+
 <div id="toast"></div>
 <div id="app">
 <!-- ===== READER PANEL (left): chapter title + JUMP menu + chapter text ===== -->
-<section id="reader"><div id="rhead"><div id="rtitle"></div><select id="jump" aria-label="Jump to chapter"></select><button id="night" title="Night mode" aria-label="Night mode">&#127769;</button><button id="hideRead" title="Hide reading panel" aria-label="Hide reading panel">Hide</button><button id="settingsBtn" title="Settings" aria-label="Settings" style="background:none; border:1px solid #b9ad88; border-radius:8px; padding:5px 8px; font-size:15px; cursor:pointer;">⚙️</button></div><div id="pbar"><div id="pbarTxt">0% complete</div><div id="fsBox"><button id="fsMinus" type="button" aria-label="Smaller text">&minus;</button><button id="fsPlus" type="button" aria-label="Bigger text">+</button></div><div class="track"><div class="fill" id="pbarFill"></div></div></div><div id="rtext"></div>
+<section id="reader"><div id="rhead"><div id="rtitle"></div><select id="jump" aria-label="Jump to chapter"></select><button id="night" title="Night mode" aria-label="Night mode">&#127769;</button><button id="hideRead" title="Hide reading panel" aria-label="Hide reading panel">Hide</button><button id="settingsBtn" title="Settings" aria-label="Settings" style="background:none; border:1px solid #b9ad88; border-radius:8px; padding:5px 8px; font-size:15px; cursor:pointer;">⚙️</button><button id="bellBtn" type="button" title="Inbox" aria-label="Inbox">🔔<span id="inboxBadge" class="ibBadge"></span></button></div><div id="pbar"><div id="pbarTxt">0% complete</div><div id="fsBox"><button id="fsMinus" type="button" aria-label="Smaller text">&minus;</button><button id="fsPlus" type="button" aria-label="Bigger text">+</button></div><div class="track"><div class="fill" id="pbarFill"></div></div></div><div id="rtext"></div>
 <!-- ===== CONTROLS (bottom of the reading panel): name + Log out, stage label, Prev, Finished/Next ===== -->
 <div id="ui"><div id="lbl">Loading...</div><div id="rcheck"><div id="rcTxt"></div><div class="track"><div class="fill" id="rcFill"></div></div></div><div id="fruitbar"><span id="basket">🪣 0</span><button id="harvest" type="button" style="display:none"><span class="fruitdot"></span> Harvest (<span id="fruitN">0</span>)</button></div><div style="display:none"><button id="prev" type="button"></button><button id="next" type="button"></button></div></div>
 
@@ -442,6 +458,7 @@ class="setArrow">›</span></button>
 
 <div class="setLabel">More</div>
 <div class="setList">
+<button type="button" class="setBtn" id="adminBtn" style="display:none"><span class="setIco">📣</span><span class="setTxt">Send announcement</span><span class="setArrow">›</span></button>
 <button type="button" class="setBtn" id="aboutLink3"><span class="setIco">ℹ️</span><span class="setTxt">About &amp; privacy</span><span class="setArrow">›</span></button>
 <button type="button" class="setBtn setDanger" id="logout"><span class="setIco">🚪</span><span class="setTxt">Log out</span></button>
 </div>
@@ -452,7 +469,7 @@ class="setArrow">›</span></button>
 </section>
 <section id="treewrap">
 <!-- ===== SHOW-READING BAR (only visible while the reading panel is hidden) ===== -->
-<div id="miniBar"><button id="showRead" type="button" aria-label="Show reading panel" title="Show reading panel">&#128214;</button><span id="miniLbl"></span></div>
+<div id="miniBar"><button id="showRead" type="button" aria-label="Show reading panel" title="Show reading panel">&#128214;<span id="miniBadge" class="ibBadge"></span></button><span id="miniLbl"></span></div>
 <!-- ===== TREE (right side): book, trunk, branches, leaves, fruits are drawn here ===== -->
 <svg id="scene" viewBox="-169 0 1138 640" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -1820,10 +1837,13 @@ $("auth").style.display = "none";
 $("whoName").textContent = "Reader: " + st.username;
 applyState(st); viewIdx = st.cur || 0; loadedIdx = -1; RCSAVE = {}; applyNight(st.night); show();
 if (st.mustChange) openPw(true); else { pendingPw = ""; focusReader(); } // the owner reset this password: force a new one
+if (typeof inboxStart === "function") inboxStart();
 }
 // ====== EXACT REPLACEMENT FOR logout in JsAccounts.html ======
 
-function logout() { try { if (window.sbSignOut) sbSignOut(); } catch (e) {}
+function logout() {
+if (typeof inboxStop === "function") inboxStop();
+try { if (window.sbSignOut) sbSignOut(); } catch (e) {}
 tokenSet(""); cache = {}; NOTES = {}; colors = ["yellow"]; owned = []; closeVerse(); progress = 0; fruits = 0; tokens = 0; curIdx = 0; curWait = 0; viewIdx = 0; loadedIdx = -1; RCSAVE = {}; RC.ready = false; RC.eligible = false;
 $("rtext").textContent = ""; 
 $("auth").classList.remove("resuming");
@@ -2199,7 +2219,7 @@ function focusReader() { // asks the browser to send keyboard presses to this pa
   } catch (e) {}
 }
 function modalOpen() { // true while a pop-up (settings, gift, login...) is on screen, so the arrow keys leave it alone
-  var ids = ["auth", "pw", "gift", "about", "welcome", "settingsModal", "gamesModal", "langModal", "goLoading", "nameModal"], k, m;
+  var ids = ["auth", "pw", "gift", "about", "welcome", "settingsModal", "gamesModal", "langModal", "goLoading", "nameModal", "logoutModal", "inboxModal", "adminModal"], k, m;
   for (k = 0; k < ids.length; k++) { m = $(ids[k]); if (m && m.style.display && m.style.display !== "none") return true; }
   return $("vp").classList.contains("open");
 }
@@ -2357,6 +2377,40 @@ body.night .setBtn.on { background: #2f3b41; border-color: #9bd36a; }
 body.night .setCheck { color: #9bd36a; }
 
 #lbl:empty, #miniLbl:empty { display: none; } /* no empty bubble when the label has no text */
+
+/* ---- INBOX ---- */
+.ibBadge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: #d32f2f; color: #fff; font: 700 11px/18px system-ui, sans-serif; text-align: center; display: none; pointer-events: none; }
+#bellBtn { position: relative; background: none; border: 1px solid #b9ad88; border-radius: 8px; padding: 5px 8px; font-size: 15px; cursor: pointer; }
+#showRead { position: relative; }
+#inboxModal, #adminModal { position: fixed; inset: 0; z-index: 67; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#inboxModal .acard, #adminModal .acard { width: 100%; max-width: 420px; background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+#inboxModal h1, #adminModal h1 { margin: 0 0 10px; font-size: 20px; color: #1b5e20; }
+.ibItem { border: 1px solid #d9e2cc; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; }
+.ibItem.unread { background: #f3f7ee; border-color: #2f7d32; }
+.ibHead { display: flex; align-items: center; gap: 8px; }
+.ibDot { width: 9px; height: 9px; border-radius: 50%; background: transparent; flex: none; }
+.ibItem.unread .ibDot { background: #d32f2f; }
+.ibTitle { flex: 1; font-size: 15px; color: #2b2416; overflow-wrap: anywhere; }
+.ibItem.unread .ibTitle { font-weight: 700; }
+.ibDate { font-size: 11px; color: #777; flex: none; }
+.ibBody { display: none; margin-top: 8px; font-size: 14px; color: #333; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ibItem.open .ibBody { display: block; }
+#ibEmpty { color: #777; font-size: 14px; padding: 8px 0; }
+#ibBtns, #adBtns { display: flex; gap: 8px; margin-top: 12px; }
+#ibAll, #ibClose, #adGo, #adBack { flex: 1; padding: 10px; border-radius: 999px; border: 0; font-size: 15px; cursor: pointer; background: #2f7d32; color: #fff; }
+#ibClose, #adBack { background: #e4e8dc; color: #333; }
+#adminModal input, #adminModal select, #adminModal textarea { display: block; width: 100%; box-sizing: border-box; padding: 10px; margin-bottom: 8px; border: 1px solid #b9ad88; border-radius: 8px; font: 16px system-ui, sans-serif; background: #fff; color: #222; }
+#adminModal textarea { min-height: 110px; resize: vertical; }
+#adErr { min-height: 18px; color: #b3261e; font-size: 13px; margin-bottom: 4px; }
+body.night #bellBtn { background: #263036; border-color: #3a464c; color: #e4e8dc; }
+body.night #inboxModal, body.night #adminModal { background: rgba(20,24,26,.96); }
+body.night #inboxModal .acard, body.night #adminModal .acard { background: #1c2226; color: #e4e8dc; }
+body.night #inboxModal h1, body.night #adminModal h1 { color: #9bd36a; }
+body.night .ibItem { border-color: #3a464c; }
+body.night .ibItem.unread { background: #263036; border-color: #9bd36a; }
+body.night .ibTitle, body.night .ibBody { color: #e4e8dc; }
+body.night #ibClose, body.night #adBack { background: #3a464c; color: #e4e8dc; }
+body.night #adminModal input, body.night #adminModal select, body.night #adminModal textarea { background: #263036; color: #e4e8dc; border-color: #3a464c; }
 
 </style>
 
@@ -2516,7 +2570,75 @@ function goChapter(i, dir) { // dir: 1 = going forward, -1 = going back
 initSwipe(); // starts the swipe feature
 
 </script>
+<script>
+// ===== INBOX: bell badge, inbox modal, admin "Send announcement" =====
+var IB = { timer: 0, open: false };
+function ibBadge(n) {
+  ["inboxBadge", "miniBadge"].forEach(function (id) {
+    var b = $(id); b.textContent = n > 99 ? "99+" : n; b.style.display = n > 0 ? "block" : "none";
+  });
+}
+function ibRefresh() {
+  if (!TOKEN) return;
+  call("inboxSummary", [TOKEN], function (r) {
+    ibBadge(r.unread || 0);
+    $("adminBtn").style.display = r.admin ? "" : "none";
+    if (IB.open) ibLoad();
+  }, function (m) { if (/log in/i.test(m)) logout(); });
+}
+function inboxStart() { ibRefresh(); clearInterval(IB.timer); IB.timer = setInterval(ibRefresh, 60000); }
+function inboxStop() { clearInterval(IB.timer); ibBadge(0); $("adminBtn").style.display = "none"; IB.open = false; $("inboxModal").style.display = "none"; }
+document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") ibRefresh(); });
 
+function ibLoad() {
+  call("inboxList", [TOKEN], function (list) {
+    var box = $("ibList"); box.textContent = "";
+    if (!list || !list.length) { var e = document.createElement("div"); e.id = "ibEmpty"; e.textContent = "No messages yet."; box.appendChild(e); return; }
+    list.forEach(function (m) {
+      var it = document.createElement("div"); it.className = "ibItem" + (m.is_read ? "" : " unread");
+      var h = document.createElement("div"); h.className = "ibHead";
+      var dot = document.createElement("span"); dot.className = "ibDot";
+      var t = document.createElement("span"); t.className = "ibTitle"; t.textContent = (m.kind === "gift" ? "\uD83C\uDF81 " : "") + m.title;
+      var d = document.createElement("span"); d.className = "ibDate"; d.textContent = new Date(m.created_at).toLocaleDateString();
+      h.appendChild(dot); h.appendChild(t); h.appendChild(d);
+      var b = document.createElement("div"); b.className = "ibBody"; b.textContent = m.body || "";
+      it.appendChild(h); it.appendChild(b);
+      it.onclick = function () {
+        it.classList.toggle("open");
+        if (!m.is_read) {
+          m.is_read = true; it.classList.remove("unread");
+          call("inboxRead", [TOKEN, m.id], function () { ibRefresh(); }, function () {});
+        }
+      };
+      box.appendChild(it);
+    });
+  }, function (m) { $("ibList").textContent = m; if (/log in/i.test(m)) { ibClose(); logout(); } });
+}
+function ibOpen() { IB.open = true; $("ibList").textContent = "Loading..."; $("inboxModal").style.display = "flex"; ibLoad(); }
+function ibClose() { IB.open = false; $("inboxModal").style.display = "none"; ibRefresh(); }
+$("bellBtn").onclick = ibOpen;
+$("ibClose").onclick = ibClose;
+$("ibAll").onclick = function () { call("inboxReadAll", [TOKEN], function () { ibLoad(); ibRefresh(); }, function (m) { toast(m); }); };
+
+// ---- admin screen ----
+function adClose() { $("adminModal").style.display = "none"; }
+$("adminBtn").onclick = function () {
+  closeSettings();
+  $("adWho").value = "all"; $("adTo").style.display = "none"; $("adTo").value = ""; $("adTitle").value = ""; $("adBody").value = "";
+  $("adErr").textContent = ""; $("adGo").disabled = false; $("adminModal").style.display = "flex";
+};
+$("adWho").onchange = function () { $("adTo").style.display = $("adWho").value === "some" ? "" : "none"; };
+$("adBack").onclick = function () { adClose(); openSettings(); };
+$("adGo").onclick = function () {
+  var some = $("adWho").value === "some", to = $("adTo").value.trim(), title = $("adTitle").value.trim();
+  if (some && !to) { $("adErr").textContent = "Please type at least one username or Reader ID."; return; }
+  if (!title) { $("adErr").textContent = "Please write a title."; return; }
+  $("adGo").disabled = true; $("adErr").textContent = "Sending...";
+  call("adminSend", [TOKEN, title, $("adBody").value, some ? to : ""], function (r) {
+    adClose(); toast("\u2713 Announcement sent to " + (r.sent === "everyone" ? "everyone" : r.sent + " reader" + (r.sent === 1 ? "" : "s")));
+  }, function (m) { $("adGo").disabled = false; $("adErr").textContent = m; });
+};
+</script>
 
 <script>
 // ############################################################################
@@ -2547,8 +2669,9 @@ initSwipe(); // starts the swipe feature
   // ---- Phone Back button: closes the pop-up on top instead of leaving or reloading the page ----
   // Every pop-up that opens adds one history step; Back removes it and closes that pop-up.
   var CLOSERS = { settingsModal: "settingsClose", gamesModal: "gamesClose", langModal: "langClose", nameModal: "nameBack",
-                  gift: "giftBack", about: "aboutClose", logoutModal: "logoutNo", pw: "pwCancel" }; // welcome has no closer: Back cannot skip it
-  var ORDER = ["settingsModal", "gamesModal", "langModal", "nameModal", "gift", "about", "pw", "welcome", "logoutModal"];
+                gift: "giftBack", about: "aboutClose", logoutModal: "logoutNo", pw: "pwCancel",
+                inboxModal: "ibClose", adminModal: "adBack" }; // welcome has no closer: Back cannot skip it
+var ORDER = ["settingsModal", "gamesModal", "langModal", "nameModal", "gift", "about", "pw", "inboxModal", "adminModal", "welcome", "logoutModal"];
   var depth = 0, skip = 0;
   function isOpen(id) { var m = el(id); return !!m && m.style.display !== "" && m.style.display !== "none"; }
   function openList() { return ORDER.filter(isOpen); }
