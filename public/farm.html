@@ -160,6 +160,7 @@ body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
 body.night #zoomNote{color:#111}
 body.cam #zoomNote{visibility:hidden!important}
 #mini{width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5)}
+#vmini{position:absolute;left:8px;top:60px;z-index:6;width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5);display:none;touch-action:none;cursor:pointer}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -195,8 +196,9 @@ body.cam #zoomNote{visibility:hidden!important}
  </div>
  <div id="visit" style="display:none">
   <canvas id="vBg"></canvas>
-  <div id="vHead"><b id="vName"></b><button class="btn alt" id="vHint" title="How to help">&#10067;</button><button class="btn alt" id="vRot" title="Rotate view">&#129517;</button><button class="btn alt" id="vCopy" title="Copy this layout to a slot">&#128203;</button><button class="btn alt" id="vClose" title="Leave this farm">&#128682;</button></div>
+  <div id="vHead"><b id="vName"></b><button class="btn alt" id="vHint" title="Show / hide mini map">&#128506;&#65039;</button><button class="btn alt" id="vRot" title="Rotate view">&#129517;</button><button class="btn alt" id="vCopy" title="Copy this layout to a slot">&#128203;</button><button class="btn alt" id="vClose" title="Leave this farm">&#128682;</button></div>
   <div id="vScene"><canvas id="vCanvas"></canvas></div>
+ <canvas id="vmini"></canvas>
  </div>
 </div>
 <div id="lay" style="display:none">
@@ -1710,7 +1712,7 @@ function drawNow(){ANIM=false;
  if(LAY&&$("lay").style.display!=="none"){iso($("lCanvas"),S.plots,LAY.pp,S.np,-1,LAY.dc,true);ANIM=false;return}
  var vis=!!V&&$("visit").style.display!=="none";
  if(S&&!vis)iso($("field"),S.plots,S.pp,S.np,HV.f,PEND?S.dc.concat([PEND]):S.dc,EDIT);
- if(vis)iso($("vCanvas"),V.plots,V.pp||[],V.np,HV.v,V.dc,false);
+ if(vis){iso($("vCanvas"),V.plots,V.pp||[],V.np,HV.v,V.dc,false);drawVMini()}
  else drawMini()}
 setInterval(function(){var fv=$("field")._view,zo=!!fv&&fv.k<.9;if(ANIM&&!document.hidden&&!MOVING&&$("mkt").style.display==="none"&&$("dlg").style.display!=="flex"&&Date.now()-LASTEND>(LASTMS>45?(zo?400:250):Math.max(PERF?120:34,LASTMS*(zo?4:2))))drawAll()},34);
 function mmap(z){if(z)CR=0;else setRot($("field"));var n=(S&&S.sz)||8,B=wbox(n,S&&S.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
@@ -1755,6 +1757,43 @@ function miniGo(e){var cv=$("mini"),r=cv.getBoundingClientRect(),M=mmap(),hh=$("
 $("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){try{editTap(this,e)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
 $("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(this,ptr(this,e)),n=[Math.floor(t[0]),Math.floor(t[1])];if(!HOVT||HOVT[0]!==n[0]||HOVT[1]!==n[1]){HOVT=n;drawAll()}}return}var i=hit(this,e);if(i!==HV.f){HV.f=i;drawAll()}};
 $("field").onmouseleave=function(){HV.f=-1;drawAll()};
+// ===== MINI MAP IN VISIT MODE =====
+var VMINI=true,VMT=0;try{VMINI=localStorage.getItem("vminiHide")!=="1"}catch(e){}
+function vmmap(){setRot($("vCanvas"));var n=(V&&V.sz)||8,B=wbox(n,V&&V.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
+ return{n:n,ox:ox,oy:oy,x0:x0,y0:y0,m:m,fx:(124-(x1-x0)*m)/2,fy:(65-(y1-y0)*m)/2}}
+function drawVMini(){var cv=$("vmini"),f=$("vCanvas"),v=f._view,hb=$("vHint");
+ if(hb)hb.style.opacity=VMINI?"1":".55";
+ if(!V||(V.sz||8)<14||!v||!VMINI){cv.style.display="none";return}
+ var dpr=Math.min(2,window.devicePixelRatio||1),sc=dpr*MSC,w=124,h=65,M=vmmap(),x,i,q,o,PL=V.plots||[],PP=V.pp||[],cw=parseFloat(f.style.width)||window.innerWidth,ch=parseFloat(f.style.height)||window.innerHeight,vx,vy,vw,vh,rx,ry,rx2,ry2,hh=$("vHead").offsetHeight;
+ if(MOVING&&Date.now()-VMT<90)return;VMT=Date.now();cv.style.display="block";if(cv._ht!==hh){cv._ht=hh;cv.style.top=(hh+8)+"px"}
+ if(cv.width!==Math.round(w*sc)){cv.width=Math.round(w*sc);cv.height=Math.round(h*sc)}
+ x=cv.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);
+ function P(c,r){return[M.fx+(M.ox+(c-r)*56-M.x0)*M.m,M.fy+(M.oy+(c+r)*28-M.y0)*M.m]}
+ function Q(c,r){var t=rp(c,r);return P(t[0],t[1])}
+ function path(a){x.beginPath();a.forEach(function(p,j){j?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath()}
+ parcels(M.n,V.ls).forEach(function(q){path([P(q.c0,q.r0),P(q.c1,q.r0),P(q.c1,q.r1),P(q.c0,q.r1)]);
+  x.fillStyle=NIGHT?"#2f6a2a":"#86d452";x.fill();x.strokeStyle="#efdba8";x.lineWidth=1.6;x.lineJoin="round";x.stroke()});
+ for(i=0;i<V.np;i++){q=PP[i];if(!q)continue;o=Q(q[0]+.5,q[1]+.5);
+  if(PL[i]&&isRipe(PL[i])){x.fillStyle="#ffd23a";x.fillRect(o[0]-1.8,o[1]-1.8,3.6,3.6)}
+  else{x.fillStyle=PL[i]?"#1b5e20":"#a0693a";x.fillRect(o[0]-1.3,o[1]-1.3,2.6,2.6)}}
+ (V.dc||[]).forEach(function(it){var f2,s2,col;if(it.s||isF(it.k))return;f2=FTD[it.k];
+  col=it.k==="barn"?"#e53935":f2?(f2.animal?"#ff9800":"#00897b"):"#ab47bc";
+  s2=Math.max(2.6,Math.min(8,footN(it.k)*1.7));o=Q(it.c+.5,it.r+.5);
+  x.fillStyle=col;x.fillRect(o[0]-s2/2,o[1]-s2/2,s2,s2);x.strokeStyle="rgba(0,0,0,.5)";x.lineWidth=.6;x.strokeRect(o[0]-s2/2,o[1]-s2/2,s2,s2)});
+ vx=M.fx+((-v.L/v.k)-M.x0)*M.m;vy=M.fy+((-v.T/v.k)-M.y0)*M.m;vw=cw/v.k*M.m;vh=ch/v.k*M.m;
+ rx=Math.max(1,vx);ry=Math.max(1,vy);rx2=Math.min(w-1,vx+vw);ry2=Math.min(h-1,vy+vh);
+ if(rx2-rx<3)rx2=rx+3;if(ry2-ry<3)ry2=ry+3;
+ x.save();x.beginPath();x.rect(0,0,w,h);x.rect(rx,ry,rx2-rx,ry2-ry);x.fillStyle="rgba(0,25,45,.42)";x.fill("evenodd");x.restore();
+ x.fillStyle="rgba(0,229,255,.14)";x.fillRect(rx,ry,rx2-rx,ry2-ry);
+ x.lineJoin="round";x.strokeStyle="rgba(0,0,0,.8)";x.lineWidth=3.6;x.strokeRect(rx,ry,rx2-rx,ry2-ry);
+ x.strokeStyle="#00e5ff";x.lineWidth=2;x.strokeRect(rx,ry,rx2-rx,ry2-ry)}
+function vminiGo(e){var cv=$("vmini"),r=cv.getBoundingClientRect(),M=vmmap(),hh=$("vHead").offsetHeight,vc=$("vCanvas"),
+ wx=((e.clientX-r.left)/MSC-M.fx)/M.m+M.x0,wy=((e.clientY-r.top)/MSC-M.fy)/M.m+M.y0;
+ vc._anc={sx:window.innerWidth/2,sy:hh+(window.innerHeight-hh)/2,cx:wx,cy:wy};fitMove(vc)}
+(function(){var cv=$("vmini"),on=false;
+ cv.addEventListener("pointerdown",function(e){on=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}vminiGo(e);e.preventDefault()});
+ cv.addEventListener("pointermove",function(e){if(on)vminiGo(e)});
+ function off(){on=false}cv.addEventListener("pointerup",off);cv.addEventListener("pointercancel",off)})();
 $("vCanvas").onclick=function(e){if(this._drag){this._drag=false;return}var i=hit(this,e);if(i>=0)visitTap(i)};
 $("vCanvas").onmousemove=function(e){var i=hit(this,e);if(i!==HV.v){HV.v=i;drawAll()}};
 $("vCanvas").onmouseleave=function(){HV.v=-1;drawAll()};
@@ -1920,7 +1959,7 @@ function visitDlg(){var dlg=$("dlg");function shut(){dlg.style.display="none"}
   "<div class='dst'><i>\uD83D\uDC65</i><span>Helps left today: <b>"+S.helpLeft+"</b></span></div></div>"+
   "<div class='dbtns'><button class='btn ok' id='dYes'>\uD83D\uDC4D Got it</button></div>";
  dlg.style.display="flex";$("dYes").onclick=shut;dlg.onclick=function(ev){if(ev.target===dlg)shut()}}
-$("vHint").onclick=function(){if(V)visitDlg()};
+$("vHint").onclick=function(){VMINI=!VMINI;try{localStorage.setItem("vminiHide",VMINI?"0":"1")}catch(e){}drawAll()};
 function visitTap(i){var p=V.plots[i];if(!p)return;var c=cr(p.c);p.hb=p.hb||[];
  if(nowT()-p.t>=c.ms){toast("Already ripe - only the owner can harvest it.");return}
  if(S.helpLeft<1){toast("You have used all your helps for today.");return}
