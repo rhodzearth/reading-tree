@@ -150,7 +150,8 @@ body:has(#barnP[style*="block"]) #hud{visibility:hidden}
 body.edit-top #dlg{align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
 body.edit-top #dlg .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
 body.edit-top:has(#dlg[style*="flex"]) #hud{visibility:hidden}
-body.paint-top #editbar{top:calc(6px + env(safe-area-inset-top));bottom:auto!important;z-index:20;background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;flex-wrap:wrap!important;justify-content:center!important;width:auto;max-width:96vw;max-height:60vh;overflow-y:auto;border-radius:14px}
+body.paint-top #editbar{top:calc(6px + env(safe-area-inset-top));bottom:auto!important;z-index:20;background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;flex-direction:row!important;flex-wrap:wrap!important;justify-content:center!important;align-items:center;width:96vw;max-width:96vw;overflow:visible;border-radius:14px;padding:6px 8px;gap:6px}
+body.paint-top #editbar #edTxt{flex:0 0 100%;text-align:center}
 body.paint-top #hud{visibility:hidden}
 #dlg:has(#fbN){align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
 #dlg:has(#fbN) .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
