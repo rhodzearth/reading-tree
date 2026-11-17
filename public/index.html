@@ -14,7 +14,7 @@ JsPreview.html (preview only) | JsStart.html (startup, must stay last). Server s
 /* Styles.html - ALL THE LOOK OF THE PAGE (colors, layout, phone and night-mode rules). Change colors and sizes here. */
 html, body { margin: 0; height: 100%; background: #fbf7ea; }
 body.night, body.night html { background: #14181a; }
-#treewrap { background: #fbf7ea; }
+#treewrap { background: linear-gradient(180deg, #1f8fef 0%, #4aa9f4 38%, #8fcdf6 72%, #d6edfb 100%); }
 body.night #treewrap { background: #14181a; }
 #app { display: flex; height: 100vh; }
 #reader { width: 42%; max-width: 620px; min-width: 300px; display: flex; flex-direction: column; background: #fbf7ea; border-right: 1px solid #d9cfae; font-family: Georgia, serif; color: #2b2416; }
@@ -468,6 +468,15 @@ class="setArrow">›</span></button>
 </div>
 </section>
 <section id="treewrap">
+  <svg id="cloudDefs" aria-hidden="true"><defs><g id="cbShape"><circle cx="58" cy="96" r="32"/><circle cx="108" cy="72" r="44"/><circle cx="168" cy="62" r="52"/><circle cx="224" cy="80" r="40"/><circle cx="262" cy="100" r="26"/><rect x="58" y="98" width="204" height="30" rx="15"/></g></defs></svg>
+<div id="clouds" aria-hidden="true">
+<div class="cw" style="top:2%;width:44%;--x:8vw;animation-duration:150s;animation-delay:-40s"><svg class="cl" viewBox="0 0 300 130"><use href="#cbShape" fill="#c4def6"/><use href="#cbShape" fill="#fff" y="-6"/></svg></div>
+<div class="cw" style="top:13%;width:28%;--x:60vw;animation-duration:190s;animation-delay:-120s"><svg class="cl" viewBox="0 0 300 130"><use href="#cbShape" fill="#c4def6"/><use href="#cbShape" fill="#fff" y="-6"/></svg></div>
+<div class="cw" style="top:24%;width:52%;--x:30vw;animation-duration:170s;animation-delay:-70s"><svg class="cl" viewBox="0 0 300 130"><use href="#cbShape" fill="#c4def6"/><use href="#cbShape" fill="#fff" y="-6"/></svg></div>
+<div class="cw" style="top:36%;width:60%;--x:70vw;animation-duration:210s;animation-delay:-160s"><svg class="cl" viewBox="0 0 300 130"><use href="#cbShape" fill="#c4def6"/><use href="#cbShape" fill="#fff" y="-6"/></svg></div>
+<div class="cw" style="top:8%;width:22%;--x:85vw;animation-duration:130s;animation-delay:-100s"><svg class="cl" viewBox="0 0 300 130"><use href="#cbShape" fill="#c4def6"/><use href="#cbShape" fill="#fff" y="-6"/></svg></div>
+<div class="cw" style="top:31%;width:34%;--x:45vw;animation-duration:120s;animation-delay:-20s"><svg class="cl" viewBox="0 0 300 130"><use href="#cbShape" fill="#c4def6"/><use href="#cbShape" fill="#fff" y="-6"/></svg></div>
+</div>
 <!-- ===== SHOW-READING BAR (only visible while the reading panel is hidden) ===== -->
 <div id="miniBar"><button id="showRead" type="button" aria-label="Show reading panel" title="Show reading panel">&#128214;<span id="miniBadge" class="ibBadge"></span></button><span id="miniLbl"></span></div>
 <!-- ===== TREE (right side): book, trunk, branches, leaves, fruits are drawn here ===== -->
@@ -485,7 +494,7 @@ class="setArrow">›</span></button>
 <radialGradient id="moonGlow"><stop offset="0" stop-color="#fffbe0" stop-opacity=".35"/><stop offset="1" stop-color="#fffbe0" stop-opacity="0"/></radialGradient>
 </defs>
 
-<g class="daysky" transform="translate(860 90)">
+<g class="daysky" transform="translate(735 75)">
 <circle r="100" fill="url(#sunGlow)"/>
 <g class="rays" stroke="#f6b73c" stroke-width="4" stroke-linecap="round" fill="none"><path d="M44,0L60,0M38.1,22L52,30M22,38.1L30,52M0,44L0,60M-22,38.1L-30,52M-38.1,22L-52,30M-44,0L-60,0M-38.1,-22L-52,-30M-22,-38.1L-30,-52M0,-44L0,-60M22,-38.1L30,-52M38.1,-22L52,-30"/></g>
 <circle r="34" fill="url(#sunBody)"/>
@@ -524,6 +533,23 @@ class="setArrow">›</span></button>
 <path class="st" transform="translate(700 50)" style="animation-delay:1.6s" d="M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z"/>
 <path class="st" transform="translate(880 215)" style="animation-delay:.3s" d="M0,-6 L1.5,-1.5 L6,0 L1.5,1.5 L0,6 L-1.5,1.5 L-6,0 L-1.5,-1.5Z"/>
 </g>
+</g>
+
+<!-- ===== MOUNTAINS (behind the tree, in front of the sky) ===== -->
+<g id="mountains" pointer-events="none">
+<defs>
+<linearGradient id="mtnBack" gradientUnits="userSpaceOnUse" x1="0" y1="90" x2="0" y2="470"><stop offset="0" stop-color="#7fa99b"/><stop offset="1" stop-color="#bcd8c6"/></linearGradient>
+<linearGradient id="mtnMid" gradientUnits="userSpaceOnUse" x1="0" y1="245" x2="0" y2="470"><stop offset="0" stop-color="#6c9f82"/><stop offset="1" stop-color="#9cc79a"/></linearGradient>
+<linearGradient id="mtnFront" gradientUnits="userSpaceOnUse" x1="0" y1="360" x2="0" y2="470"><stop offset="0" stop-color="#8fc26a"/><stop offset="1" stop-color="#b3d98a"/></linearGradient>
+<linearGradient id="mtnHaze" gradientUnits="userSpaceOnUse" x1="0" y1="330" x2="0" y2="470"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".4"/></linearGradient>
+</defs>
+<path id="mtnBackP" fill="url(#mtnBack)" d="M-800,470 L-800,270 C-600,250 -350,215 -169,175 C-60,150 20,118 110,88 C150,76 190,90 235,128 C300,185 380,205 470,190 C540,178 590,150 670,140 C770,128 870,124 969,134 C1150,150 1350,215 1600,260 L1600,470 Z"/>
+<path class="mtnShade" fill="#3f6f66" opacity=".22" d="M110,88 C150,76 190,90 235,128 C262,152 290,176 322,188 C270,196 230,190 200,200 C170,212 150,230 140,262 C138,200 128,140 110,88 Z"/>
+<path class="mtnShade" fill="#fff" opacity=".25" d="M110,88 C70,102 10,128 -60,152 C20,150 80,138 128,140 C126,120 118,102 110,88 Z"/>
+<path class="mtnShade" fill="#3f6f66" opacity=".18" d="M670,140 C720,132 760,138 800,152 C760,160 720,176 690,200 C690,175 682,155 670,140 Z"/>
+<path id="mtnMidP" fill="url(#mtnMid)" d="M-800,470 L-800,300 C-600,290 -400,272 -169,252 C-60,244 40,262 150,305 C250,343 340,362 440,346 C530,332 610,296 710,276 C800,258 880,250 969,244 C1150,232 1350,252 1600,290 L1600,470 Z"/>
+<rect class="mtnShade" x="-800" y="330" width="2400" height="140" fill="url(#mtnHaze)"/>
+<path id="mtnFrontP" fill="url(#mtnFront)" d="M-800,470 L-800,392 C-600,388 -400,372 -169,364 C0,358 150,388 300,410 C380,422 450,430 530,426 C650,420 760,392 860,384 C940,378 1020,372 1100,372 C1300,372 1450,392 1600,402 L1600,470 Z"/>
 </g>
 
 <!-- ===== GRASS (drawn by the grass script near the bottom of this file) ===== -->
@@ -2420,7 +2446,19 @@ body.night #adminModal input, body.night #adminModal select, body.night #adminMo
   #night, #hideRead, #settingsBtn, #bellBtn { padding: 5px 7px; }
   #hideRead { font-size: 12px; }
 }
-
+/* ---- BLUE SKY, MOVING CLOUDS, MOUNTAINS ---- */
+#scene { position: relative; z-index: 1; }
+#cloudDefs { position: absolute; width: 0; height: 0; overflow: hidden; }
+#clouds { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; transition: opacity .6s ease; }
+#clouds .cw { position: absolute; left: 0; will-change: transform; animation: cloudDrift linear infinite; }
+#clouds .cl { display: block; width: 100%; height: auto; }
+@keyframes cloudDrift { from { transform: translate3d(-100%, 0, 0); } to { transform: translate3d(100vw, 0, 0); } }
+body.night #clouds { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { #clouds .cw { animation: none; transform: translate3d(var(--x, 0), 0, 0); } }
+body.night #mtnBackP { fill: #1c2b36; }
+body.night #mtnMidP { fill: #172629; }
+body.night #mtnFrontP { fill: #13241a; }
+body.night #mountains .mtnShade { display: none; }
 </style>
 
 <script>
