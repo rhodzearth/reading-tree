@@ -156,6 +156,9 @@ body.paint-top #hud{visibility:hidden}
 #dlg:has(#fbN) .dbox{background:var(--card)!important;-webkit-backdrop-filter:none;backdrop-filter:none;text-shadow:none;max-height:85vh;overflow-y:auto}
 body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
 #barnAll{display:none!important}
+#zoomNote{position:fixed;left:50%;top:100px;transform:translateX(-50%);z-index:60;display:none;background:var(--dk);color:#fff;padding:6px 14px;border-radius:99px;font-weight:700;font-size:14px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+body.night #zoomNote{color:#111}
+body.cam #zoomNote{visibility:hidden!important}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -204,7 +207,7 @@ body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
 </div>
 <div id="goLoading"><div class="acard"><div class="goSpin"></div><div class="goTitle" id="goTitle">Opening...</div><div class="goSub">Please wait a moment.</div></div></div>
 <div id="dlg"><div class="dbox" id="dlgBody"></div></div>
-<div id="toast"></div><button id="camOff" title="Exit camera view">&#128247;</button>
+<div id="toast"></div><div id="zoomNote"></div><button id="camOff" title="Exit camera view">&#128247;</button>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="farm_adapter.js"></script>
 <script>
@@ -1677,7 +1680,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
   if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
   if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx;
   if(box.l1&&box.vb){k=Math.min(3.2,aw/L1SPAN);mx=ox;my=oy+(box.vb[0]+box.vb[1])*28-(ah/2-L1MARG)/k}} // first view: a bit closer, land sitting low so its bottom fence corner is near the bottom
- kd=k;if(cv._kabs)k=Math.max(k0*.6,Math.min(3.2,cv._kabs));else k=Math.max(k0*.6,Math.min(3.2,kd*z));cv._z=k/kd;if(ah>150)cv._kabs=k;
+ kd=k;if(cv._kabs)k=Math.max(k0*.6,Math.min(3.2,cv._kabs));else k=Math.max(k0*.6,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
   nx=aw-pad-L0-(ox+(B.c1-B.r0)*56+2200)*k,xx=pad-L0-(ox+(B.c0-B.r1)*56-2200)*k,ny=vt+ah-pad-T0-(oy+(B.c1+B.r1)*28+1600)*k,xy=vt+pad-T0-(oy+(B.c0+B.r0)*28-1600)*k,px,py;
  if(cv._anc){var a=cv._anc;cv._anc=null;pn=[a.sx-a.cx*k-L0,a.sy-a.cy*k-T0]}
@@ -1732,11 +1735,18 @@ $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 $("vCanvas").onclick=function(e){if(this._drag){this._drag=false;return}var i=hit(this,e);if(i>=0)visitTap(i)};
 $("vCanvas").onmousemove=function(e){var i=hit(this,e);if(i!==HV.v){HV.v=i;drawAll()}};
 $("vCanvas").onmouseleave=function(){HV.v=-1;drawAll()};
+function zoomNote(cv){var v=cv._view,mn=cv._kmin,mx=3.2,e=$("zoomNote"),k,p;
+ if(!v||!mn||!e)return;
+ k=Math.max(mn,Math.min(mx,v.k));
+ p=Math.max(1,Math.min(100,Math.round(1+99*Math.log(mx/k)/Math.log(mx/mn))));
+ e.textContent="\uD83D\uDD0D "+p+"%"+(p<=1?" (max in)":p>=100?" (max out)":"");
+ e.style.display="block";clearTimeout(zoomNote.t);
+ zoomNote.t=setTimeout(function(){e.style.display="none"},1000)}
 function addPan(cv){var P={},st=null,pz=null,PR=0;
  function cnt(){return Object.keys(P).length}
  function bx(){return cv.parentNode.getBoundingClientRect()}
  function zoomAt(f,sx,sy,fx,fy){var v=cv._view||{L:0,T:0,k:1},kk=v.k,l=v.L,tp=v.T;
-  cv._anc={sx:sx,sy:sy,cx:(fx-l)/kk,cy:(fy-tp)/kk};cv._z=(cv._z||1)*f;cv._kabs=Math.max(.05,Math.min(3.2,kk*f));fitMove(cv)}
+  cv._anc={sx:sx,sy:sy,cx:(fx-l)/kk,cy:(fy-tp)/kk};cv._z=(cv._z||1)*f;cv._kabs=Math.max(.05,Math.min(3.2,kk*f));fitMove(cv);zoomNote(cv)}
  cv.addEventListener("pointerdown",function(e){if(e.pointerType==="mouse")P={};P[e.pointerId]=[e.clientX,e.clientY];
   if(cnt()===1){var p=cv._pan||(cv._pan=[0,0]);st={x:e.clientX,y:e.clientY,px:p[0],py:p[1],m:false,id:e.pointerId};pz=null;cv._drag=false}
   else if(cnt()===2){var ids=Object.keys(P),a=P[ids[0]],b=P[ids[1]];pz={ids:ids,d:Math.hypot(a[0]-b[0],a[1]-b[1])||1,m:[(a[0]+b[0])/2,(a[1]+b[1])/2]};st=null;cv._drag=true;
