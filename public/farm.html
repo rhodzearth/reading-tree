@@ -216,12 +216,13 @@ window.onerror=function(m,u,l,c){var d=document.createElement("div");d.style.css
 <script>
 var $=function(i){return document.getElementById(i)},TOKEN="",S=null,sel="strawberry",V=null,lastLvl=0,HV={f:-1,v:-1},ANIM=false;
 var FW=8,FH=8,STAB="c";
-var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.9;
+var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.55;
 function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++)delete C[k[i]];return k.length-m} // drop the oldest third instead of everything
 // while you drag or pinch: cheap drawing + only the geometry is recalculated
 function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
  MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll()},170);
  fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
+ var ZOUT=.4; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
 var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
 try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
@@ -1579,7 +1580,7 @@ function occMap(ig){var m={},i,q,PP=LAY?LAY.pp:S.pp;for(i=0;i<S.np;i++){q=PP[i];
  (LAY?LAY.dc:(S.dc||[])).forEach(function(o){if(!o.s&&!isF(o.k)&&!(ig&&ig.t==="d"&&ig.id===o.id)){var nw=footW(o.k),nh=footH(o.k),a,b;for(a=0;a<nw;a++)for(b=0;b<nh;b++)m[(o.c+a)*64+o.r+b]=1}});return m}
 function iso(cv,plots,pp,np,hov,items,edit){
  var v=cv._view;if(!v)return;
- var cols=szOf(cv),rows=cols,TW=112,TH=56,i,kz=v.k,dprB=Math.min(PERF?1.2:1.5,window.devicePixelRatio||1),dpr=kz<.5?Math.max(.85,dprB*.7):kz<.8?Math.max(1,dprB*.85):dprB,
+ var cols=szOf(cv),rows=cols,TW=112,TH=56,i,kz=v.k,dpr=Math.min(2,window.devicePixelRatio||1),
   cw=parseFloat(cv.style.width)||window.innerWidth,ch=parseFloat(cv.style.height)||window.innerHeight,
   ox=(rows+2)*TW/2+30,oy=130+TH,W=(rows+cols+4)*TW/2+60,H=oy+(cols+rows+2)*TH/2+60;
  if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr)}
@@ -1680,7 +1681,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
   if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
   if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx;
   if(box.l1&&box.vb){k=Math.min(3.2,aw/L1SPAN);mx=ox;my=oy+(box.vb[0]+box.vb[1])*28-(ah/2-L1MARG)/k}} // first view: a bit closer, land sitting low so its bottom fence corner is near the bottom
- kd=k;if(cv._kabs)k=Math.max(k0*.6,Math.min(3.2,cv._kabs));else k=Math.max(k0*.6,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
+ var kmn=PERF?3.2*Math.pow(k0*.6/3.2,ZOUT):k0*.6;kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
   nx=aw-pad-L0-(ox+(B.c1-B.r0)*56+2200)*k,xx=pad-L0-(ox+(B.c0-B.r1)*56-2200)*k,ny=vt+ah-pad-T0-(oy+(B.c1+B.r1)*28+1600)*k,xy=vt+pad-T0-(oy+(B.c0+B.r0)*28-1600)*k,px,py;
  if(cv._anc){var a=cv._anc;cv._anc=null;pn=[a.sx-a.cx*k-L0,a.sy-a.cy*k-T0]}
