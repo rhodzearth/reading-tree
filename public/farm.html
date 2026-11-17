@@ -3903,7 +3903,7 @@ function sellFloorDlg(f){var dlg=$("dlg"),inp,tot,have=haveTiles(f.id),rate=S.se
 (function(){var b=document.createElement("button");b.className="btn alt";b.id="edFRot";b.style.display="none";$("edAll").parentNode.insertBefore(b,$("edAll"));
  b.onclick=function(){if(!PAINT)return;var s=PAINT.turn?4:(PAINT.rot|0);s=(s+1)%5;PAINT.turn=s===4?1:0;PAINT.rot=s===4?0:s;editUI();drawAll()}})();
 var _editUI0=editUI;
-editUI=function(){_editUI0.apply(this,arguments);document.body.classList.toggle("paint-top",!!PAINT);var f,tile,b=$("edFRot");
+editUI=function(){_editUI0.apply(this,arguments);document.body.classList.toggle("paint-top",!!(PAINT||PLACING||SEL));var f,tile,b=$("edFRot");
  if(!PAINT){b.style.display="none";return}
  f=floorDef(PAINT.id)||{id:"",name:""};tile=isTileF(f.id);
  b.style.display=(tile||PAINT.turn)?"":"none";
