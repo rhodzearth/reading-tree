@@ -223,10 +223,11 @@ var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=nul
 function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++)delete C[k[i]];return k.length-m} // drop the oldest third instead of everything
 // while you drag or pinch: cheap drawing + only the geometry is recalculated
 function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
- MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll()},170);
+ MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll();saveView()},170);
  fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
  var ZOUT=.5; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
-var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
+var DEFP=60; // default zoom on the notifier (1 = max in, 100 = max out). It can't go past the ZOUT cap.
+ var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
 var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
 try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
 TOKEN=window.FARM_TOKEN||"";
@@ -1687,14 +1688,25 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
   if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
   if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx;
   if(box.l1&&box.vb){k=Math.min(3.2,aw/L1SPAN);mx=ox;my=oy+(box.vb[0]+box.vb[1])*28-(ah/2-L1MARG)/k}} // first view: a bit closer, land sitting low so its bottom fence corner is near the bottom
- var kmn=(cv.id==="lCanvas"||!PERF)?k0*.6:3.2*Math.pow(k0*.6/3.2,ZOUT);kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
+ var kmn=(cv.id==="lCanvas"||!PERF)?k0*.6:3.2*Math.pow(k0*.6/3.2,ZOUT);if(!cv._kabs&&!cv._dz&&cv.id==="field"){cv._dz=1;cv._kabs=3.2*Math.pow(k0*.6/3.2,(DEFP-1)/99)}kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
   nx=aw-pad-L0-(ox+(B.c1-B.r0)*56+2200)*k,xx=pad-L0-(ox+(B.c0-B.r1)*56-2200)*k,ny=vt+ah-pad-T0-(oy+(B.c1+B.r1)*28+1600)*k,xy=vt+pad-T0-(oy+(B.c0+B.r0)*28-1600)*k,px,py;
  if(cv._anc){var a=cv._anc;cv._anc=null;pn=[a.sx-a.cx*k-L0,a.sy-a.cy*k-T0]}
  px=nx>xx?0:Math.max(nx,Math.min(xx,pn[0]));py=ny>xy?0:Math.max(ny,Math.min(xy,pn[1]));cv._pan=[px,py];
  cv._view={L:L0+px,T:T0+py,k:k};
  cv.style.width=aw+"px";cv.style.height=(rel?ah:window.innerHeight)+"px";cv.style.left="0px";cv.style.top="0px";cv.style.marginTop="0"}
-function fitAll(){var hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight,eb=$("editbar").offsetHeight,f,vc,vh,lc,lh,lb;MHT=hud;
+function saveView(){var f=$("field"),v=f._view,hud,dh,sy;
+ if(!v||!S||!TOKEN)return;
+ hud=$("hud").offsetHeight;dh=$("botBar").offsetHeight;sy=hud+(window.innerHeight-hud-dh)/2;
+ try{localStorage.setItem("farmView_"+TOKEN.slice(-12),JSON.stringify({k:v.k,cx:(window.innerWidth/2-v.L)/v.k,cy:(sy-v.T)/v.k,rot:f._rot||0,sz:S.sz||8}))}catch(e){}}
+function restoreView(){var f=$("field"),o=null,hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight;
+ try{o=JSON.parse(localStorage.getItem("farmView_"+TOKEN.slice(-12))||"null")}catch(e){}
+ if(!o||o.sz!==(S.sz||8)||!isFinite(o.k)||!isFinite(o.cx)||!isFinite(o.cy))return;
+ f._rot=o.rot&3;f._kabs=o.k;
+ f._anc={sx:window.innerWidth/2,sy:hud+(window.innerHeight-hud-dh)/2,cx:o.cx,cy:o.cy}}
+window.addEventListener("pagehide",saveView);
+document.addEventListener("visibilitychange",function(){if(document.hidden)saveView()});
+ function fitAll(){var hud=$("hud").offsetHeight,dh=$("botBar").offsetHeight,eb=$("editbar").offsetHeight,f,vc,vh,lc,lh,lb;MHT=hud;if(S&&!fitAll.rv){fitAll.rv=1;restoreView()}
  $("buyBar").style.bottom=(dh+14)+"px";$("editbar").style.bottom=(dh+10)+"px";$("barnP").style.bottom="auto";$("toast").style.bottom=(dh+12)+"px";
  if(S){PERF=(S.sz||8)>=36||!!(S.ls&&S.ls.length)||S.np>150;
   f=$("field");if(!f._kabs||!f._box)f._box=lvl1Box(f);
