@@ -2411,6 +2411,15 @@ body.night .ibItem.unread { background: #263036; border-color: #9bd36a; }
 body.night .ibTitle, body.night .ibBody { color: #e4e8dc; }
 body.night #ibClose, body.night #adBack { background: #3a464c; color: #e4e8dc; }
 body.night #adminModal input, body.night #adminModal select, body.night #adminModal textarea { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+/* ---- PHONE HEADER FIX (stops the bell from pushing the header off-screen) ---- */
+#rtitle:empty { display: none; }
+#rhead > button { flex: none; }
+@media (max-width: 800px) {
+  #rhead { gap: 6px; padding: 8px 10px; }
+  #jump { flex: 1 1 0; min-width: 0; max-width: none; font-size: 13px; padding: 5px 6px; }
+  #night, #hideRead, #settingsBtn, #bellBtn { padding: 5px 7px; }
+  #hideRead { font-size: 12px; }
+}
 
 </style>
 
