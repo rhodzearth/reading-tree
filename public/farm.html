@@ -3776,7 +3776,7 @@ if(!TOKEN)showMsg("Please log in to the Reading Tree first, then open Reading Fa
  if(Q.length){kick();flush(load)}else load()}
 
 /* ===== FLOOR TILES: bought into the barn, placed, turned, stored back. This block replaces the old "paint" functions above (water is still painted). ===== */
-BAT.farmFloorBuy="fb";BAT.farmFloorRot="fr";
+BAT.farmFloorBuy="fb";BAT.farmFloorSell="fx";BAT.farmFloorRot="fr";
 function frOf(cv){return cv&&cv.id==="vCanvas"?(V&&V.fr):(S&&S.fr)}
 function ftileR(id,dpr,rot){var key="R|"+id+"|"+dpr+"|"+rot,c=FTS[key],cx,b;if(!rot)return ftile(id,dpr,0);if(c)return c;
  b=ftile(id,dpr,0);c=document.createElement("canvas");c.width=b.width;c.height=b.height;cx=c.getContext("2d");cx.setTransform(dpr,0,0,dpr,0,0);cx.translate(57,29);
@@ -3883,7 +3883,22 @@ function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.key
   b.className="btn alt";b.textContent=ic+" "+nm+" \u00D7"+g.length;
   b.onclick=function(){PLACING=g[0];SEL=null;$("barnP").style.display="none";editUI();drawAll()};box.appendChild(b)});
  tl.forEach(function(id){var f=floorDef(id)||{id:id,name:id},b=document.createElement("button");b.className="btn alt";b.textContent="\uD83E\uDDF1 "+f.name+" tile \u00D7"+S.ft[id];
-  b.onclick=function(){$("barnP").style.display="none";startPaint(f)};box.appendChild(b)})}
+  b.onclick=function(){$("barnP").style.display="none";startPaint(f)};box.appendChild(b);
+  var sb=document.createElement("button");sb.className="btn alt";sb.textContent="\uD83D\uDCB0 Sell";sb.onclick=function(){sellFloorDlg(f)};box.appendChild(sb)})}
+function sellFloorDlg(f){var dlg=$("dlg"),inp,tot,have=haveTiles(f.id),rate=S.sellRate||.5;
+ function shut(){dlg.style.display="none"}
+ $("dlgBody").innerHTML="<div id='fsThumb' style='width:84px;height:84px;margin:0 auto'></div><div class='dtitle'>Sell "+esc(f.name)+" tiles</div><div class='dsub'>In your barn: <b>"+have+"</b><br>You get half the price back.</div><div style='margin:8px 0'><input id='fsN' type='number' min='1' max='"+have+"' value='"+have+"' style='width:120px;font-size:16px;padding:6px;border-radius:8px;text-align:center'></div><div class='small' id='fsTot'></div><div class='dbtns'><button class='btn alt' id='dNo'>Close</button><button class='btn ok' id='fsSell'>Sell</button></div>";
+ $("fsThumb").appendChild(fThumb(f.id,Math.min(1.5,window.devicePixelRatio||1)));
+ inp=$("fsN");tot=$("fsTot");
+ function n0(){return Math.max(0,Math.min(have,Math.floor(+inp.value||0)))}
+ function upd(){var n=n0();tot.textContent=n+" tiles = +\uD83E\uDE99 "+Math.floor(n*f.cost*rate)}
+ upd();inp.oninput=upd;dlg.style.display="flex";$("dNo").onclick=shut;
+ $("fsSell").onclick=function(){var n=n0(),g;
+  if(n<1){toast("Choose how many tiles to sell.");return}
+  g=Math.floor(n*f.cost*rate);S.coins+=g;S.ft[f.id]=have-n;if(S.ft[f.id]<=0)delete S.ft[f.id];
+  send("farmFloorSell",[TOKEN,f.id,n]);paint();renderBarn();
+  try{FarmAudio.play("sell")}catch(e){}
+  toast("\uD83D\uDCB0 Sold "+n+" "+f.name+" tiles for +"+g+"\uD83E\uDE99");shut()}}
 // the tile buttons on the edit bar
 (function(){var b=document.createElement("button");b.className="btn alt";b.id="edFRot";b.style.display="none";$("edAll").parentNode.insertBefore(b,$("edAll"));
  b.onclick=function(){if(!PAINT)return;var s=PAINT.turn?4:(PAINT.rot|0);s=(s+1)%5;PAINT.turn=s===4?1:0;PAINT.rot=s===4?0:s;editUI();drawAll()}})();
