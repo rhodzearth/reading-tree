@@ -1761,17 +1761,14 @@ $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 var VMINI=true,VMT=0;try{VMINI=localStorage.getItem("vminiHide")!=="1"}catch(e){}
 function vmmap(){setRot($("vCanvas"));var n=(V&&V.sz)||8,B=wbox(n,V&&V.ls),ox=(n+2)*56+30,oy=186,x0=ox+(B.c0-B.r1)*56,x1=ox+(B.c1-B.r0)*56,y0=oy+(B.c0+B.r0)*28,y1=oy+(B.c1+B.r1)*28,m=Math.min(118/(x1-x0),59/(y1-y0));
  return{n:n,ox:ox,oy:oy,x0:x0,y0:y0,m:m,fx:(124-(x1-x0)*m)/2,fy:(65-(y1-y0)*m)/2}}
-function drawVMini(){var cv=$("vmini"),f=$("vCanvas"),v=f._view,hb=$("vHint");
- if(hb)hb.style.opacity=VMINI?"1":".55";
- if(!V||(V.sz||8)<14||!v||!VMINI){cv.style.display="none";return}
- var dpr=Math.min(2,window.devicePixelRatio||1),sc=dpr*MSC,w=124,h=65,M=vmmap(),x,i,q,o,PL=V.plots||[],PP=V.pp||[],cw=parseFloat(f.style.width)||window.innerWidth,ch=parseFloat(f.style.height)||window.innerHeight,vx,vy,vw,vh,rx,ry,rx2,ry2,hh=$("vHead").offsetHeight;
- if(MOVING&&Date.now()-VMT<90)return;VMT=Date.now();cv.style.display="block";if(cv._ht!==hh){cv._ht=hh;cv.style.top=(hh+8)+"px"}
- if(cv.width!==Math.round(w*sc)){cv.width=Math.round(w*sc);cv.height=Math.round(h*sc)}
- x=cv.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);
- function P(c,r){return[M.fx+(M.ox+(c-r)*56-M.x0)*M.m,M.fy+(M.oy+(c+r)*28-M.y0)*M.m]}
- function Q(c,r){var t=rp(c,r);return P(t[0],t[1])}
+var VMC=null;
+function buildVMC(M,sc,w,h,key){var c=VMC&&VMC.c||document.createElement("canvas"),x,i,q,o,PL=V.plots||[],PP=V.pp||[];
+ if(c.width!==Math.round(w*sc)||c.height!==Math.round(h*sc)){c.width=Math.round(w*sc);c.height=Math.round(h*sc)}
+ x=c.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);
+ function P(c2,r){return[M.fx+(M.ox+(c2-r)*56-M.x0)*M.m,M.fy+(M.oy+(c2+r)*28-M.y0)*M.m]}
+ function Q(c2,r){var t=rp(c2,r);return P(t[0],t[1])}
  function path(a){x.beginPath();a.forEach(function(p,j){j?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath()}
- parcels(M.n,V.ls).forEach(function(q){path([P(q.c0,q.r0),P(q.c1,q.r0),P(q.c1,q.r1),P(q.c0,q.r1)]);
+ parcels(M.n,V.ls).forEach(function(q2){path([P(q2.c0,q2.r0),P(q2.c1,q2.r0),P(q2.c1,q2.r1),P(q2.c0,q2.r1)]);
   x.fillStyle=NIGHT?"#2f6a2a":"#86d452";x.fill();x.strokeStyle="#efdba8";x.lineWidth=1.6;x.lineJoin="round";x.stroke()});
  for(i=0;i<V.np;i++){q=PP[i];if(!q)continue;o=Q(q[0]+.5,q[1]+.5);
   if(PL[i]&&isRipe(PL[i])){x.fillStyle="#ffd23a";x.fillRect(o[0]-1.8,o[1]-1.8,3.6,3.6)}
@@ -1780,6 +1777,17 @@ function drawVMini(){var cv=$("vmini"),f=$("vCanvas"),v=f._view,hb=$("vHint");
   col=it.k==="barn"?"#e53935":f2?(f2.animal?"#ff9800":"#00897b"):"#ab47bc";
   s2=Math.max(2.6,Math.min(8,footN(it.k)*1.7));o=Q(it.c+.5,it.r+.5);
   x.fillStyle=col;x.fillRect(o[0]-s2/2,o[1]-s2/2,s2,s2);x.strokeStyle="rgba(0,0,0,.5)";x.lineWidth=.6;x.strokeRect(o[0]-s2/2,o[1]-s2/2,s2,s2)});
+ VMC={c:c,v:V,k:key,t:Date.now()}}
+function drawVMini(){var cv=$("vmini"),f=$("vCanvas"),v=f._view,hb=$("vHint");
+ if(hb)hb.style.opacity=VMINI?"1":".55";
+ if(!V||(V.sz||8)<14||!v||!VMINI){cv.style.display="none";return}
+ if(MOVING&&Date.now()-VMT<120)return;
+ var dpr=Math.min(2,window.devicePixelRatio||1),sc=dpr*MSC,w=124,h=65,M=vmmap(),x,cw=parseFloat(f.style.width)||window.innerWidth,ch=parseFloat(f.style.height)||window.innerHeight,vx,vy,vw,vh,rx,ry,rx2,ry2,hh=$("vHead").offsetHeight,
+  key=[V.sz,V.np,(V.dc||[]).length,(V.ls||[]).length,CR,NIGHT?1:0,sc].join("|");
+ VMT=Date.now();cv.style.display="block";if(cv._ht!==hh){cv._ht=hh;cv.style.top=(hh+8)+"px"}
+ if(cv.width!==Math.round(w*sc)){cv.width=Math.round(w*sc);cv.height=Math.round(h*sc)}
+ if(!VMC||VMC.v!==V||VMC.k!==key||Date.now()-VMC.t>3000)buildVMC(M,sc,w,h,key);
+ x=cv.getContext("2d");x.setTransform(sc,0,0,sc,0,0);x.clearRect(0,0,w,h);x.drawImage(VMC.c,0,0,w,h);
  vx=M.fx+((-v.L/v.k)-M.x0)*M.m;vy=M.fy+((-v.T/v.k)-M.y0)*M.m;vw=cw/v.k*M.m;vh=ch/v.k*M.m;
  rx=Math.max(1,vx);ry=Math.max(1,vy);rx2=Math.min(w-1,vx+vw);ry2=Math.min(h-1,vy+vh);
  if(rx2-rx<3)rx2=rx+3;if(ry2-ry<3)ry2=ry+3;
