@@ -1682,7 +1682,7 @@ function fit(cv,np,top,bot,box,rel){setRot(cv);var n=szOf(cv),ls=LSof(cv),B=wbox
   if(kz>cap){kz=cap;mx=n<=(box.l1?8:10)?ox:(x0+x1)/2}else mx=(x0+x1)/2;
   if(kz>k){k=kz;my=(y0+y1)/2}else mx=d.mx;
   if(box.l1&&box.vb){k=Math.min(3.2,aw/L1SPAN);mx=ox;my=oy+(box.vb[0]+box.vb[1])*28-(ah/2-L1MARG)/k}} // first view: a bit closer, land sitting low so its bottom fence corner is near the bottom
- var kmn=(PERF&&cv.id!=="lCanvas")?3.2*Math.pow(k0*.6/3.2,ZOUT):k0*.6;var kmn=PERF?3.2*Math.pow(k0*.6/3.2,ZOUT):k0*.6;kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
+ var kmn=(cv.id==="lCanvas"||!PERF)?k0*.6:3.2*Math.pow(k0*.6/3.2,ZOUT);kd=k;if(cv._kabs)k=Math.max(kmn,Math.min(3.2,cv._kabs));else k=Math.max(kmn,Math.min(3.2,kd*z));cv._z=k/kd;cv._kmin=k0*.6;if(ah>150)cv._kabs=k;
  var vt=rel?0:top,L0=aw/2-mx*k,T0=vt+ah/2-my*k,pn=cv._pan||[0,0],pad=24,
   nx=aw-pad-L0-(ox+(B.c1-B.r0)*56+2200)*k,xx=pad-L0-(ox+(B.c0-B.r1)*56-2200)*k,ny=vt+ah-pad-T0-(oy+(B.c1+B.r1)*28+1600)*k,xy=vt+pad-T0-(oy+(B.c0+B.r0)*28-1600)*k,px,py;
  if(cv._anc){var a=cv._anc;cv._anc=null;pn=[a.sx-a.cx*k-L0,a.sy-a.cy*k-T0]}
@@ -2304,7 +2304,7 @@ function layOpen(slot){var L=(S.lo||[])[slot]||null;
  flush(function(){var w=layBuild(L),lc;
   if(!w){toast("Not enough free space for this layout.");return}
   LAY={slot:slot,pp:w.pp,dc:w.dc,undo:[],dirty:false,bh:0};SEL=null;PLACING=null;HOVT=null;
-  lc=$("lCanvas");lc._pan=[0,0];lc._z=1;lc._kabs=0;lc._view=null;
+  lc=$("lCanvas");lc._pan=[0,0];lc._z=1;lc._kabs=0;lc._view=null;lc._kmin=0;
   LAY.box=camBox(LAY.pp,S.np,LAY.dc,S.sz||8,3,S.ls);
   $("lName").textContent="\u270F\uFE0F Layout "+(slot+1);$("lStoreP").style.display="none";$("lay").style.display="flex";layUI();fitAll()})}
 function layClose(){LAY=null;LGMOVE=null;GPREV=null;SEL=null;PLACING=null;HOVT=null;$("lStoreP").style.display="none";$("lay").style.display="none";fitAll()}
