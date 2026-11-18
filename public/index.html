@@ -234,6 +234,30 @@ body.night #logoutModal { background: rgba(20,24,26,.96); }
 body.night #logoutModal .acard { background: #1c2226; color: #e4e8dc; }
 body.night #logoutNo { color: #9aa5a8; }
 </style>
+<style>
+/* ---- MY NOTES & HIGHLIGHTS screen ---- */
+#notesModal { position: fixed; inset: 0; z-index: 63; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.96); padding: 16px; overflow-y: auto; }
+#notesModal .acard { width: 100%; max-width: 420px; box-sizing: border-box; background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; }
+body.night #notesModal { background: rgba(20,24,26,.96); }
+body.night #notesModal .acard { background: #1c2226; color: #e4e8dc; }
+.nChips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.nChip { border: 1px solid #b9ad88; background: #fff; color: #2b2416; border-radius: 999px; padding: 5px 12px; font-size: 13px; cursor: pointer; }
+.nChip.on { background: #2f7d32; color: #fff; border-color: #2f7d32; }
+body.night .nChip { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+.nList { max-height: 52vh; overflow-y: auto; }
+.nItem { border: 1px solid #e3dac0; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; font: 15px/1.5 Georgia, serif; color: #2b2416; background: #fff; }
+.nRef { font: 600 13px system-ui, sans-serif; color: #1b5e20; margin-bottom: 4px; }
+.nSnip mark.hl { background: var(--c); color: inherit; border-radius: 4px; }
+.nNote { margin-top: 6px; font: 14px system-ui, sans-serif; color: #5b5236; background: #faf6ea; border-radius: 8px; padding: 6px 8px; white-space: pre-wrap; }
+.nRow { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+.nRow select, .nRow button { font-size: 13px; padding: 5px 8px; border-radius: 8px; border: 1px solid #b9ad88; background: #fff; color: #2b2416; cursor: pointer; }
+.nEmpty { color: #777; font: 14px system-ui, sans-serif; padding: 12px 4px; }
+#notesClose { width: 100%; margin-top: 12px; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
+body.night .nItem { background: #1c2226; border-color: #2a3135; color: #e4e8dc; }
+body.night .nRef { color: #9bd36a; }
+body.night .nNote { background: #263036; color: #d8dcd0; }
+body.night .nRow select, body.night .nRow button { background: #263036; color: #e4e8dc; border-color: #3a464c; }
+</style>
 </head>
 <body>
   <!-- ===== LOADING COVER (hides the page until it is fully ready) ===== -->
@@ -354,6 +378,13 @@ body.night #logoutNo { color: #9aa5a8; }
 
 
 <!-- ===== GAMES DIALOG (opens from Settings > Games) ===== -->
+ <!-- ===== MY NOTES & HIGHLIGHTS (opens from Settings) ===== -->
+<div id="notesModal"><div class="acard">
+<h2 class="setTitle">🖍️ Highlights &amp; notes</h2>
+<div id="nGroupBar" class="nChips"></div>
+<div id="nList" class="nList">Loading...</div>
+<button id="notesClose" type="button">Back</button>
+</div></div>
 <div id="gamesModal"><div class="acard">
 <h2 class="setTitle">🎮 Games</h2>
 <div class="setList">
@@ -448,6 +479,11 @@ class="setArrow">›</span></button>
 <div class="setLabel">Reading</div>
 <div class="setList">
 <button type="button" class="setBtn" id="langBtn"><span class="setIco">🌐</span><span class="setTxt">Language</span><span class="setSoon" id="langNow">English</span><span class="setArrow">›</span></button>
+</div>
+
+<div class="setLabel">My notes</div>
+<div class="setList">
+<button type="button" class="setBtn" id="myNotesBtn"><span class="setIco">🖍️</span><span class="setTxt">Highlights &amp; notes</span><span class="setArrow">›</span></button>
 </div>
 
 <div class="setLabel">Fun</div>
@@ -2244,7 +2280,7 @@ function focusReader() { // asks the browser to send keyboard presses to this pa
   } catch (e) {}
 }
 function modalOpen() { // true while a pop-up (settings, gift, login...) is on screen, so the arrow keys leave it alone
-  var ids = ["auth", "pw", "gift", "about", "welcome", "settingsModal", "gamesModal", "langModal", "goLoading", "nameModal", "logoutModal", "inboxModal", "adminModal"], k, m;
+  var ids = ["auth", "pw", "gift", "about", "welcome", "settingsModal", "notesModal", "gamesModal", "langModal", "goLoading", "nameModal", "logoutModal", "inboxModal", "adminModal"], k, m;
   for (k = 0; k < ids.length; k++) { m = $(ids[k]); if (m && m.style.display && m.style.display !== "none") return true; }
   return $("vp").classList.contains("open");
 }
@@ -2716,10 +2752,10 @@ $("adGo").onclick = function () {
 
   // ---- Phone Back button: closes the pop-up on top instead of leaving or reloading the page ----
   // Every pop-up that opens adds one history step; Back removes it and closes that pop-up.
-  var CLOSERS = { settingsModal: "settingsClose", gamesModal: "gamesClose", langModal: "langClose", nameModal: "nameBack",
+  var CLOSERS = { settingsModal: "settingsClose", notesModal: "notesClose", gamesModal: "gamesClose", langModal: "langClose", nameModal: "nameBack",
                 gift: "giftBack", about: "aboutClose", logoutModal: "logoutNo", pw: "pwCancel",
                 inboxModal: "ibClose", adminModal: "adBack" }; // welcome has no closer: Back cannot skip it
-var ORDER = ["settingsModal", "gamesModal", "langModal", "nameModal", "gift", "about", "pw", "inboxModal", "adminModal", "welcome", "logoutModal"];
+var ORDER = ["settingsModal", "notesModal", "gamesModal", "langModal", "nameModal", "gift", "about", "pw", "inboxModal", "adminModal", "welcome", "logoutModal"];
   var depth = 0, skip = 0;
   function isOpen(id) { var m = el(id); return !!m && m.style.display !== "" && m.style.display !== "none"; }
   function openList() { return ORDER.filter(isOpen); }
@@ -2740,6 +2776,167 @@ var ORDER = ["settingsModal", "gamesModal", "langModal", "nameModal", "gift", "a
   });
   var mo = new MutationObserver(sync);
   ORDER.forEach(function (id) { if (el(id)) mo.observe(el(id), { attributes: true, attributeFilter: ["style"] }); });
+})();
+</script>
+<script>
+// ############################################################################
+// MY NOTES & HIGHLIGHTS (opens from Settings): your highlights and notes, grouped under titles you choose
+// ############################################################################
+(function () {
+  var NT = { groups: [], items: {}, rows: [], filter: "all" };
+  // NT.items["chapter:verse:lang"] = group id (a missing key means no group)
+
+  function $n(id) { return document.getElementById(id); }
+  function el(tag, cls, txt) { var x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; }
+  function gOf(r) { var g = NT.items[r.ch + ":" + r.v + ":" + LANG]; return g == null ? null : String(g); }
+  function curGroup() { for (var k = 0; k < NT.groups.length; k++) if (String(NT.groups[k].id) === NT.filter) return NT.groups[k]; return null; }
+  function countIn(key) { return NT.rows.filter(function (r) { var g = gOf(r); return key === "none" ? g == null : g === key; }).length; }
+
+  // 1) read the highlights and notes of every chapter (in small batches, so the page stays responsive)
+  function loadAll(done) {
+    var L = LANG, rows = [], ch = 0, active = 0, WAIT = 12;
+    function pump() {
+      while (active < WAIT && ch < CHAPTERS) send(ch++);
+      if (ch >= CHAPTERS && active === 0) done(rows);
+    }
+    function send(c) {
+      active++;
+      call("authNotes", [TOKEN, c, L], function (list) {
+        if (L === LANG) (list || []).forEach(function (x) {
+          if (x.c || x.n || (x.r && x.r.length)) rows.push({ ch: c, v: Number(x.v), c: x.c || "", n: x.n || "", r: x.r || [] });
+        });
+        active--; pump();
+      }, function () { active--; pump(); });
+    }
+    pump();
+  }
+
+  // 2) draw one verse with its colored pieces (same rules as the reader)
+  function drawSnip(node, txt, e) {
+    var list = (e.r && e.r.length) ? e.r.slice() : (e.c ? [{ s: 0, e: txt.length, c: e.c }] : []);
+    list.sort(function (a, b) { return a.s - b.s; });
+    var pos = 0;
+    list.forEach(function (x) {
+      var s = Math.max(pos, Math.min(txt.length, x.s)), en = Math.min(txt.length, x.e);
+      if (en <= s) return;
+      if (s > pos) node.appendChild(document.createTextNode(txt.slice(pos, s)));
+      var m = el("mark", "hl", txt.slice(s, en)); m.setAttribute("data-hl", x.c); node.appendChild(m);
+      pos = en;
+    });
+    if (pos < txt.length) node.appendChild(document.createTextNode(txt.slice(pos)));
+  }
+
+  // 3) one note card
+  function itemBox(r) {
+    var box = el("div", "nItem");
+    box.appendChild(el("div", "nRef", ITEMS[r.ch].t + ":" + r.v));
+    var snip = el("div", "nSnip", "Loading verse...");
+    box.appendChild(snip);
+    if (r.n) box.appendChild(el("div", "nNote", "\uD83D\uDCDD " + r.n));
+
+    var row = el("div", "nRow");
+    var sel = document.createElement("select");
+    var none = el("option", "", "No group"); none.value = ""; sel.appendChild(none);
+    NT.groups.forEach(function (g) { var o = el("option", "", g.title); o.value = String(g.id); sel.appendChild(o); });
+    sel.value = gOf(r) || "";
+    sel.onchange = function () { moveTo(r, sel.value ? Number(sel.value) : null); };
+    var go = el("button", "", "Open \u2197"); go.type = "button";
+    go.onclick = function () { closeNotes(false); jumpTo(r.ch); };
+    row.appendChild(sel); row.appendChild(go);
+    box.appendChild(row);
+
+    getChap(r.ch, function (d) {
+      snip.textContent = "";
+      var line = d ? d.filter(function (x) { return String(x.t).indexOf(r.v + " ") === 0; })[0] : null;
+      if (!line) { snip.textContent = "(verse text not found)"; return; }
+      drawSnip(snip, line.t, r);
+    });
+    return box;
+  }
+
+  // 4) draw the chips and the list
+  function addChip(parent, key, label) {
+    var b = el("button", "nChip" + (NT.filter === key ? " on" : ""), label);
+    b.type = "button";
+    b.onclick = function () { NT.filter = key; render(); };
+    parent.appendChild(b);
+  }
+  function render() {
+    var bar = $n("nGroupBar"); bar.textContent = "";
+    addChip(bar, "all", "All (" + NT.rows.length + ")");
+    NT.groups.forEach(function (g) { addChip(bar, String(g.id), g.title + " (" + countIn(String(g.id)) + ")"); });
+    addChip(bar, "none", "Ungrouped (" + countIn("none") + ")");
+    var plus = el("button", "nChip", "+ New group"); plus.type = "button"; plus.onclick = newGroup;
+    bar.appendChild(plus);
+    if (curGroup()) {
+      var ren = el("button", "nChip", "Rename"); ren.type = "button"; ren.onclick = renameGroup;
+      var del = el("button", "nChip", "Delete group"); del.type = "button"; del.onclick = deleteGroup;
+      bar.appendChild(ren); bar.appendChild(del);
+    }
+
+    var list = $n("nList"); list.textContent = "";
+    var shown = NT.rows.filter(function (r) {
+      if (NT.filter === "all") return true;
+      var g = gOf(r);
+      return NT.filter === "none" ? g == null : g === NT.filter;
+    }).sort(function (a, b) { return a.ch - b.ch || a.v - b.v; });
+    if (!shown.length) {
+      list.appendChild(el("div", "nEmpty", NT.rows.length ? "Nothing in this group yet. Use the dropdown on a note to move it here." : "No highlights or notes yet. Select words in a chapter to highlight them, or tap a verse to add a note."));
+      return;
+    }
+    shown.forEach(function (r) { list.appendChild(itemBox(r)); });
+  }
+
+  // 5) group actions
+  function newGroup() {
+    var t = (window.prompt("Title for the new group (for example: Faith, Family talks, Study):") || "").trim().slice(0, 60);
+    if (!t) return;
+    call("authGroupCreate", [TOKEN, t], function (id) {
+      NT.groups.push({ id: Number(id), title: t }); NT.filter = String(id); render(); toast("\u2713 Group created");
+    }, function (m) { toast(m); });
+  }
+  function renameGroup() {
+    var g = curGroup(); if (!g) return;
+    var t = (window.prompt("New title for this group:", g.title) || "").trim().slice(0, 60);
+    if (!t) return;
+    call("authGroupRename", [TOKEN, g.id, t], function () { g.title = t; render(); toast("\u2713 Renamed"); }, function (m) { toast(m); });
+  }
+  function deleteGroup() {
+    var g = curGroup(); if (!g) return;
+    if (!window.confirm('Delete the group "' + g.title + '"? Its notes and highlights stay, they just become ungrouped.')) return;
+    call("authGroupDelete", [TOKEN, g.id], function () {
+      NT.groups = NT.groups.filter(function (x) { return String(x.id) !== String(g.id); });
+      Object.keys(NT.items).forEach(function (k) { if (String(NT.items[k]) === String(g.id)) delete NT.items[k]; });
+      NT.filter = "all"; render(); toast("\u2713 Group deleted");
+    }, function (m) { toast(m); });
+  }
+  function moveTo(r, g) {
+    call("authGroupSet", [TOKEN, r.ch, r.v, LANG, g], function () {
+      var k = r.ch + ":" + r.v + ":" + LANG;
+      if (g == null) delete NT.items[k]; else NT.items[k] = g;
+      render(); toast("\u2713 Moved");
+    }, function (m) { toast(m); render(); });
+  }
+
+  // 6) open and close the screen
+  function openNotes() {
+    NT.filter = "all"; NT.rows = [];
+    $n("nList").textContent = "Loading your highlights and notes...";
+    $n("nGroupBar").textContent = "";
+    $n("notesModal").style.display = "flex";
+    call("authGroups", [TOKEN], function (g) {
+      NT.groups = (g || []).map(function (x) { return { id: Number(x.id), title: x.title }; });
+      call("authGroupItems", [TOKEN], function (its) {
+        NT.items = {};
+        (its || []).forEach(function (x) { NT.items[x.ch + ":" + x.v + ":" + x.lang] = x.g; });
+        loadAll(function (rows) { NT.rows = rows; render(); });
+      }, function (m) { $n("nList").textContent = m; });
+    }, function (m) { $n("nList").textContent = m; if (/log in/i.test(m)) logout(); });
+  }
+  function closeNotes(back) { $n("notesModal").style.display = "none"; if (back) openSettings(); }
+
+  $n("myNotesBtn").onclick = function () { closeSettings(); openNotes(); };
+  $n("notesClose").onclick = function () { closeNotes(true); };
 })();
 </script>
 </body>

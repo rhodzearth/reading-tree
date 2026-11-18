@@ -91,6 +91,12 @@
     authBuyItem: function (t, id) { return rpc("auth_buy_item", { p_id: id }); },
     authLookup: function (t, to) { return rpc("auth_lookup", { p_to: to }); },
     authGift: function (t, to, n) { return rpc("auth_gift", { p_to: to, p_amount: n }); },
+        authGroups: function () { return rpc("auth_group_list"); },
+    authGroupItems: function () { return rpc("auth_group_items"); },
+    authGroupCreate: function (t, title) { return rpc("auth_group_create", { p_title: title }); },
+    authGroupRename: function (t, id, title) { return rpc("auth_group_rename", { p_id: id, p_title: title }); },
+    authGroupDelete: function (t, id) { return rpc("auth_group_delete", { p_id: id }); },
+    authGroupSet: function (t, ch, v, lang, g) { return rpc("auth_group_set", { p_ch: ch, p_verse: v, p_lang: lang || "eng", p_group: g || null }); },
 
     inboxSummary: function () { return rpc("inbox_summary"); },
     inboxList: function () { return rpc("inbox_list"); },
