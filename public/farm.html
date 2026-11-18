@@ -4007,7 +4007,7 @@ function buyCowShed(i){var sd=shedWithRoom(),id2,tl,o2;if(!sd)return false;
  send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);send("farmCowIn",[TOKEN,id2,sd.id]);
  paint();toast("\uD83D\uDC04 New cow moved into your cow shed ("+sd.cw.length+"/5)");return true}
 
-function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,H=330,FY0=H*.66,FY1=H*.93,cv,cx,bg,cows=[],raf=0,last=0,alive=true,fx=[],sig="",lastSig=0,seed=7;
+function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,H=Math.min(1300,Math.round(640*(innerHeight*.8)/Math.min(innerWidth-32,560))),FY0=H*.4,FY1=H*.95,Z=1.5,cv,cx,bg,cows=[],raf=0,last=0,alive=true,fx=[],sig="",lastSig=0,seed=7;
  if(!sd)return;
  function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
 function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";body.style.cssText="";dlg.onclick=null}
@@ -4038,7 +4038,7 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
   cx.lineCap="round";cx.strokeStyle=col;cx.lineWidth=6;cx.beginPath();cx.moveTo(hx,-27);cx.lineTo(kx,ky);cx.stroke();
   cx.lineWidth=4.4;cx.beginPath();cx.moveTo(kx,ky);cx.lineTo(fx2,fy);cx.stroke();
   cx.fillStyle="#2a1f1a";cx.beginPath();cx.moveTo(fx2-3,fy-3);cx.lineTo(fx2+3,fy-3);cx.lineTo(fx2+3.6,fy+2);cx.lineTo(fx2-3.6,fy+2);cx.closePath();cx.fill()}
- function drawCow(c,t){var wk=c.st==="walk",k=1.25+(c.y-FY0)/(FY1-FY0)*.55,hx=46+c.hd*7,hy=-37+c.hd*29,ch=c.st==="idle"?Math.sin(t*9+c.tp)*1:0,tw=-37+Math.sin(t*2.4+c.tp)*4,j,cd,cd=dcById(c.id),rp=cd?ripe(cd):false;
+ function drawCow(c,t){var wk=c.st==="walk",k=Z*(1.25+(c.y-FY0)/(FY1-FY0)*.55),hx=46+c.hd*7,hy=-37+c.hd*29,ch=c.st==="idle"?Math.sin(t*9+c.tp)*1:0,tw=-37+Math.sin(t*2.4+c.tp)*4,j,cd,cd=dcById(c.id),rp=cd?ripe(cd):false;
   cx.save();cx.translate(c.x,c.y);cx.scale(c.dir*k,k);
   cx.fillStyle="rgba(0,0,0,.26)";cx.beginPath();cx.ellipse(2,1,40,6.5,0,0,7);cx.fill();
   leg(-19,c.ph+Math.PI,wk,c.pal.d);leg(20,c.ph,wk,c.pal.d);
@@ -4076,7 +4076,7 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
   raf=requestAnimationFrame(frame)}
  function collect(id){var c=dcById(id),f=c&&FTD[c.k],was=c&&ripe(c),cc;if(!c)return;tapTree(c);
   if(was){cc=cows.filter(function(q){return q.id===id})[0];if(cc)fx.push({x:cc.x,y:cc.y-100,txt:"+"+f.sell+"\uD83E\uDE99",a:1.2})}rows()}
- body.style.cssText="max-width:440px;padding:0;background:transparent!important;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow:hidden";
+ body.style.cssText="max-width:560px;padding:0;background:transparent!important;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow:hidden";
  body.innerHTML="<div style='position:relative'><canvas id='shCv' style='width:100%;display:block;border-radius:18px;touch-action:manipulation'></canvas><div id='shSub' style='position:absolute;top:10px;left:0;right:0;text-align:center;font:bold 22px sans-serif;color:#fff;text-shadow:0 2px 6px #000'></div><div style='position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:48px'><button id='shMinus' style='width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:transparent;color:#fff;font:bold 32px sans-serif;line-height:1;text-shadow:0 2px 6px #000'>-</button><button id='shPlus' style='width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:transparent;color:#fff;font:bold 32px sans-serif;line-height:1;text-shadow:0 2px 6px #000'>+</button></div></div>";
  dlg.style.display="flex";cv=$("shCv");var dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext("2d");cx.setTransform(dpr,0,0,dpr,0,0);
  bg=mkBg();sync();rows();
