@@ -4010,7 +4010,7 @@ function buyCowShed(i){var sd=shedWithRoom(),id2,tl,o2;if(!sd)return false;
 function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,H=330,FY0=H*.66,FY1=H*.93,cv,cx,bg,cows=[],raf=0,last=0,alive=true,fx=[],sig="",lastSig=0,seed=7;
  if(!sd)return;
  function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
- function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";body.style.maxWidth="";dlg.onclick=null}
+function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";body.style.cssText="";dlg.onclick=null}
  function ripe(c){var f=FTD[c.k];return !!f&&nowT()-(c.t||0)>=f.ms}
  function barnCows(){return stored().filter(function(s){var o=s.t==="d"&&dcById(s.id);return o&&o.k==="a_cow"})}
  function mkBg(){var b=document.createElement("canvas"),g=b.getContext("2d"),i,x,y,gr;b.width=W;b.height=H;
@@ -4066,12 +4066,7 @@ function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,
   else if(c.t<=0){r=rnd();if(r<.45){c.st="walk";c.tx=60+rnd()*(W-120);c.ty=FY0+14+rnd()*(FY1-FY0-18)}else if(r<.78){c.st="graze";c.t=2.5+rnd()*3}else{c.st="idle";c.t=1.5+rnd()*2.5}}
   c.hd+=((c.st==="graze"?1:0)-c.hd)*Math.min(1,dt*4)})}
  function status(c){var f=FTD[c.k],el;if(!f)return"";el=nowT()-(c.t||0);return el>=f.ms?"Milk ready! +"+f.sell+"\uD83E\uDE99":"Next milk in "+fmtDur(f.ms-el)}
- function rows(){var L=shedCows(sd),h="",nb=barnCows().length,s2;
-  L.forEach(function(c,i){var rp=ripe(c);h+="<div style='display:flex;align-items:center;gap:6px;text-align:left;margin:5px 0'><span style='flex:1'><b>Cow "+(i+1)+"</b><br><span class='small' id='shS"+i+"'>"+status(c)+"</span></span><button class='btn"+(rp?"":" alt")+"' style='padding:8px 10px;font-size:13px' data-a='c' data-i='"+c.id+"'>"+(rp?"Collect":"Wait")+"</button><button class='btn alt' style='padding:8px 10px;font-size:13px' data-a='o' data-i='"+c.id+"'>Take out</button></div>"});
-  if(!L.length)h="<div class='small' style='margin:8px 0'>No cows yet. Buy a cow in the Market (Animals) and it will move in here, or add one from your barn.</div>";
-  $("shRows").innerHTML=h;$("shSub").textContent=L.length+" / 5 cows";
-  s2=$("shAdd");s2.textContent=L.length>=5?"Shed is full":"+ Add cow from barn ("+nb+")";s2.className="btn ok"+(L.length>=5||!nb?" alt":"");
-  sig=L.map(function(c){return c.id+ripe(c)}).join()}
+ function rows(){var L=shedCows(sd),nb=barnCows().length;$("shSub").textContent=L.length+"/5 cows";$("shPlus").style.opacity=(L.length>=5||!nb)?".35":"1";$("shMinus").style.opacity=L.length?"1":".35";sig=L.map(function(c){return c.id+ripe(c)}).join()}
  function frame(ts){var t=ts/1000,dt,fy;if(!alive)return;if(dlg.style.display!=="flex"||!$("shCv")){alive=false;return}
   dt=Math.min(.05,(ts-last)/1000||.016);last=ts;upd(dt,t);
   cx.clearRect(0,0,W,H);cx.drawImage(bg,0,0);
@@ -4081,19 +4076,17 @@ function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,
   raf=requestAnimationFrame(frame)}
  function collect(id){var c=dcById(id),f=c&&FTD[c.k],was=c&&ripe(c),cc;if(!c)return;tapTree(c);
   if(was){cc=cows.filter(function(q){return q.id===id})[0];if(cc)fx.push({x:cc.x,y:cc.y-100,txt:"+"+f.sell+"\uD83E\uDE99",a:1.2})}rows()}
- body.style.maxWidth="440px";
- body.innerHTML="<div style='font-size:34px;line-height:1'>\uD83D\uDC04</div><div class='dtitle'>Cow Shed</div><div class='dsub' id='shSub'></div><canvas id='shCv' style='width:100%;display:block;border-radius:14px;margin:8px 0;touch-action:manipulation'></canvas><div id='shRows' style='max-height:26vh;overflow-y:auto'></div><div class='dbtns'><button class='btn alt' id='dNo'>Close</button><button class='btn ok' id='shAdd'></button></div>";
+ body.style.cssText="max-width:440px;padding:0;background:transparent!important;border:0;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow:hidden";
+ body.innerHTML="<div style='position:relative'><canvas id='shCv' style='width:100%;display:block;border-radius:18px;touch-action:manipulation'></canvas><div id='shSub' style='position:absolute;top:10px;left:0;right:0;text-align:center;font:bold 22px sans-serif;color:#fff;text-shadow:0 2px 6px #000'></div><div style='position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:48px'><button id='shMinus' style='width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:transparent;color:#fff;font:bold 32px sans-serif;line-height:1;text-shadow:0 2px 6px #000'>-</button><button id='shPlus' style='width:56px;height:56px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:transparent;color:#fff;font:bold 32px sans-serif;line-height:1;text-shadow:0 2px 6px #000'>+</button></div></div>";
  dlg.style.display="flex";cv=$("shCv");var dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext("2d");cx.setTransform(dpr,0,0,dpr,0,0);
  bg=mkBg();sync();rows();
- $("dNo").onclick=close;
  cv.onclick=function(e){var r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W,py=(e.clientY-r.top)/r.height*H,best=null,bd=1e9;
   cows.forEach(function(c){var k=1.25+(c.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-c.x)+Math.abs(py-(c.y-30*k));if(Math.abs(px-c.x)<58*k&&py>c.y-70*k&&py<c.y+8&&d<bd){bd=d;best=c}});
   if(best)collect(best.id)};
  dlg.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button"),id;if(ev.target===dlg){close();return}if(!b)return;
-  if(b.id==="shAdd"){var L=shedCows(sd),bc=barnCows(),o;if(L.length>=5){toast("The cow shed is full (5 cows).");return}if(!bc.length){toast("No cows in your barn. Buy a cow in the Market.");return}
+  if(b.id==="shPlus"){var L=shedCows(sd),bc=barnCows(),o;if(L.length>=5){toast("The cow shed is full (5 cows).");return}if(!bc.length){toast("No cows in your barn. Buy a cow in the Market.");return}
    o=dcById(bc[0].id);sd.cw=(sd.cw||[]).concat([o.id]);send("farmCowIn",[TOKEN,o.id,sd.id]);paint();sync();rows();toast("\uD83D\uDC04 Cow moved into the shed ("+shedCows(sd).length+"/5)");return}
-  id=b.dataset.i;if(b.dataset.a==="c"){collect(id)}
-  else if(b.dataset.a==="o"){sd.cw=(sd.cw||[]).filter(function(q){return q!==id});send("farmCowOut",[TOKEN,id]);paint();sync();rows();toast("Cow moved to your barn")}};
+  if(b.id==="shMinus"){var L2=shedCows(sd);if(!L2.length){toast("No cows in the shed.");return}id=L2[L2.length-1].id;sd.cw=(sd.cw||[]).filter(function(q){return q!==id});send("farmCowOut",[TOKEN,id]);paint();sync();rows();toast("Cow moved to your barn")}};
  raf=requestAnimationFrame(frame)}
 (function(){
  Object.keys(FOOT).concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
