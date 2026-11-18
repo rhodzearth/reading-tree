@@ -186,7 +186,7 @@ body.cam #zoomNote{visibility:hidden!important}
   <div id="mkt" style="display:none">
   <div class="mh"><b>&#128722; Market</b><span class="pill" id="mCoins"></span><button class="btn alt" id="mMulti">&#129530; Multi-buy: OFF</button><button class="btn alt" id="mClose">&#10005;</button></div>
   <div class="mtabs"><button class="btn" id="mtT">&#127795; Trees</button><button class="btn alt" id="mtA">&#128004; Animals</button><button class="btn alt" id="mtH">&#127968; Housing</button><button class="btn alt" id="mtD">&#127969; Decorations</button><button class="btn alt" id="mtN">&#128679; Fences</button><button class="btn alt" id="mtF">&#129521; Floor</button><button class="btn alt" id="mtG">&#127988; Flags</button><button class="btn alt" id="mtV">&#128663; Vehicle</button><button class="btn alt" id="mtO">&#127958;&#65039; Outside</button></div>
-<button class="btn alt" id="mtS">&#128046; Animal Sheds</button>
+<button class="btn alt" id="mtO">&#127958;&#65039; Outside</button><button class="btn alt" id="mtS">&#128046; Animal Sheds</button></div>
   <div id="mList"></div>
  </div>
  <div id="side">
@@ -3416,7 +3416,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   d.className="mc"+(lock?" lock":"");v.className="mcv";if(th)v.appendChild(th);else q.push([i,v]);
   t.textContent=i.icon+" "+i.name;sm.className="small";
   sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):/^v_/.test(i.id)?"Vehicle &middot; "+(VLEN[i.id]||"")+"<br>takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.house?"Housing &middot; takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.id==="stoplight"?"Stands on a tile corner, takes no space":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":i.id==="cowshed"?"Animal shed &middot; holds 5 cows<br>takes 2\u00D72 tiles":"Decoration";
-  b.className="btn";b.textContent=lock?"\uD83D\uDD12 Level "+i.lvl:"Buy "+i.cost+"\uD83E\uDE99";b.textContent=lock?"\uD83D\uDD12 Level "+i.lvl:"Buy "+(WFCOST[i.id]?WFCOST[i.id]+"\u26AA":i.cost+"\uD83E\uDE99");b.onclick=function(){buyItem(i)};
+  b.className="btn";b.textContent=lock?"\uD83D\uDD12 Level "+i.lvl:"Buy "+i.cost+"\uD83E\uDE99";b.onclick=function(){buyItem(i)};
   d.appendChild(v);d.appendChild(t);d.appendChild(sm);d.appendChild(b);frag.appendChild(d)});
  box.appendChild(frag);if(MK==="fence")box.insertBefore(perimBanner(),box.firstChild);
  requestAnimationFrame(function nx(){if(rid!==MKR||!q.length)return;var t0=Date.now(),o;while(q.length&&Date.now()-t0<8){o=q.shift();o[1].appendChild(mThumb(o[0],dpr))}if(q.length)requestAnimationFrame(nx)})}
@@ -3553,8 +3553,7 @@ var OUT_MIN_SZ=14; // main land size needed: 8 -> 10 -> 12 -> 14 = 3 expansions
 function outLocked(){return (S.sz||8)<OUT_MIN_SZ}
 function outLockMsg(){return "\uD83D\uDD12 Outside unlocks when your main land is "+OUT_MIN_SZ+" x "+OUT_MIN_SZ+" (yours is "+(S.sz||8)+" x "+(S.sz||8)+"). Expand it 3 times."}
 var _renderMkt=renderMkt;
-renderMkt=function(){if(MK==="out"&&outLocked())MK="tree";var r=_renderMkt.apply(this,arguments);$("mtO").className="btn"+(MK==="out"?"":" alt");$("mtV").className="btn"+(MK==="veh"?"":" alt");$("mtO").innerHTML=outLocked()?"&#128274; Outside":"&#127958;&#65039; Outside";return r};
-$("mtS").className="btn"+(MK==="shed"?"":" alt");
+renderMkt=function(){if(MK==="out"&&outLocked())MK="tree";var r=_renderMkt.apply(this,arguments);$("mtO").className="btn"+(MK==="out"?"":" alt");$("mtV").className="btn"+(MK==="veh"?"":" alt");$("mtS").className="btn"+(MK==="shed"?"":" alt");$("mtO").innerHTML=outLocked()?"&#128274; Outside":"&#127958;&#65039; Outside";return r};
 $("mtO").onclick=function(){if(outLocked()){toast(outLockMsg());return}MK="out";renderMkt()};
 var _buyItem=buyItem;
 buyItem=function(i){if(i&&i.out&&outLocked()){toast(outLockMsg());return}var r=_buyItem.apply(this,arguments);
