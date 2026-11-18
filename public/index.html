@@ -252,6 +252,15 @@ body.night .nChip { background: #263036; color: #e4e8dc; border-color: #3a464c; 
 .nRow { display: flex; gap: 6px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
 .nRow select, .nRow button { font-size: 13px; padding: 5px 8px; border-radius: 8px; border: 1px solid #b9ad88; background: #fff; color: #2b2416; cursor: pointer; }
 .nEmpty { color: #777; font: 14px system-ui, sans-serif; padding: 12px 4px; }
+#nLoad { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(243,247,238,.92); z-index: 2; }
+#nLoad.show { display: flex; }
+.nLoadBox { background: #fff; border-radius: 16px; padding: 22px 26px; text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,.2); font-family: system-ui, sans-serif; color: #1b5e20; max-width: 80%; }
+#nLoadTxt { font-weight: 600; font-size: 15px; }
+#nLoadSub { font-size: 13px; color: #666; margin-top: 6px; }
+.nSpin { width: 36px; height: 36px; margin: 0 auto 12px; border: 4px solid #dfe8cf; border-top-color: #2f7d32; border-radius: 50%; animation: nspin .8s linear infinite; }
+@keyframes nspin { to { transform: rotate(360deg); } }
+body.night #notesModal .nLoadBox { background: #1c2226; color: #9bd36a; }
+body.night #nLoadSub { color: #8b9498; }
 #notesClose { width: 100%; margin-top: 12px; padding: 11px; background: #2f7d32; color: #fff; border: 0; border-radius: 999px; font-size: 16px; cursor: pointer; }
 body.night .nItem { background: #1c2226; border-color: #2a3135; color: #e4e8dc; }
 body.night .nRef { color: #9bd36a; }
@@ -382,7 +391,8 @@ body.night .nRow select, body.night .nRow button { background: #263036; color: #
 <div id="notesModal"><div class="acard">
 <h2 class="setTitle">🖍️ Highlights &amp; notes</h2>
 <div id="nGroupBar" class="nChips"></div>
-<div id="nList" class="nList">Loading...</div>
+<div id="nLoad"><div class="nLoadBox"><div class="nSpin"></div><div id="nLoadTxt">Loading your highlights and notes...</div><div id="nLoadSub">This only takes a moment the first time. Next time it opens instantly.</div></div></div>
+<div id="nList" class="nList"></div>
 <button id="notesClose" type="button">Back</button>
 </div></div>
 <div id="gamesModal"><div class="acard">
@@ -2868,6 +2878,9 @@ var ORDER = ["settingsModal", "notesModal", "gamesModal", "langModal", "nameModa
     addChip(bar, "none", "Ungrouped (" + countIn("none") + ")");
     var plus = el("button", "nChip", "+ New group"); plus.type = "button"; plus.onclick = newGroup;
     bar.appendChild(plus);
+    var rf = el("button", "nChip", "\u27F3 Refresh"); rf.type = "button";
+    rf.onclick = function () { cacheDrop(); openNotes(); };
+    bar.appendChild(rf);
     if (curGroup()) {
       var ren = el("button", "nChip", "Rename"); ren.type = "button"; ren.onclick = renameGroup;
       var del = el("button", "nChip", "Delete group"); del.type = "button"; del.onclick = deleteGroup;
@@ -2918,20 +2931,58 @@ var ORDER = ["settingsModal", "notesModal", "gamesModal", "langModal", "nameModa
     }, function (m) { toast(m); render(); });
   }
 
-  // 6) open and close the screen
-  function openNotes() {
-    NT.filter = "all"; NT.rows = [];
-    $n("nList").textContent = "Loading your highlights and notes...";
-    $n("nGroupBar").textContent = "";
-    $n("notesModal").style.display = "flex";
+  // 6) open and close the screen, with a saved copy so it opens instantly
+  var CACHE_MEM = {};
+  function cacheKey() { return "notesCache:" + (myId || "me") + ":" + LANG; }
+  function cacheGet() {
+    var k = cacheKey(); if (CACHE_MEM[k]) return CACHE_MEM[k];
+    try { var s = localStorage.getItem(k); if (s) { CACHE_MEM[k] = JSON.parse(s); return CACHE_MEM[k]; } } catch (e) {}
+    return null;
+  }
+  function cacheSave(data) {
+    var k = cacheKey(); CACHE_MEM[k] = data;
+    try { localStorage.setItem(k, JSON.stringify(data)); } catch (e) {}
+  }
+  function cacheDrop() { // forget the saved copy (after a change, a refresh, or at logout)
+    CACHE_MEM = {};
+    try { Object.keys(localStorage).forEach(function (k) { if (k.indexOf("notesCache:") === 0) localStorage.removeItem(k); }); } catch (e) {}
+  }
+
+  // any save of a note or a group makes the saved copy out of date, so it is dropped
+  var CHANGES = { authSaveNote: 1, authGroupCreate: 1, authGroupRename: 1, authGroupDelete: 1, authGroupSet: 1 };
+  var realCall = window.call;
+  window.call = function (name, args, ok, bad) { if (CHANGES[name]) cacheDrop(); return realCall(name, args, ok, bad); };
+  // logging out clears the saved copy, so the next reader on this device never sees it
+  var realLogout = window.logout;
+  window.logout = function () { cacheDrop(); return realLogout.apply(this, arguments); };
+
+  function showLoad(on) { $n("nLoad").classList.toggle("show", !!on); }
+  function paintScreen(data) {
+    NT.groups = data.groups; NT.items = data.items; NT.rows = data.rows;
+    render();
+  }
+  function fetchAll(done, fail) {
     call("authGroups", [TOKEN], function (g) {
-      NT.groups = (g || []).map(function (x) { return { id: Number(x.id), title: x.title }; });
       call("authGroupItems", [TOKEN], function (its) {
-        NT.items = {};
-        (its || []).forEach(function (x) { NT.items[x.ch + ":" + x.v + ":" + x.lang] = x.g; });
-        loadAll(function (rows) { NT.rows = rows; render(); });
-      }, function (m) { $n("nList").textContent = m; });
-    }, function (m) { $n("nList").textContent = m; if (/log in/i.test(m)) logout(); });
+        var items = {}; (its || []).forEach(function (x) { items[x.ch + ":" + x.v + ":" + x.lang] = x.g; });
+        loadAll(function (rows) {
+          done({ groups: (g || []).map(function (x) { return { id: Number(x.id), title: x.title }; }), items: items, rows: rows });
+        });
+      }, fail);
+    }, fail);
+  }
+  function openNotes() {
+    NT.filter = "all";
+    $n("notesModal").style.display = "flex";
+    var cached = cacheGet();
+    if (cached) { paintScreen(cached); return; } // opens at once from the saved copy
+    $n("nGroupBar").textContent = ""; $n("nList").textContent = "";
+    showLoad(true); // loading box until the notes are ready
+    fetchAll(function (data) {
+      cacheSave(data); paintScreen(data); showLoad(false);
+    }, function (m) {
+      showLoad(false); $n("nList").textContent = m; if (/log in/i.test(m)) logout();
+    });
   }
   function closeNotes(back) { $n("notesModal").style.display = "none"; if (back) openSettings(); }
 
