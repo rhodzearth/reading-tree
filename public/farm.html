@@ -1785,7 +1785,7 @@ function miniGo(e){var cv=$("mini"),r=cv.getBoundingClientRect(),M=mmap(),hh=$("
  cv.addEventListener("pointerdown",function(e){on=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}miniGo(e);e.preventDefault()});
  cv.addEventListener("pointermove",function(e){if(on)miniGo(e)});
  function off(){on=false}cv.addEventListener("pointerup",off);cv.addEventListener("pointercancel",off)})();
-$("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){try{editTap(this,e)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
+$("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){try{editTap(this,e)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&t.k==="cowshed"){shedDlg(t.id);return}if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
 $("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(this,ptr(this,e)),n=[Math.floor(t[0]),Math.floor(t[1])];if(!HOVT||HOVT[0]!==n[0]||HOVT[1]!==n[1]){HOVT=n;drawAll()}}return}var i=hit(this,e);if(i!==HV.f){HV.f=i;drawAll()}};
 $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 // ===== MINI MAP IN VISIT MODE =====
@@ -1908,7 +1908,7 @@ function lvlUp(){var L=1+Math.floor(Math.sqrt(S.xp/10));S.level=L;S.prevXp=10*(L
 
 // ===== SAVING: everything you do is kept in a queue, saved to your phone at once, then sent to the server in ONE batch =====
 var Q=[],busy=false,QT=0,IDLE=1500,RT=0,QK="farmQ_"+TOKEN.slice(-12);
-var BAT={farmPlant:"pl",farmHarvest:"hv",farmBuyPlot:"bp",farmDecor:"d",farmPlotMove:"p",farmTreeHarvest:"th",farmRotate:"rt",farmSell:"sl",farmBuyAt:"bu",farmFloor:"fl",farmFenceSwap:"fs"};
+var BAT={farmPlant:"pl",farmHarvest:"hv",farmBuyPlot:"bp",farmDecor:"d",farmPlotMove:"p",farmTreeHarvest:"th",farmRotate:"rt",farmSell:"sl",farmBuyAt:"bu",farmFloor:"fl",farmFenceSwap:"fs",farmCowIn:"ci",farmCowOut:"co"};
 function qSave(){try{if(Q.length)localStorage.setItem(QK,JSON.stringify(Q));else localStorage.removeItem(QK)}catch(e){}}
 function sv(){$("saveBtn").innerHTML=(Q.length||busy)?"&#9203;":"&#128190;"}
 function sendMany(L){L.forEach(function(x){Q.push(x)});qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
@@ -2070,7 +2070,7 @@ function freeTile(){var sx=0,sy=0,n=0,i,q,mc,mr,best=null,bd=1e18,c,r,v,occ={},B
 function getPos(s){if(s.t==="p")return S.pp[s.i]?S.pp[s.i].slice():null;var it=dcById(s.id);return it?[it.c,it.r]:null}
 function setPos(s,c,r){if(s.t==="p")S.pp[s.i]=[c,r];else{var it=dcById(s.id);it.c=c;it.r=r;it.s=0}}
 function nameOf(s){return s.t==="p"?"plot":KN[dcById(s.id).k][1]}
-function stored(){var l=[],i;for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});(S.dc||[]).forEach(function(x){if(x.s)l.push({t:"d",id:x.id})});return l}
+function stored(){var l=[],i;for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});(S.dc||[]).forEach(function(x){if(x.s&&!inShed(x))l.push({t:"d",id:x.id})});return l}
 function ptr(cv,ev){var g=cv._g,rc=cv.getBoundingClientRect();return[(ev.clientX-rc.left-g.L)/g.k,(ev.clientY-rc.top-g.T)/g.k]}
 function toTile(cv,p){var g=cv._g,dx=(p[0]-g.ox)/(g.TW/2),dy=(p[1]-g.oy)/(g.TH/2);return[(dx+dy)/2,(dy-dx)/2]}
 function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]),ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=iw(it),fh=ih(it),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
@@ -3389,6 +3389,7 @@ function tapTree(it){var f=FTD[it.k],el=nowT()-it.t;
 function buyItem(i){if(S.level<i.lvl){toast(i.name+" unlocks at level "+i.lvl);return}
  if(S.coins<i.cost){toast(i.name+" costs "+i.cost+" coins. You have "+S.coins+".");return}
  
+ if(i.id==="a_cow"&&buyCowShed(i))return;
  var tl=i.out?outFreeTile(i):freeTile(i.id);if(!tl&&isF(i.id))tl=[0,0];if(!tl){toast("No free tile in your field. Make some space first.");return}
   if(MULTI){var id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36),o2={id:id2,k:i.id,c:tl[0],r:tl[1],s:1};if(i.fruit)o2.t=nowT();
   S.coins-=i.cost;S.dc.push(o2);send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);paint();toast("\u2705 "+i.name+" added to barn ("+stored().length+" in barn)");return}
@@ -3967,6 +3968,133 @@ var FOOT={h_mint:2,h_lav:2,h_farm:2,h_yellow:2,h_brick:2,h_tudor:2,h_chalet:2,h_
 function footW(k){return FOOTR[k]?FOOTR[k][0]:(FOOT[k]||1)}
 function footH(k){return FOOTR[k]?FOOTR[k][1]:(FOOT[k]||1)}
 function footN(k){return Math.max(footW(k),footH(k))}
+/* ===== COW SHED: footprint, picture, helpers, and the cow dialog ===== */
+FOOT.cowshed=2;HB.cowshed=[-37,-56,37,22];
+DEC.cowshed=function(p){var x=p[0],y=p[1],lu=40,lv=30,h=22,f=BFp(x,y,lu,lv),k,a,b,c,q,t;shade(p,50,17,.32);
+ ibx(x,y,lu,lv,h,"#a8322a","#c4473a","#8c2a22");
+ X.strokeStyle="rgba(40,10,5,.28)";X.lineWidth=1;X.beginPath();
+ for(k=1;k<10;k++){a=LPt(f,lv,k/10,0);b=LPt(f,lv,k/10,h);X.moveTo(a[0],a[1]);X.lineTo(b[0],b[1])}X.stroke();
+ poly([LPt(f,lv,.3,h-11),LPt(f,lv,.7,h-11),LPt(f,lv,.7,h-2),LPt(f,lv,.3,h-2)],"#2a160c","#f4eadb",1.4);
+ a=LPt(f,lv,.5,h-11);b=LPt(f,lv,.5,h-2);X.strokeStyle="#f4eadb";X.lineWidth=1;X.beginPath();X.moveTo(a[0],a[1]);X.lineTo(b[0],b[1]);X.stroke();
+ poly([RPt(f,lu,.05,h-3),RPt(f,lu,.95,h-3),RPt(f,lu,.95,3),RPt(f,lu,.05,3)],"#241309","#f4eadb",1.4);
+ poly([RPt(f,lu,.07,h-4),RPt(f,lu,.93,h-4),RPt(f,lu,.93,5),RPt(f,lu,.07,5)],"#3b2414",null,0);
+ poly([RPt(f,lu,.07,h-4),RPt(f,lu,.4,h-4),RPt(f,lu,.4,5),RPt(f,lu,.07,5)],"rgba(255,225,150,.13)",null,0);
+ [.27,.62].forEach(function(tt,i){q=RPt(f,lu,tt,9);
+  X.fillStyle="#f6f2ea";X.beginPath();X.ellipse(q[0],q[1],4.6,4,0,0,7);X.fill();
+  X.fillStyle=i?"#2a2a2e":"#7b4a2a";X.beginPath();X.ellipse(q[0]-1.4,q[1]-2,2.6,1.9,0,0,7);X.fill();
+  X.fillStyle="#f6f2ea";X.beginPath();X.ellipse(q[0]-5,q[1]-2.5,2.6,1.3,-.5,0,7);X.fill();X.beginPath();X.ellipse(q[0]+5,q[1]-2.5,2.6,1.3,.5,0,7);X.fill();
+  X.fillStyle="#f0b4b0";X.beginPath();X.ellipse(q[0]+.4,q[1]+2.2,2.8,1.9,0,0,7);X.fill();
+  X.fillStyle="#1a1a1a";X.beginPath();X.arc(q[0]-1.6,q[1]-.6,.7,0,7);X.arc(q[0]+2.4,q[1]-.6,.7,0,7);X.fill()});
+ poly([RPt(f,lu,0,6),RPt(f,lu,1,6),RPt(f,lu,1,0),RPt(f,lu,0,0)],"#8a5a30","rgba(0,0,0,.35)",.8);
+ poly([RPt(f,lu,0,6.6),RPt(f,lu,1,6.6),RPt(f,lu,1,5.4),RPt(f,lu,0,5.4)],"#b98550",null,0);
+ X.strokeStyle="#4a2e16";X.lineWidth=2.6;X.beginPath();
+ [0,.5,1].forEach(function(tt){a=RPt(f,lu,tt,0);b=RPt(f,lu,tt,h);X.moveTo(a[0],a[1]);X.lineTo(b[0],b[1])});X.stroke();
+ X.strokeStyle="#f4eadb";X.lineWidth=1.3;X.beginPath();a=LPt(f,lv,1,0);b=LPt(f,lv,1,h);X.moveTo(a[0],a[1]);X.lineTo(b[0],b[1]);
+ a=LPt(f,lv,0,h);b=RPt(f,lu,0,h);X.moveTo(a[0],a[1]);X.lineTo(b[0],b[1]);X.stroke();
+ groof(x,y,lu+4,lv+4,h+1,11,"#7b8188","#c9a46a","rgba(0,0,0,.35)");
+ t=RPt(f,lu,.5,h+7);X.fillStyle="#f4eadb";X.fillRect(t[0]-9,t[1]-3,18,6);X.strokeStyle="#7a5530";X.lineWidth=.8;X.strokeRect(t[0]-9,t[1]-3,18,6);
+ X.fillStyle="#3b2414";X.font="bold 5px sans-serif";X.textAlign="center";X.fillText("COWS",t[0],t[1]+1.8);
+ ibx(x-44,y+22,10,8,6,"#d8b44a","#e8c860","#f0d878");X.strokeStyle="rgba(120,80,10,.5)";X.lineWidth=.8;X.beginPath();X.moveTo(x-44,y+25);X.lineTo(x-44,y+22);X.stroke();
+ X.fillStyle="#9aa0a8";X.beginPath();X.ellipse(x+46,y+22,4,2,0,0,7);X.fill();X.fillRect(x+42,y+10,8,12);X.fillStyle="#b4bac2";X.beginPath();X.ellipse(x+46,y+10,4,2,0,0,7);X.fill();X.fillStyle="#5a6068";X.fillRect(x+42,y+15,8,1.6)};
+
+function shedList(){return(S.dc||[]).filter(function(x){return x.k==="cowshed"&&!x.s})}
+function inShed(x){var L=shedList(),i;if(!x.s)return false;for(i=0;i<L.length;i++)if(L[i].cw&&L[i].cw.indexOf(x.id)>=0)return true;return false}
+function shedCows(sd){var o=[];(sd.cw||[]).forEach(function(id){var c=dcById(id);if(c&&c.s&&o.length<5)o.push(c)});return o}
+function shedWithRoom(){var L=shedList(),i;for(i=0;i<L.length;i++)if(shedCows(L[i]).length<5)return L[i];return null}
+function buyCowShed(i){var sd=shedWithRoom(),id2,tl,o2;if(!sd)return false;
+ tl=freeTile(i.id)||[0,0];id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+ o2={id:id2,k:i.id,c:tl[0],r:tl[1],s:1,t:nowT()};S.coins-=i.cost;S.dc.push(o2);sd.cw=(sd.cw||[]).concat([id2]);
+ send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);send("farmCowIn",[TOKEN,id2,sd.id]);
+ paint();toast("\uD83D\uDC04 New cow moved into your cow shed ("+sd.cw.length+"/5)");return true}
+
+function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,H=330,FY0=H*.66,FY1=H*.93,cv,cx,bg,cows=[],raf=0,last=0,alive=true,fx=[],sig="",lastSig=0,seed=7;
+ if(!sd)return;
+ function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";body.style.maxWidth="";dlg.onclick=null}
+ function ripe(c){var f=FTD[c.k];return !!f&&nowT()-(c.t||0)>=f.ms}
+ function barnCows(){return stored().filter(function(s){var o=s.t==="d"&&dcById(s.id);return o&&o.k==="a_cow"})}
+ function mkBg(){var b=document.createElement("canvas"),g=b.getContext("2d"),i,x,y,gr;b.width=W;b.height=H;
+  gr=g.createLinearGradient(0,0,0,FY0);gr.addColorStop(0,"#5e4026");gr.addColorStop(1,"#86602f");g.fillStyle=gr;g.fillRect(0,0,W,FY0);
+  g.strokeStyle="rgba(30,15,5,.4)";g.lineWidth=2;for(x=0;x<W;x+=44){g.beginPath();g.moveTo(x,0);g.lineTo(x,FY0);g.stroke()}
+  g.strokeStyle="rgba(255,220,150,.07)";for(x=22;x<W;x+=44){g.beginPath();g.moveTo(x,0);g.lineTo(x,FY0);g.stroke()}
+  g.fillStyle="#3f2814";g.fillRect(0,0,W,18);g.fillRect(0,FY0-12,W,12);
+  [0,W/3,2*W/3,W-14].forEach(function(px){g.fillStyle="#3a2411";g.fillRect(px,0,14,FY0)});
+  g.fillStyle="rgba(255,236,170,.14)";g.beginPath();g.moveTo(120,18);g.lineTo(220,18);g.lineTo(330,FY0+40);g.lineTo(170,FY0+40);g.closePath();g.fill();
+  g.fillStyle="#d9c9a0";g.fillRect(120,34,100,70);g.fillStyle="#bfe0f2";g.fillRect(126,40,41,58);g.fillRect(173,40,41,58);
+  g.fillStyle="#8fbf5a";g.fillRect(126,78,41,20);g.fillRect(173,78,41,20);
+  gr=g.createLinearGradient(0,FY0,0,H);gr.addColorStop(0,"#b99350");gr.addColorStop(1,"#d3ae66");g.fillStyle=gr;g.fillRect(0,FY0-4,W,H-FY0+4);
+  g.strokeStyle="rgba(120,80,20,.5)";g.lineWidth=1.3;for(i=0;i<260;i++){x=rnd()*W;y=FY0+rnd()*(H-FY0);g.beginPath();g.moveTo(x,y);g.lineTo(x+6+rnd()*8,y+(rnd()-.5)*3);g.stroke()}
+  g.strokeStyle="rgba(250,225,140,.55)";for(i=0;i<160;i++){x=rnd()*W;y=FY0+rnd()*(H-FY0);g.beginPath();g.moveTo(x,y);g.lineTo(x+5+rnd()*8,y+(rnd()-.5)*3);g.stroke()}
+  g.fillStyle="#6a4422";g.fillRect(470,FY0+6,150,22);g.fillStyle="#4a2e14";g.fillRect(470,FY0+24,150,6);g.fillStyle="#5aa6d4";g.fillRect(476,FY0+10,138,8);
+  g.fillStyle="#e0b84a";g.fillRect(14,FY0+10,70,36);g.fillStyle="#f0d36a";g.fillRect(14,FY0+10,70,10);g.strokeStyle="#9a7a20";g.lineWidth=1.4;g.strokeRect(14,FY0+10,70,36);
+  g.beginPath();g.moveTo(14,FY0+28);g.lineTo(84,FY0+28);g.stroke();
+  g.strokeStyle="#2a1a0c";g.lineWidth=2;g.beginPath();g.moveTo(W*.5,18);g.lineTo(W*.5,48);g.stroke();g.fillStyle="#f2b84a";g.beginPath();g.arc(W*.5,56,9,0,7);g.fill();g.fillStyle="rgba(255,200,80,.18)";g.beginPath();g.arc(W*.5,56,26,0,7);g.fill();
+  return b}
+ function newCow(c,i){var sp=[],j,pal=i%3===1?{m:"#f1e8da",d:"#d2c6b0",s:"#7b4a2a"}:{m:"#f6f2ea",d:"#d6d0c2",s:"#2a2a2e"};
+  for(j=0;j<4;j++)sp.push([-24+rnd()*50,-54+rnd()*26,5+rnd()*7,4+rnd()*5,rnd()*3]);
+  return{id:c.id,x:90+rnd()*(W-180),y:FY0+14+rnd()*(FY1-FY0-18),dir:rnd()<.5?-1:1,st:"idle",t:rnd()*2,tx:0,ty:0,ph:rnd()*6,hd:0,tp:rnd()*6,sp:sp,pal:pal}}
+ function sync(){var L=shedCows(sd),old={};cows.forEach(function(c){old[c.id]=c});cows=L.map(function(c,i){return old[c.id]||newCow(c,i)})}
+ function leg(hx,ph,wk,col){var s=wk?Math.sin(ph):0,l=wk?Math.max(0,Math.cos(ph))*5:0,kx=hx+s*5,ky=-14-l*.4,fx2=hx+s*9,fy=-1-l;
+  cx.lineCap="round";cx.strokeStyle=col;cx.lineWidth=6;cx.beginPath();cx.moveTo(hx,-27);cx.lineTo(kx,ky);cx.stroke();
+  cx.lineWidth=4.4;cx.beginPath();cx.moveTo(kx,ky);cx.lineTo(fx2,fy);cx.stroke();
+  cx.fillStyle="#2a1f1a";cx.beginPath();cx.moveTo(fx2-3,fy-3);cx.lineTo(fx2+3,fy-3);cx.lineTo(fx2+3.6,fy+2);cx.lineTo(fx2-3.6,fy+2);cx.closePath();cx.fill()}
+ function drawCow(c,t){var wk=c.st==="walk",k=1.25+(c.y-FY0)/(FY1-FY0)*.55,hx=46+c.hd*7,hy=-37+c.hd*29,ch=c.st==="idle"?Math.sin(t*9+c.tp)*1:0,tw=-37+Math.sin(t*2.4+c.tp)*4,j,cd,cd=dcById(c.id),rp=cd?ripe(cd):false;
+  cx.save();cx.translate(c.x,c.y);cx.scale(c.dir*k,k);
+  cx.fillStyle="rgba(0,0,0,.26)";cx.beginPath();cx.ellipse(2,1,40,6.5,0,0,7);cx.fill();
+  leg(-19,c.ph+Math.PI,wk,c.pal.d);leg(20,c.ph,wk,c.pal.d);
+  cx.strokeStyle=c.pal.s;cx.lineWidth=2.4;cx.lineCap="round";cx.beginPath();cx.moveTo(-31,-50);cx.quadraticCurveTo(-40,-42,tw,-27);cx.stroke();
+  cx.fillStyle=c.pal.s;cx.beginPath();cx.ellipse(tw,-24,2.6,5,0,0,7);cx.fill();
+  cx.strokeStyle=c.pal.m;cx.lineWidth=18;cx.beginPath();cx.moveTo(26,-45);cx.lineTo(hx-3,hy+1);cx.stroke();
+  cx.strokeStyle="rgba(0,0,0,.18)";cx.lineWidth=1;cx.beginPath();cx.moveTo(24,-37);cx.lineTo(hx-5,hy+8);cx.stroke();
+  cx.beginPath();cx.moveTo(-31,-40);cx.bezierCurveTo(-34,-53,-12,-57,2,-55);cx.bezierCurveTo(14,-56,30,-55,34,-44);cx.bezierCurveTo(37,-32,30,-22,20,-22);cx.lineTo(-18,-22);cx.bezierCurveTo(-30,-22,-36,-30,-31,-40);cx.closePath();
+  var gr=cx.createLinearGradient(0,-56,0,-22);gr.addColorStop(0,c.pal.m);gr.addColorStop(.6,c.pal.m);gr.addColorStop(1,c.pal.d);cx.fillStyle=gr;cx.fill();
+  cx.save();cx.clip();cx.fillStyle=c.pal.s;for(j=0;j<c.sp.length;j++){cx.beginPath();cx.ellipse(c.sp[j][0],c.sp[j][1],c.sp[j][2],c.sp[j][3],c.sp[j][4],0,7);cx.fill()}cx.restore();
+  cx.strokeStyle="rgba(0,0,0,.28)";cx.lineWidth=1.1;cx.stroke();
+  cx.fillStyle="#f0a9a4";cx.beginPath();cx.ellipse(-4,-21,7,4.6,0,0,7);cx.fill();cx.fillStyle="#e08c88";[-8,-1].forEach(function(u){cx.beginPath();cx.ellipse(u,-17,1.4,2.4,0,0,7);cx.fill()});
+  leg(-23,c.ph,wk,c.pal.m);leg(15,c.ph+Math.PI,wk,c.pal.m);
+  cx.save();cx.translate(hx,hy);cx.rotate(.3+c.hd*.7);
+  cx.fillStyle=c.pal.m;cx.beginPath();cx.ellipse(0,0,10,7.8,0,0,7);cx.fill();cx.strokeStyle="rgba(0,0,0,.25)";cx.lineWidth=1;cx.stroke();
+  cx.fillStyle=c.pal.s;cx.beginPath();cx.ellipse(-2,-3,5.2,4,-.3,0,7);cx.fill();
+  cx.fillStyle="#f0b4b0";cx.beginPath();cx.ellipse(9,2.5+ch*.5,5.6,4.8,0,0,7);cx.fill();cx.fillStyle="#b86a66";cx.beginPath();cx.arc(11.4,1.4,.9,0,7);cx.arc(11.4,4.4,.9,0,7);cx.fill();
+  cx.fillStyle="#fff";cx.beginPath();cx.arc(2.4,-2.6,1.9,0,7);cx.fill();cx.fillStyle="#141414";cx.beginPath();cx.arc(2.8,-2.6,1.2,0,7);cx.fill();
+  cx.fillStyle=c.pal.s;cx.beginPath();cx.ellipse(-7,-5,6.2,2.8,-.55+Math.sin(t*3+c.tp)*.06,0,7);cx.fill();
+  cx.strokeStyle="#e8dcc0";cx.lineWidth=2.4;cx.beginPath();cx.moveTo(-3,-7);cx.quadraticCurveTo(-5,-12,-1,-13);cx.stroke();
+  cx.restore();cx.restore();
+  if(rp){cx.font="22px sans-serif";cx.textAlign="center";cx.fillText("\uD83E\uDD5B",c.x,c.y-82*k+Math.sin(t*4+c.tp)*3)}}
+ function upd(dt,t){cows.forEach(function(c){var dx,dy,d,r;c.t-=dt;
+  if(c.st==="walk"){dx=c.tx-c.x;dy=c.ty-c.y;d=Math.hypot(dx,dy);if(d<3){c.st="idle";c.t=1.5+rnd()*3}else{c.x+=dx/d*28*dt;c.y+=dy/d*18*dt;c.dir=dx>=0?1:-1;c.ph+=dt*5.4}}
+  else if(c.t<=0){r=rnd();if(r<.45){c.st="walk";c.tx=60+rnd()*(W-120);c.ty=FY0+14+rnd()*(FY1-FY0-18)}else if(r<.78){c.st="graze";c.t=2.5+rnd()*3}else{c.st="idle";c.t=1.5+rnd()*2.5}}
+  c.hd+=((c.st==="graze"?1:0)-c.hd)*Math.min(1,dt*4)})}
+ function status(c){var f=FTD[c.k],el;if(!f)return"";el=nowT()-(c.t||0);return el>=f.ms?"Milk ready! +"+f.sell+"\uD83E\uDE99":"Next milk in "+fmtDur(f.ms-el)}
+ function rows(){var L=shedCows(sd),h="",nb=barnCows().length,s2;
+  L.forEach(function(c,i){var rp=ripe(c);h+="<div style='display:flex;align-items:center;gap:6px;text-align:left;margin:5px 0'><span style='flex:1'><b>Cow "+(i+1)+"</b><br><span class='small' id='shS"+i+"'>"+status(c)+"</span></span><button class='btn"+(rp?"":" alt")+"' style='padding:8px 10px;font-size:13px' data-a='c' data-i='"+c.id+"'>"+(rp?"Collect":"Wait")+"</button><button class='btn alt' style='padding:8px 10px;font-size:13px' data-a='o' data-i='"+c.id+"'>Take out</button></div>"});
+  if(!L.length)h="<div class='small' style='margin:8px 0'>No cows yet. Buy a cow in the Market (Animals) and it will move in here, or add one from your barn.</div>";
+  $("shRows").innerHTML=h;$("shSub").textContent=L.length+" / 5 cows";
+  s2=$("shAdd");s2.textContent=L.length>=5?"Shed is full":"+ Add cow from barn ("+nb+")";s2.className="btn ok"+(L.length>=5||!nb?" alt":"");
+  sig=L.map(function(c){return c.id+ripe(c)}).join()}
+ function frame(ts){var t=ts/1000,dt,fy;if(!alive)return;if(dlg.style.display!=="flex"||!$("shCv")){alive=false;return}
+  dt=Math.min(.05,(ts-last)/1000||.016);last=ts;upd(dt,t);
+  cx.clearRect(0,0,W,H);cx.drawImage(bg,0,0);
+  cows.slice().sort(function(a,b){return a.y-b.y}).forEach(function(c){drawCow(c,t)});
+  fx=fx.filter(function(e){return e.a>0});fx.forEach(function(e){e.y-=26*dt;e.a-=dt*.7;cx.globalAlpha=Math.max(0,e.a);cx.font="bold 20px sans-serif";cx.textAlign="center";cx.fillStyle="#fff";cx.strokeStyle="#7a4a10";cx.lineWidth=3;cx.strokeText(e.txt,e.x,e.y);cx.fillText(e.txt,e.x,e.y);cx.globalAlpha=1});
+  if(ts-lastSig>500){lastSig=ts;if(sig!==shedCows(sd).map(function(c){return c.id+ripe(c)}).join()){sync();rows()}else shedCows(sd).forEach(function(c,i){var e=$("shS"+i);if(e)e.textContent=status(c)})}
+  raf=requestAnimationFrame(frame)}
+ function collect(id){var c=dcById(id),f=c&&FTD[c.k],was=c&&ripe(c),cc;if(!c)return;tapTree(c);
+  if(was){cc=cows.filter(function(q){return q.id===id})[0];if(cc)fx.push({x:cc.x,y:cc.y-100,txt:"+"+f.sell+"\uD83E\uDE99",a:1.2})}rows()}
+ body.style.maxWidth="440px";
+ body.innerHTML="<div style='font-size:34px;line-height:1'>\uD83D\uDC04</div><div class='dtitle'>Cow Shed</div><div class='dsub' id='shSub'></div><canvas id='shCv' style='width:100%;display:block;border-radius:14px;margin:8px 0;touch-action:manipulation'></canvas><div id='shRows' style='max-height:26vh;overflow-y:auto'></div><div class='dbtns'><button class='btn alt' id='dNo'>Close</button><button class='btn ok' id='shAdd'></button></div>";
+ dlg.style.display="flex";cv=$("shCv");var dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;cx=cv.getContext("2d");cx.setTransform(dpr,0,0,dpr,0,0);
+ bg=mkBg();sync();rows();
+ $("dNo").onclick=close;
+ cv.onclick=function(e){var r=cv.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W,py=(e.clientY-r.top)/r.height*H,best=null,bd=1e9;
+  cows.forEach(function(c){var k=1.25+(c.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-c.x)+Math.abs(py-(c.y-30*k));if(Math.abs(px-c.x)<58*k&&py>c.y-70*k&&py<c.y+8&&d<bd){bd=d;best=c}});
+  if(best)collect(best.id)};
+ dlg.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button"),id;if(ev.target===dlg){close();return}if(!b)return;
+  if(b.id==="shAdd"){var L=shedCows(sd),bc=barnCows(),o;if(L.length>=5){toast("The cow shed is full (5 cows).");return}if(!bc.length){toast("No cows in your barn. Buy a cow in the Market.");return}
+   o=dcById(bc[0].id);sd.cw=(sd.cw||[]).concat([o.id]);send("farmCowIn",[TOKEN,o.id,sd.id]);paint();sync();rows();toast("\uD83D\uDC04 Cow moved into the shed ("+shedCows(sd).length+"/5)");return}
+  id=b.dataset.i;if(b.dataset.a==="c"){collect(id)}
+  else if(b.dataset.a==="o"){sd.cw=(sd.cw||[]).filter(function(q){return q!==id});send("farmCowOut",[TOKEN,id]);paint();sync();rows();toast("Cow moved to your barn")}};
+ raf=requestAnimationFrame(frame)}
 (function(){
  Object.keys(FOOT).concat(["h_tent","h_hut","h_shed","h_cabin","h_cottage","h_beach","h_eco","h_yurt","h_stone","h_blue","h_pink"]).forEach(function(k){var b=HB[k],w,n,s;if(!b||BSC[k])return;w=b[2]-b[0];n=footN(k);s=Math.min(87*n/w,n===1?1.15:99);BSC[k]=s;HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]})})();
  BSC.windmill=2.9;BSC.greenhouse=2.2;["windmill","greenhouse"].forEach(function(k){var b=HB[k],s=BSC[k];HB[k]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
