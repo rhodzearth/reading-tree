@@ -4007,7 +4007,7 @@ function buyCowShed(i){var sd=shedWithRoom(),id2,tl,o2;if(!sd)return false;
  send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);send("farmCowIn",[TOKEN,id2,sd.id]);
  paint();toast("\uD83D\uDC04 New cow moved into your cow shed ("+sd.cw.length+"/5)");return true}
 
-function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,H=Math.min(1300,Math.round(640*Math.max(300,innerHeight-212)/Math.min(innerWidth-32,560)))H=Math.min(1300,Math.round(640*(innerHeight*.8)/Math.min(innerWidth-32,560))),FY0=H*.4,FY1=H*.95,Z=1.5,cv,cx,bg,cows=[],raf=0,last=0,alive=true,fx=[],sig="",lastSig=0,seed=7;
+function shedDlg(shId){var sd=dcById(shId),dlg=$("dlg"),body=$("dlgBody"),W=640,H=Math.min(1300,Math.round(640*Math.max(300,innerHeight-212)/Math.min(innerWidth-32,560))),FY0=H*.4,FY1=H*.95,Z=1.5,cv,cx,bg,cows=[],raf=0,last=0,alive=true,fx=[],sig="",lastSig=0,seed=7;
  if(!sd)return;
  function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
 function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";body.style.cssText="";dlg.onclick=null}
