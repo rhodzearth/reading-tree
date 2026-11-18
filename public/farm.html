@@ -3980,7 +3980,6 @@ DEC.cowshed=function(p){var x=p[0],y=p[1],lu=40,lv=30,h=22,f=BFp(x,y,lu,lv),k,n,
   ln(RPt(ff,w,.3,0),RPt(ff,w,.3,hh),"#6b4a14",1);ln(RPt(ff,w,.7,0),RPt(ff,w,.7,hh),"#6b4a14",1);ln(LPt(ff,d,.5,0),LPt(ff,d,.5,hh),"rgba(90,60,10,.6)",.9)};
  /* ground shadow + trampled dirt in front */
  shade(p,50,17,.32);
- X.fillStyle="rgba(120,92,52,.28)";X.beginPath();X.ellipse(x+14,y+22,40,11,0,0,7);X.fill();
  /* stone foundation + walls */
  ibx(x,y,lu+3,lv+3,3,"#7e7a70","#a29e92","#b8b4a8");
  ibx(x,y-3,lu,lv,h-3,"#a8322a","#c4473a","#8c2a22");
@@ -4056,16 +4055,7 @@ DEC.cowshed=function(p){var x=p[0],y=p[1],lu=40,lv=30,h=22,f=BFp(x,y,lu,lv),k,n,
  t=Rp(.5,h+7);X.fillStyle="rgba(0,0,0,.28)";X.fillRect(t[0]-8,t[1]-1,18,6);
  X.fillStyle=lg(0,t[1]-3,0,t[1]+3,[[0,"#fbf3e4"],[1,"#d9ccb4"]]);X.fillRect(t[0]-9,t[1]-3,18,6);X.strokeStyle="#7a5530";X.lineWidth=.8;X.strokeRect(t[0]-9,t[1]-3,18,6);
  X.fillStyle="#3b2414";X.font="bold 5px sans-serif";X.textAlign="center";X.fillText("COWS",t[0],t[1]+1.8);
- /* hay bales */
- hb(x-44,y+22,10,8,6);hb(x-55,y+27,11,8,6);hb(x-47,y+21,10,8,6);
- /* milk cans */
- [[x+31,y+25],[x+37,y+27]].forEach(function(c){X.fillStyle="rgba(0,0,0,.3)";X.beginPath();X.ellipse(c[0]+1.5,c[1]+.5,4.2,1.5,0,0,7);X.fill();
-  X.fillStyle=lg(c[0]-3,0,c[0]+3,0,[[0,"#8a9098"],[.4,"#e4e8ec"],[1,"#7a8088"]]);X.fillRect(c[0]-3,c[1]-9,6,9);X.fillRect(c[0]-2,c[1]-11,4,2.5);
-  X.fillStyle="#b9bfc6";X.beginPath();X.ellipse(c[0],c[1]-11.2,2.4,1,0,0,7);X.fill();ln([c[0]-3,c[1]-5],[c[0]+3,c[1]-5],"rgba(0,0,0,.3)",.8)});
- /* water tank */
- X.fillStyle=lg(x+42,0,x+50,0,[[0,"#7f868e"],[.38,"#d2d7dd"],[1,"#5a6068"]]);X.beginPath();X.ellipse(x+46,y+22,4,2,0,0,7);X.fill();X.fillRect(x+42,y+10,8,12);
- ln([x+42,y+15],[x+50,y+15],"rgba(0,0,0,.3)",1.4);ln([x+42,y+19.5],[x+50,y+19.5],"rgba(0,0,0,.3)",1.4);
- X.fillStyle="#d6dbe0";X.beginPath();X.ellipse(x+46,y+10,4,2,0,0,7);X.fill();X.fillStyle="#6bb5e0";X.beginPath();X.ellipse(x+46,y+10,3,1.4,0,0,7);X.fill();
+
 };
 
 function shedList(){return(S.dc||[]).filter(function(x){return x.k==="cowshed"&&!x.s})}
