@@ -186,6 +186,7 @@ body.cam #zoomNote{visibility:hidden!important}
   <div id="mkt" style="display:none">
   <div class="mh"><b>&#128722; Market</b><span class="pill" id="mCoins"></span><button class="btn alt" id="mMulti">&#129530; Multi-buy: OFF</button><button class="btn alt" id="mClose">&#10005;</button></div>
   <div class="mtabs"><button class="btn" id="mtT">&#127795; Trees</button><button class="btn alt" id="mtA">&#128004; Animals</button><button class="btn alt" id="mtH">&#127968; Housing</button><button class="btn alt" id="mtD">&#127969; Decorations</button><button class="btn alt" id="mtN">&#128679; Fences</button><button class="btn alt" id="mtF">&#129521; Floor</button><button class="btn alt" id="mtG">&#127988; Flags</button><button class="btn alt" id="mtV">&#128663; Vehicle</button><button class="btn alt" id="mtO">&#127958;&#65039; Outside</button></div>
+<button class="btn alt" id="mtS">&#128046; Animal Sheds</button>
   <div id="mList"></div>
  </div>
  <div id="side">
@@ -3403,6 +3404,8 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   if(MK==="flag")return false;
   if(/^v_/.test(i.id))return MK==="veh";
   if(MK==="veh")return false;
+    if(i.id==="cowshed")return MK==="shed";
+  if(MK==="shed")return false;
   if(MK==="tree")return !!i.fruit&&!i.animal;
   if(MK==="animal")return !!i.animal;
   if(MK==="fence")return /^f_/.test(i.id);
@@ -3412,7 +3415,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   var lock=S.level<i.lvl,d=document.createElement("div"),v=document.createElement("div"),t=document.createElement("b"),sm=document.createElement("div"),b=document.createElement("button"),th=MTH[i.id+"@"+dpr];
   d.className="mc"+(lock?" lock":"");v.className="mcv";if(th)v.appendChild(th);else q.push([i,v]);
   t.textContent=i.icon+" "+i.name;sm.className="small";
-  sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):/^v_/.test(i.id)?"Vehicle &middot; "+(VLEN[i.id]||"")+"<br>takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.house?"Housing &middot; takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.id==="stoplight"?"Stands on a tile corner, takes no space":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":"Decoration";
+  sm.innerHTML=i.animal?i.prod+" every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.fruit?"Fruit every "+fmtDur(i.ms)+"<br>sells "+i.sell+"\uD83E\uDE99 &middot; +"+i.xp+" XP":i.out?(i.out==="w"?"Floats on the sea<br>Beyond the beach":"Place on the beach<br>Outside your fences"):/^v_/.test(i.id)?"Vehicle &middot; "+(VLEN[i.id]||"")+"<br>takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.house?"Housing &middot; takes "+footW(i.id)+"\u00D7"+footH(i.id)+" tiles":i.id==="stoplight"?"Stands on a tile corner, takes no space":/^f_/.test(i.id)?"Stands on a tile edge, takes no space":i.id==="cowshed"?"Animal shed &middot; holds 5 cows<br>takes 2\u00D72 tiles":"Decoration";
   b.className="btn";b.textContent=lock?"\uD83D\uDD12 Level "+i.lvl:"Buy "+i.cost+"\uD83E\uDE99";b.onclick=function(){buyItem(i)};
   d.appendChild(v);d.appendChild(t);d.appendChild(sm);d.appendChild(b);frag.appendChild(d)});
  box.appendChild(frag);if(MK==="fence")box.insertBefore(perimBanner(),box.firstChild);
@@ -3424,7 +3427,7 @@ $("mtN").onclick=function(){MK="fence";renderMkt()};$("mtF").onclick=function(){
 $("mtD").onclick=function(){MK="decor";renderMkt()};
 $("mtG").onclick=function(){MK="flag";renderMkt()};
 $("mtV").onclick=function(){MK="veh";renderMkt()};
-
+$("mtS").onclick=function(){MK="shed";renderMkt()};
 function askExpand(e,yes){var cur=S.sz||8,s=cur/e.sz,x1=(112*s).toFixed(1),y1=(56*s).toFixed(1),dlg=$("dlg");
  function shut(){dlg.style.display="none"}
  $("dlgBody").innerHTML="<div style='font-size:38px;line-height:1'>\uD83C\uDF3E</div><div class='dtitle'>Expand your land?</div>"+
@@ -3551,6 +3554,7 @@ function outLocked(){return (S.sz||8)<OUT_MIN_SZ}
 function outLockMsg(){return "\uD83D\uDD12 Outside unlocks when your main land is "+OUT_MIN_SZ+" x "+OUT_MIN_SZ+" (yours is "+(S.sz||8)+" x "+(S.sz||8)+"). Expand it 3 times."}
 var _renderMkt=renderMkt;
 renderMkt=function(){if(MK==="out"&&outLocked())MK="tree";var r=_renderMkt.apply(this,arguments);$("mtO").className="btn"+(MK==="out"?"":" alt");$("mtV").className="btn"+(MK==="veh"?"":" alt");$("mtO").innerHTML=outLocked()?"&#128274; Outside":"&#127958;&#65039; Outside";return r};
+$("mtS").className="btn"+(MK==="shed"?"":" alt");
 $("mtO").onclick=function(){if(outLocked()){toast(outLockMsg());return}MK="out";renderMkt()};
 var _buyItem=buyItem;
 buyItem=function(i){if(i&&i.out&&outLocked()){toast(outLockMsg());return}var r=_buyItem.apply(this,arguments);
