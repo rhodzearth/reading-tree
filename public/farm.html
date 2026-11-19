@@ -1796,7 +1796,7 @@ function miniGo(e){var cv=$("mini"),r=cv.getBoundingClientRect(),M=mmap(),hh=$("
  cv.addEventListener("pointerdown",function(e){on=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}miniGo(e);e.preventDefault()});
  cv.addEventListener("pointermove",function(e){if(on)miniGo(e)});
  function off(){on=false}cv.addEventListener("pointerup",off);cv.addEventListener("pointercancel",off)})();
-$("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){var bo=!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE&&!SEL;try{editTap(this,e);if(bo&&!SEL&&!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE)setEdit(false)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&t.k==="cowshed"){shedDlg(t.id);return}if(t&&t.k==="chickenshed"){chickDlg(t.id);return}if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
+$("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){var bo=!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE&&!SEL;try{editTap(this,e);if(bo&&!SEL&&!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE)setEdit(false)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&t.k==="cowshed"){shedDlg(t.id);return}if(t&&t.k==="chickenshed"){chickDlg(t.id);return}if(t&&t.k==="sheepshed"){sheepDlg(t.id);return}if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
 $("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(this,ptr(this,e)),n=[Math.floor(t[0]),Math.floor(t[1])];if(!HOVT||HOVT[0]!==n[0]||HOVT[1]!==n[1]){HOVT=n;drawAll()}}return}var i=hit(this,e);if(i!==HV.f){HV.f=i;drawAll()}};
 $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 // ===== MINI MAP IN VISIT MODE =====
@@ -3402,6 +3402,7 @@ function buyItem(i){if(S.level<i.lvl){toast(i.name+" unlocks at level "+i.lvl);r
  
  if(i.id==="a_cow"&&buyCowShed(i))return;
   if(i.id==="a_chicken"&&buyChickShed(i))return;
+if(i.id==="a_sheep"&&buySheepShed(i))return;
  var tl=i.out?outFreeTile(i):freeTile(i.id);if(!tl&&isF(i.id))tl=[0,0];if(!tl){toast("No free tile in your field. Make some space first.");return}
   if(MULTI){var id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36),o2={id:id2,k:i.id,c:tl[0],r:tl[1],s:1};if(i.fruit)o2.t=nowT();
   S.coins-=i.cost;S.dc.push(o2);send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);paint();toast("\u2705 "+i.name+" added to barn ("+stored().length+" in barn)");return}
@@ -3429,7 +3430,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   if(MK==="flag")return false;
   if(/^v_/.test(i.id))return MK==="veh";
   if(MK==="veh")return false;
-    if(i.id==="cowshed"||i.id==="chickenshed")return MK==="shed";
+  if(i.id==="cowshed"||i.id==="chickenshed"||i.id==="sheepshed")return MK==="shed";
   if(MK==="shed")return false;
   if(MK==="tree")return !!i.fruit&&!i.animal;
   if(MK==="animal")return !!i.animal;
@@ -4116,8 +4117,53 @@ qr(.445,.475,6.2,h-3.4,"#2a190c");
  ln([M[0],M[1]-11],[M[0],M[1]-20],"#2a1a0c",1.2);ln([M[0]-5,M[1]-17],[M[0]+5,M[1]-17],"#2a1a0c",1);poly([[M[0]+5,M[1]-17],[M[0]+2.4,M[1]-18.6],[M[0]+2.4,M[1]-15.4]],"#2a1a0c");
 
 };
-
-function shedList(k){return(S.dc||[]).filter(function(x){return(k?x.k===k:(x.k==="cowshed"||x.k==="chickenshed"))&&!x.s})}
+/* ===== SHEEP SHED: same logic as the cow shed (5 sheep inside, lambs in the side rooms, wool) ===== */
+FOOT.sheepshed=2;HB.sheepshed=[-37,-56,37,22];DEC.sheepshed=DEC.cowshed;
+function buySheepShed(i){var sd=shedWithRoom("sheepshed"),id2,tl,o2;if(!sd)return false;
+ tl=freeTile(i.id)||[0,0];id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+ o2={id:id2,k:i.id,c:tl[0],r:tl[1],s:1,t:nowT()};S.coins-=i.cost;S.dc.push(o2);sd.cw=(sd.cw||[]).concat([id2]);
+ send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);send("farmCowIn",[TOKEN,id2,sd.id]);
+ paint();toast("\uD83D\uDC11 New sheep moved into your sheep shed ("+sd.cw.length+"/5)");return true}
+function sheepDlg(shId){var dlg=$("dlg"),sd=dcById(shId),FA=FTD.a_sheep;if(!sd)return;
+ function shut(){dlg.style.display="none"}
+ function SH(){return dcById(shId)||sd}
+ function sheepIn(){var o=[];(SH().cw||[]).forEach(function(id){var c=dcById(id);if(c&&c.s&&o.length<5)o.push(c)});return o}
+ function barnSheep(){return stored().filter(function(s){var o=s.t==="d"&&dcById(s.id);return o&&o.k==="a_sheep"})}
+ function ripeSheep(c){return !!FA&&nowT()-(c.t||0)>=FA.ms}
+ function grownLambs(){var c=SH().cc,now=nowT();return c?(SH().cf||[]).filter(function(q){return now-q.b>=c.g}):[]}
+ function moveIn(){var bc=barnSheep(),h=SH(),o;
+  if(sheepIn().length>=5){toast("The sheep shed is full (5 sheep).");return}
+  if(!bc.length){toast("No sheep in your barn. Buy a sheep in the Market.");return}
+  o=dcById(bc[0].id);h.cw=(h.cw||[]).concat([o.id]);send("farmCowIn",[TOKEN,o.id,shId]);paint();show();toast("\uD83D\uDC11 Sheep moved into the shed ("+sheepIn().length+"/5)")}
+ function moveOut(){var L=sheepIn(),h=SH(),id;
+  if(!L.length){toast("No sheep in the shed.");return}
+  id=L[L.length-1].id;h.cw=(h.cw||[]).filter(function(q){return q!==id});send("farmCowOut",[TOKEN,id]);paint();show();toast("Sheep moved to your barn")}
+ function harvest(){var n=0,c=SH().cc,now=nowT();
+  sheepIn().forEach(function(x){if(ripeSheep(x)){n++;S.coins+=FA.sell;S.xp+=FA.xp;x.t=now;send("farmTreeHarvest",[TOKEN,x.id])}});
+  if(c)(SH().cf||[]).forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m)){n++;S.coins+=c.y;S.xp+=c.x;q.m=now;send("farmCalfMilk",[TOKEN,shId,q.i])}});
+  if(!n){toast("No wool ready yet.");return}
+  lvlUp();paint();show();toast("\uD83E\uDDF6 Wool collected! ("+n+")")}
+ function moveLamb(toShed){var h=SH(),c=h.cc,now=nowT(),q,id2,o;
+  if(!c){toast("No lambs yet.");return}
+  if(toShed&&sheepIn().length>=5){toast("The sheep shed is full (5 sheep).");return}
+  q=grownLambs()[0];
+  if(!q){toast("No fully grown lamb yet.");return}
+  h.cf=(h.cf||[]).filter(function(z){return z!==q});
+  id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+  o={id:id2,k:"a_sheep",c:0,r:0,s:1,t:now};S.dc.push(o);
+  if(toShed)h.cw=(h.cw||[]).concat([id2]);
+  send("farmCalfOut",[TOKEN,shId,q.i,id2,toShed?1:0]);
+  paint();show();toast(toShed?"\uD83D\uDC11 Grown lamb moved into the sheep room ("+sheepIn().length+"/5)":"\uD83D\uDC11 Grown lamb moved to your barn")}
+ function show(){var L=sheepIn(),bc=barnSheep(),c=SH().cc,now=nowT(),cf=SH().cf||[],ready=0,k=L.filter(ripeSheep).length;
+  if(c)cf.forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m))ready++});
+  $("dlgBody").innerHTML="<div style='font-size:38px;line-height:1'>\uD83D\uDC11</div><div class='dtitle'>Sheep Shed</div>"+
+   "<div class='dsub'>Sheep in shed: "+L.length+"/5 &middot; Sheep in barn: "+bc.length+"<br>Lambs: "+cf.length+"/10 &middot; Grown lambs: "+grownLambs().length+"</div>"+
+   "<div class='dbtns' style='flex-wrap:wrap'><button class='btn alt' id='shP'>+ Sheep in</button><button class='btn alt' id='shM'>- Sheep out</button><button class='btn ok' id='shH'>Harvest wool ("+(k+ready)+")</button></div>"+
+   "<div class='dbtns' style='flex-wrap:wrap'><button class='btn alt' id='shG'>Lamb to barn</button><button class='btn alt' id='shGS'>Lamb into shed</button><button class='btn alt' id='dNo'>Close</button></div>";
+  $("shP").onclick=moveIn;$("shM").onclick=moveOut;$("shH").onclick=harvest;
+  $("shG").onclick=function(){moveLamb(0)};$("shGS").onclick=function(){moveLamb(1)};$("dNo").onclick=shut}
+ show();dlg.style.display="flex";dlg.onclick=function(ev){if(ev.target===dlg)shut()}}
+function shedList(k){return(S.dc||[]).filter(function(x){return(k?x.k===k:(x.k==="cowshed"||x.k==="chickenshed"||x.k==="sheepshed"))&&!x.s})}
 function inShed(x){var L=shedList(),i;if(!x.s)return false;for(i=0;i<L.length;i++)if(L[i].cw&&L[i].cw.indexOf(x.id)>=0)return true;return false}
 function shedCows(sd){var o=[];(sd.cw||[]).forEach(function(id){var c=dcById(id);if(c&&c.s&&o.length<5)o.push(c)});return o}
 function shedWithRoom(k){var L=shedList(k||"cowshed"),i;for(i=0;i<L.length;i++)if(shedCows(L[i]).length<5)return L[i];return null}
