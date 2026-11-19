@@ -3918,7 +3918,7 @@ function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.key
  $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none";
  $("barnSellAll").style.display=(sellAllInfo().n||tl.length)?"":"none";if(!l.length&&!tl.length){box.textContent="Barn is empty.";return}
  l.forEach(function(s){var k=gkey(s);if(!G2[k]){G2[k]=[];ks.push(k)}G2[k].push(s)});
- ks.forEach(function(k){var g=G2[k],ic=k==="p"?"\uD83D\uDFEB":(KN[k]||["?",k])[0],nm=k==="p"?"Plot":(KN[k]||["?",k])[1],b=document.createElement("button");
+ ks.forEach(function(k){if(invIsAni(k))return;var g=G2[k],ic=k==="p"?"\uD83D\uDFEB":(KN[k]||["?",k])[0],nm=k==="p"?"Plot":(KN[k]||["?",k])[1],b=document.createElement("button");
   b.className="btn alt";b.textContent=ic+" "+nm+" \u00D7"+g.length;
   b.onclick=function(){PLACING=g[0];SEL=null;$("barnP").style.display="none";editUI();drawAll()};box.appendChild(b);addSellBtn(k,g,box)});
  tl.forEach(function(id){var f=floorDef(id)||{id:id,name:id},b=document.createElement("button");b.className="btn alt";b.textContent="\uD83E\uDDF1 "+f.name+" tile \u00D7"+S.ft[id];
@@ -5653,8 +5653,12 @@ function invSell(key,n){var have=(S.inv&&S.inv[key])|0,u=invUP(key),g,nm=invInfo
 function invTab(k){var p=k.split(":"),it;if(p[0]==="c"||p[0]==="cb")return"c";if(p[0]==="y")return"p";it=fiDef(p[1]);return(it&&it.animal)?"p":"f"}
 function invIsAni(k){var d=fiDef(k);return!!d&&!!d.animal}
 function invAnimals(){var G={},ks=[];stored().forEach(function(s){var o=s.t==="d"&&dcById(s.id);if(!o||!invIsAni(o.k))return;if(!G[o.k]){G[o.k]=[];ks.push(o.k)}G[o.k].push(s)});return{G:G,ks:ks}}
-function invAniURL(id){var key="a:"+id,src,c;if(INVC[key])return INVC[key];
- try{src=mThumb(fiDef(id),Math.min(1.5,window.devicePixelRatio||1));c=document.createElement("canvas");c.width=c.height=96;c.getContext("2d").drawImage(src,0,0,96,96);return INVC[key]=c.toDataURL()}catch(e){return invIconURL("i:"+id)}}
+function invAniURL(id){var key="a:"+id,K=3,src,W,H,d,x,y,x0=1e9,y0=1e9,x1=-1,y1=-1,w,h,s,c,g;if(INVC[key])return INVC[key];
+ try{src=sprite(id,K,2,1);W=src.width;H=src.height;d=src.getContext("2d").getImageData(0,0,W,H).data;
+  for(y=0;y<H;y++)for(x=0;x<W;x++)if(d[(y*W+x)*4+3]>110){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+  if(x1<0)throw 0;w=x1-x0+1;h=y1-y0+1;s=Math.min(120/w,120/h);
+  c=document.createElement("canvas");c.width=c.height=128;g=c.getContext("2d");g.imageSmoothingQuality="high";
+  g.drawImage(src,x0,y0,w,h,(128-w*s)/2,(128-h*s)/2,w*s,h*s);return INVC[key]=c.toDataURL()}catch(e){return invIconURL("i:"+id)}}
 function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
  if(!p||!S)return;
  if(!box){box=document.createElement("div");box.id="barnInv";p.insertBefore(box,$("barnList"));
@@ -5674,7 +5678,7 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
   "<div class='ivh'><b>\uD83E\uDDFA Harvest storage</b><span>Total \uD83E\uDE99 "+invTotal()+"</span><button class='btn bsell' id='invSellAll'>\uD83D\uDCB0 Sell all harvest</button></div><div class='ivg'>";
  if(INVTAB==="a"){
   an.ks.forEach(function(k){var d=fiDef(k),n=an.G[k].length,sl=an.G[k].filter(sellable);
-   h+="<div class='ivc'><img src='"+invAniURL(k)+"'><b>"+esc(d.name)+"</b>\u00D7"+n+"<br><button class='btn pl' data-pl='"+k+"'>Place</button>"+(sl.length?"<button class='btn bsell' data-sa='"+k+"'>Sell</button>":"")+"</div>"});
+   h+="<div class='ivc'><img style='width:76px;height:76px' src='"+invAniURL(k)+"'><b>"+esc(d.name)+"</b>\u00D7"+n+"<br><button class='btn pl' data-pl='"+k+"'>Place</button>"+(sl.length?"<button class='btn bsell' data-sa='"+k+"'>Sell</button>":"")+"</div>"});
   if(!an.ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>No grown animals in the barn yet. Use Harvest &gt; Move animals to barn.</div>"}
  else{
   ks.forEach(function(k){var i=invInfo(k);
