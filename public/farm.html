@@ -3763,7 +3763,8 @@ $("dock").addEventListener("click",function(e){var b=e.target.closest("button");
 document.addEventListener("click",function(e){if($("dock").classList.contains("open")&&!e.target.closest("#dock,#gearBtn,#seedChip")){dock(false);e.stopPropagation();e.preventDefault()}},true);
 function chip(){var c=S&&cr(sel);$("seedChip").innerHTML=c?iconOf(c):"\uD83C\uDF31"}
 function load(){call("farmState",[TOKEN],setState)}
-document.addEventListener("visibilitychange",function(){if(document.hidden)kick();else if(TOKEN&&!V&&!busy&&!Q.length)load()});
+document.addEventListener("visibilitychange",function(){if(document.hidden)kick();else if(TOKEN&&!V)freshLoad_()});
+function freshLoad_(){if(!V)flush(load)} // wait for any queued saves, then always fetch the farm so pending reads are applied at once
 window.addEventListener("pagehide",kick);window.addEventListener("beforeunload",kick);
 // ===== PHONE BACK BUTTON: closes the open dialog/panel instead of leaving the page =====
 var HARM=false,HSKIP=false;
