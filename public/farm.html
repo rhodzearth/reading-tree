@@ -6427,23 +6427,26 @@ function scan(){var now=nowT(),o={crops:[],fruits:[],prods:[],moves:[]};
   (sd.cf||[]).forEach(function(q){if(now-q.b>=c.g){o.moves.push({sd:sd,q:q});if(!q.m||now-q.m>=c.m)o.prods.push({sd:sd,q:q,c:c})}})});
  return o}
 
-function doCrops(L){var fl=[],xp=0;
- L.forEach(function(o){var key=(o.p.b?"cb:":"c:")+o.p.c,s=pos(o.q[0],o.q[1],FarmFX.top);
-  rawAdd(key);xp+=cr(o.p.c).xp;S.plots[o.i]=null;send("farmHarvest",[TOKEN,o.i]);if(s)fl.push({key:key,pos:s})});
+function doCrops(L){var fl=[],xp=0,ops=[];
+ L.forEach(function(o){var key=(o.p.b?"cb:":"c:")+o.p.c,s=(fl.length<90)?pos(o.q[0],o.q[1],FarmFX.top):null;
+  rawAdd(key);xp+=cr(o.p.c).xp;S.plots[o.i]=null;ops.push(["farmHarvest",[TOKEN,o.i]]);if(s)fl.push({key:key,pos:s})});
+ if(ops.length)sendMany(ops);
  return{n:L.length,xp:xp,fl:fl}}
-function doTrees(L){var fl=[],xp=0,now=nowT();
+function doTrees(L){var fl=[],xp=0,now=nowT(),ops=[];
  L.forEach(function(o){var it=o.it,key,s;
-  if(o.q){key="y:"+o.sd.k;rawAdd(key);xp+=o.c.x;o.q.m=now;send("farmCalfMilk",[TOKEN,o.sd.id,o.q.i]);s=mid(o.sd,-30)}
-  else{key="i:"+it.k;rawAdd(key);xp+=o.f.xp;it.t=now;send("farmTreeHarvest",[TOKEN,it.id]);s=o.sh?mid(o.sh,-30):mid(it,FarmFX.itemTop(it.k))}
+  if(o.q){key="y:"+o.sd.k;rawAdd(key);xp+=o.c.x;o.q.m=now;ops.push(["farmCalfMilk",[TOKEN,o.sd.id,o.q.i]]);s=(fl.length<90)?mid(o.sd,-30):null}
+  else{key="i:"+it.k;rawAdd(key);xp+=o.f.xp;it.t=now;ops.push(["farmTreeHarvest",[TOKEN,it.id]]);s=(fl.length<90)?(o.sh?mid(o.sh,-30):mid(it,FarmFX.itemTop(it.k))):null}
   if(s)fl.push({key:key,pos:s})});
+ if(ops.length)sendMany(ops);
  return{n:L.length,xp:xp,fl:fl}}
-function doMoves(L,cnt){var now=nowT(),n=0;
+function doMoves(L,cnt){var now=nowT(),n=0,ops=[];
  L.forEach(function(o){var a=MV[o.sd.k],id2,i;if(!a)return;
   id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36)+n.toString(36);
   S.dc.push({id:id2,k:a[0],c:0,r:0,s:1,t:now});
-  send("farmCalfOut",[TOKEN,o.sd.id,o.q.i,id2,0]);
+  ops.push(["farmCalfOut",[TOKEN,o.sd.id,o.q.i,id2,0]]);
   o.sd.cf=(o.sd.cf||[]).filter(function(z){return z!==o.q});
   n++;cnt[a[1]]=(cnt[a[1]]||0)+1});
+ if(ops.length)sendMany(ops);
  return n}
 
 function run(ks){var d=scan(),R={n:0,xp:0,fl:[]},cnt={},mv=0,t;
