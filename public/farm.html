@@ -1804,7 +1804,7 @@ function miniGo(e){var cv=$("mini"),r=cv.getBoundingClientRect(),M=mmap(),hh=$("
  cv.addEventListener("pointermove",function(e){if(on)miniGo(e)});
  function off(){on=false}cv.addEventListener("pointerup",off);cv.addEventListener("pointercancel",off)})();
 $("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){var bo=!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE&&!SEL;try{editTap(this,e);if(bo&&!SEL&&!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE)setEdit(false)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&t.k==="barn"){setEdit0(true);$("edBarn").onclick();return}if(t&&t.k==="cowshed"){shedDlg(t.id);return}if(t&&t.k==="chickenshed"){chickDlg(t.id);return}if(t&&t.k==="sheepshed"){sheepDlg(t.id);return}if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
-$("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(this,ptr(this,e)),n=[Math.floor(t[0]),Math.floor(t[1])];if(!HOVT||HOVT[0]!==n[0]||HOVT[1]!==n[1]){HOVT=n;drawAll()}}return}var i=hit(this,e);if(i!==HV.f){HV.f=i;drawAll()}};
+$("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(this,ptr(this,e)),n=[Math.floor(t[0]),Math.floor(t[1])],ka=PBUY?null:curK(PEND||PLACING||SEL);if(ka)n=anch(n[0],n[1],ka);if(!HOVT||HOVT[0]!==n[0]||HOVT[1]!==n[1]){HOVT=n;drawAll()}}return}var i=hit(this,e);if(i!==HV.f){HV.f=i;drawAll()}};
 $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 // ===== MINI MAP IN VISIT MODE =====
 var VMINI=true,VMT=0;try{VMINI=localStorage.getItem("vminiHide")!=="1"}catch(e){}
@@ -2301,6 +2301,7 @@ $("edMoveS").onclick=function(){
 function editTap(cv,e){var p=ptr(cv,e),t=toTile(cv,p),tc=Math.floor(t[0]),tr=Math.floor(t[1]),it,pl,h,o;
  if(PAINT){paintAt(tc,tr);return}
  if(GMOVE){gmoveTap(tc,tr);return}
+  var _ak=PBUY?null:curK(PEND||PLACING||SEL);if(_ak){var _aa=anch(tc,tr,_ak);tc=_aa[0];tr=_aa[1]}
  if(PBUY){if(!tileFree(tc,tr,null)){badTile(tc,tr);return}
   if(S.np>=S.max||S.coins<S.plotCost){PBUY=0;toast("You cannot buy a plot right now.");editUI();return}
   var ni=S.np;S.coins-=S.plotCost;S.np++;S.plots.push(null);S.pp.push([tc,tr]);S.plotCost=30*(S.np-4);
@@ -6309,5 +6310,34 @@ window.FarmFX2={hop:hopOff,fly:fly};
 })();
 </script>
 <!-- ======== HARVEST-TO-BARN ANIMATION END ======== -->
+ <script>
+// tapped tile -> top corner tile, so the tap lands in the MIDDLE of big buildings (1x1 things are unchanged)
+function anch(c,r,k){var w=footW(k),h=footH(k);if(OUTI[k]||isF(k)||w*h<2)return[c,r];return[c-((w-1)>>1),r-((h-1)>>1)]}
+(function(){
+var pad=document.createElement("div"),D=[["\u2196",-1,0],["\u2197",0,-1],["\u2199",0,1],["\u2198",1,0]];
+pad.style.cssText="position:fixed;right:10px;z-index:21;display:none;grid-template-columns:repeat(2,48px);gap:6px";
+D.forEach(function(d){var b=document.createElement("button");b.className="btn alt";b.textContent=d[0];
+ b.style.cssText="width:48px;height:48px;padding:0;font-size:24px;line-height:1;border-radius:14px;background:rgba(20,30,25,.6);color:#fff;border:1px solid rgba(255,255,255,.45);box-shadow:0 2px 8px rgba(0,0,0,.4)";
+ b.onclick=function(){nudge(d[1],d[2])};pad.appendChild(b)});
+document.body.appendChild(pad);
+function nudge(dc,dr){var nc,nr,o,it;
+ if(PEND){if(isF(PEND.k))return;nc=PEND.c+dc;nr=PEND.r+dr;
+  if(tileFree(nc,nr,null,PEND.k)){PEND.c=nc;PEND.r=nr;HOVT=null;drawAll()}else badTile(nc,nr);return}
+ if(!SEL)return;o=getPos(SEL);if(!o)return;
+ if(SEL.t==="d"){it=dcById(SEL.id);if(!it||isF(it.k))return}
+ nc=o[0]+dc;nr=o[1]+dr;
+ if(!tileFree(nc,nr,SEL)){badTile(nc,nr);return}
+ setPos(SEL,nc,nr);
+ if(SEL.t==="p")send("farmPlotMove",[TOKEN,SEL.i,nc,nr,0]);else send("farmDecor",[TOKEN,SEL.id,nc,nr,0]);
+ drawAll()}
+function show(){var on=false,it;
+ if(typeof EDIT!=="undefined"&&EDIT&&!CAM&&!PAINT&&!GMOVE&&!PLACING){
+  if(PEND)on=!isF(PEND.k);
+  else if(SEL){if(SEL.t==="p")on=true;else{it=dcById(SEL.id);on=!!it&&!isF(it.k)}}}
+ pad.style.display=on?"grid":"none";
+ if(on)pad.style.bottom=($("botBar").offsetHeight+14)+"px"}
+setInterval(show,200);
+})();
+</script>
 </body></html>
 </body></html>
