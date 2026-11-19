@@ -1894,7 +1894,7 @@ function lvlUp(){var L=1+Math.floor(Math.sqrt(S.xp/10));S.level=L;S.prevXp=10*(L
 
 // ===== SAVING: everything you do is kept in a queue, saved to your phone at once, then sent to the server in ONE batch =====
 var Q=[],busy=false,QT=0,IDLE=1500,RT=0,QK="farmQ_"+TOKEN.slice(-12);
-var BAT={farmPlant:"pl",farmHarvest:"hv",farmBuyPlot:"bp",farmDecor:"d",farmPlotMove:"p",farmTreeHarvest:"th",farmRotate:"rt",farmSell:"sl",farmBuyAt:"bu",farmFloor:"fl",farmFenceSwap:"fs",farmCowIn:"ci",farmCowOut:"co",farmCalfMilk:"cm"};
+var BAT={farmPlant:"pl",farmHarvest:"hv",farmBuyPlot:"bp",farmDecor:"d",farmPlotMove:"p",farmTreeHarvest:"th",farmRotate:"rt",farmSell:"sl",farmBuyAt:"bu",farmFloor:"fl",farmFenceSwap:"fs",farmCowIn:"ci",farmCowOut:"co",farmCalfMilk:"cm",farmCalfOut:"cg"};
 function qSave(){try{if(Q.length)localStorage.setItem(QK,JSON.stringify(Q));else localStorage.removeItem(QK)}catch(e){}}
 function sv(){$("saveBtn").innerHTML=(Q.length||busy)?"&#9203;":"&#128190;"}
 function sendMany(L){L.forEach(function(x){Q.push(x)});qSave();sv();clearTimeout(QT);QT=setTimeout(pump,IDLE)}
@@ -4232,7 +4232,7 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
   c.hd+=((c.st==="graze"?1:0)-c.hd)*Math.min(1,dt*4)})}
  function status(c){var f=FTD[c.k],el;if(!f)return"";el=nowT()-(c.t||0);return el>=f.ms?"Milk ready! +"+f.sell+"\uD83E\uDE99":"Next milk in "+fmtDur(f.ms-el)}
   function tm(){calfTick();var L=shedCows(sd),f=FTD.a_cow,best=1e18,rp=0,e;L.forEach(function(c){var el=nowT()-(c.t||0);if(f&&el>=f.ms)rp++;else if(f)best=Math.min(best,f.ms-el)});e=$("shTime");if(!e)return;e.textContent=rm?tmSide():!L.length?"":rp?"\uD83E\uDD5B Milk ready: "+rp:"Next harvest in "+fmtDur(best)}
- function rows(){var L=shedCows(sd),nb=barnCows().length;$("shSub").textContent=rm?(calfList(rm).length?"Calf room \u00B7 "+calfList(rm).length+"/5":"Empty room \u00B7 0/5"):L.length+"/5 cows";$("shPlus").style.opacity=(L.length>=5||!nb)?".35":"1";$("shMinus").style.opacity=L.length?"1":".35";sig=L.map(function(c){return c.id+ripe(c)}).join();tm()}
+ function rows(){var L=shedCows(sd),nb=barnCows().length;$("shSub").textContent=rm?(calfList(rm).length?"Calf room \u00B7 "+calfList(rm).length+"/5":"Empty room \u00B7 0/5"):L.length+"/5 cows";$("shPlus").style.opacity=rm?((grownKids()&&L.length<5)?"1":".35"):((L.length>=5||!nb)?".35":"1");$("shMinus").style.opacity=rm?(grownKids()?"1":".35"):(L.length?"1":".35");sig=L.map(function(c){return c.id+ripe(c)}).join();tm()}
  function frame(ts){var t=ts/1000,dt,fy;if(!alive)return;if(dlg.style.display!=="flex"||!$("shCv")){alive=false;return}
   dt=Math.min(.05,(ts-last)/1000||.016);last=ts;upd(dt,t);if(pos)kidsUpd(dt);pos+=(rm-pos)*Math.min(1,dt*9);if(Math.abs(rm-pos)<.003)pos=rm;
   cx.clearRect(0,0,W,H);drawSides(t);cx.save();cx.translate(-pos*W,0);cx.drawImage(bg,0,0);
@@ -4284,7 +4284,7 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
  wrap.appendChild(aL);wrap.appendChild(aR);wrap.appendChild(dots);
  ctl.style.transition="opacity .2s";
  function roomUI(){aL.style.opacity=rm>-1?"1":"0";aL.style.pointerEvents=rm>-1?"auto":"none";aR.style.opacity=rm<1?"1":"0";aR.style.pointerEvents=rm<1?"auto":"none";
-  ctl.style.opacity=rm?"0":"1";ctl.style.pointerEvents=rm?"none":"auto";
+  ctl.style.opacity="1";ctl.style.pointerEvents="auto";
   [].forEach.call(dots.children,function(d,i){d.style.cssText="width:9px;height:9px;border-radius:50%;box-shadow:0 1px 4px #000;background:"+(i===rm+1?"#fff":"rgba(255,255,255,.4)")})}
  function goRoom(d){var n=Math.max(-1,Math.min(1,rm+d));if(n===rm)return;rm=n;roomUI();rows()}
  aL.onclick=function(){goRoom(-1)};aR.onclick=function(){goRoom(1)};
@@ -4318,6 +4318,18 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
  function kidTap(px,py){var best=null,bd=1e9;calfList(rm).forEach(function(q){var k=kid(q),sc=Math.max(.75,.42+.58*kidGrow(q)),kk=1.25+(k.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-k.x)+Math.abs(py-(k.y-30*kk));
    if(Math.abs(px-k.x)<58*kk*sc&&py>k.y-70*kk*sc&&py<k.y+10&&d<bd){bd=d;best=q}});
   if(best)milkKid(best)}
+   function grownKids(){var c=SH().cc,now=nowT();return c?calfList(rm).filter(function(q){return now-q.b>=c.g}).length:0}
+ function kidHarvest(){var c=SH().cc,now=nowT(),n=0;if(!c)return;calfList(rm).forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m)){n++;milkKid(q)}});if(!n)toast("No milk ready yet.")}
+ function kidMove(toShed){var h=SH(),c=h.cc,now=nowT(),L=calfList(rm),q=null,i,m=1e18,id2,o;if(!c)return;
+  for(i=0;i<L.length;i++){if(now-L[i].b>=c.g){q=L[i];break}m=Math.min(m,c.g-(now-L[i].b))}
+  if(!q){toast(L.length?"\uD83D\uDC04 No fully grown calf yet. Next grown-up in "+fmtDur(m):"No calves in this room.");return}
+  if(toShed&&shedCows(sd).length>=5){toast("The cow shed is full (5 cows).");return}
+  id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+  o={id:id2,k:"a_cow",c:0,r:0,s:1,t:now};S.dc.push(o);
+  h.cf=(h.cf||[]).filter(function(z){return z!==q});kids={};
+  if(toShed)sd.cw=(sd.cw||[]).concat([id2]);
+  send("farmCalfOut",[TOKEN,sd.id,q.i,id2,toShed?1:0]);
+  paint();sync();rows();toast(toShed?"\uD83D\uDC04 Grown calf moved into the cow room ("+shedCows(sd).length+"/5)":"\uD83D\uDC04 Grown calf moved to your barn")}
  function tmSide(){var c=SH().cc,L=calfList(rm),now=nowT(),rdy=0,nm=1e18,ng=1e18,a;if(!c)return"";
   L.forEach(function(q){a=now-q.b;if(a<c.g)ng=Math.min(ng,c.g-a);else if(!q.m||now-q.m>=c.m)rdy++;else nm=Math.min(nm,c.m-(now-q.m))});
   if(rdy)return"\uD83E\uDD5B Milk ready: "+rdy+" (tap the cow)";
@@ -4329,6 +4341,7 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
   cows.forEach(function(c){var k=1.25+(c.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-c.x)+Math.abs(py-(c.y-30*k));if(Math.abs(px-c.x)<58*k&&py>c.y-70*k&&py<c.y+8&&d<bd){bd=d;best=c}});
   if(best)collect(best.id)};
  dlg.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button"),id;if(ev.target===dlg){close();return}if(!b)return;
+   if(rm&&(b.id==="shHarv"||b.id==="shPlus"||b.id==="shMinus")){if(b.id==="shHarv")kidHarvest();else kidMove(b.id==="shPlus");return}
   if(b.id==="shPlus"){var L=shedCows(sd),bc=barnCows(),o;if(L.length>=5){toast("The cow shed is full (5 cows).");return}if(!bc.length){toast("No cows in your barn. Buy a cow in the Market.");return}
    o=dcById(bc[0].id);sd.cw=(sd.cw||[]).concat([o.id]);send("farmCowIn",[TOKEN,o.id,sd.id]);paint();sync();rows();toast("\uD83D\uDC04 Cow moved into the shed ("+shedCows(sd).length+"/5)");return}
    if(b.id==="shX"){close();return}
@@ -4538,6 +4551,18 @@ leg(3.5,c.ph,"#e0a028");
  function kidTap(px,py){var best=null,bd=1e9;chickList(rm).forEach(function(q){var k=kid(q),g=kidGrow(q),kk=1.25+(k.y-FY0)/(FY1-FY0)*.55,s=g<.5?ZK*kk*(.9+g*.5):Z*kk*(.55+.45*g),w=Math.max(34,22*s),hh=Math.max(46,38*s),d=Math.abs(px-k.x)+Math.abs(py-(k.y-hh*.5));
    if(Math.abs(px-k.x)<w&&py>k.y-hh&&py<k.y+12&&d<bd){bd=d;best=q}});
   if(best)milkKid(best)}
+   function grownKids(){var c=SH().cc,now=nowT();return c?chickList(rm).filter(function(q){return now-q.b>=c.g}).length:0}
+ function kidHarvest(){var c=SH().cc,now=nowT(),n=0;if(!c)return;chickList(rm).forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m)){n++;milkKid(q)}});if(!n)toast("No eggs ready yet.")}
+ function kidMove(toShed){var h=SH(),c=h.cc,now=nowT(),L=chickList(rm),q=null,i,m=1e18,id2,o;if(!c)return;
+  for(i=0;i<L.length;i++){if(now-L[i].b>=c.g){q=L[i];break}m=Math.min(m,c.g-(now-L[i].b))}
+  if(!q){toast(L.length?"\uD83D\uDC25 No fully grown chick yet. Next grown-up in "+fmtDur(m):"No chicks in this room.");return}
+  if(toShed&&hensIn().length>=5){toast("The chicken shed is full (5 chickens).");return}
+  id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36);
+  o={id:id2,k:"a_chicken",c:0,r:0,s:1,t:now};S.dc.push(o);
+  h.cf=(h.cf||[]).filter(function(z){return z!==q});kids={};
+  if(toShed)h.cw=(h.cw||[]).concat([id2]);
+  send("farmCalfOut",[TOKEN,shId,q.i,id2,toShed?1:0]);
+  paint();sync();rows();toast(toShed?"\uD83D\uDC14 Grown chick moved into the chicken room ("+hensIn().length+"/5)":"\uD83D\uDC14 Grown chick moved to your barn")}
  function tmSide(){var c=SH().cc,L=chickList(rm),now=nowT(),rdy=0,nm=1e18,ng=1e18,a;if(!c)return"";
   L.forEach(function(q){a=now-q.b;if(a<c.g)ng=Math.min(ng,c.g-a);else if(!q.m||now-q.m>=c.m)rdy++;else nm=Math.min(nm,c.m-(now-q.m))});
   if(rdy)return"\uD83E\uDD5A Egg ready: "+rdy+" (tap the chick)";
@@ -4549,7 +4574,7 @@ leg(3.5,c.ph,"#e0a028");
   L.forEach(function(c){var el=nowT()-(c.t||0);if(f&&el>=f.ms)rp++;else if(f)best=Math.min(best,f.ms-el)});
   e.textContent=!L.length?"":rp?"\uD83E\uDD5A Eggs ready: "+rp:"Next eggs in "+fmtDur(best)}
  function rows(){var L=hensIn(),nb=barnHens().length;$("ckSub").textContent=rm?(chickList(rm).length?"Chick room \u00B7 "+chickList(rm).length+"/5":"Empty room \u00B7 0/5"):L.length+"/5 chickens";
-  $("ckPlus").style.opacity=(L.length>=5||!nb)?".35":"1";$("ckMinus").style.opacity=L.length?"1":".35";sig=L.map(function(c){return c.id+ripe(c)}).join();tm()}
+$("ckPlus").style.opacity=rm?((grownKids()&&L.length<5)?"1":".35"):((L.length>=5||!nb)?".35":"1");$("ckMinus").style.opacity=rm?(grownKids()?"1":".35"):(L.length?"1":".35");sig=L.map(function(c){return c.id+ripe(c)}).join();tm()}
  /* ---------- effects ---------- */
  function shBurst(cc,sell,ox){var i,a,s,bx=cc.x+(ox||0),by=cc.y-34*Z*(1.25+(cc.y-FY0)/(FY1-FY0)*.55);cc.hop=.5;
   shPt.push({ty:"glow",x:bx,y:by,r:80,a:1});shPt.push({ty:"ring",x:bx,y:by,r:8,a:.9,w:5,g:150});
@@ -4608,6 +4633,7 @@ leg(3.5,c.ph,"#e0a028");
   hens.forEach(function(c){var kk=henK(c),d=Math.abs(px-c.x)+Math.abs(py-(c.y-20*kk));if(Math.abs(px-c.x)<Math.max(30,20*kk)&&py>c.y-44*kk&&py<c.y+8&&d<bd){bd=d;best=c}});
   if(best)collect(best.id)};
  dlg.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button"),id,o,L,bc;if(ev.target===dlg){close();return}if(!b)return;
+   if(rm&&(b.id==="ckHarv"||b.id==="ckPlus"||b.id==="ckMinus")){if(b.id==="ckHarv")kidHarvest();else kidMove(b.id==="ckPlus");return}
   if(b.id==="ckX"){close();return}
   if(b.id==="ckPlus"){L=hensIn();bc=barnHens();if(L.length>=5){toast("The chicken shed is full (5 chickens).");return}if(!bc.length){toast("No chickens in your barn. Buy a chicken in the Market.");return}
    o=dcById(bc[0].id);SH().cw=(SH().cw||[]).concat([o.id]);send("farmCowIn",[TOKEN,o.id,shId]);paint();sync();rows();toast("\uD83D\uDC14 Chicken moved into the shed ("+hensIn().length+"/5)");return}
