@@ -1967,7 +1967,7 @@ $("plAll").onclick=function(){var c=cr(sel),n=0,i,free,ops=[];if(!c)return;
  if(S.level<c.lvl){toast(c.name+" unlocks at level "+c.lvl);return}
  for(i=0;i<S.np;i++){if(!S.pp[i]||S.plots[i])continue;free=c.id===S.crops[0].id&&S.coins<c.cost;
   if(S.coins<c.cost&&!free)break;if(!free)S.coins-=c.cost;S.plots[i]={c:c.id,t:nowT(),b:0,hb:[]};ops.push(["farmPlant",[TOKEN,i,sel]]);n++}
- if(!n)toast("No empty plot, or not enough coins.");else{sendMany(ops);paint();toast("\uD83C\uDF31 Planted "+n+" "+c.name)}};
+ if(!n)toast("No empty plot, or not enough coins.");else{sendMany(ops);kick();paint();toast("\uD83C\uDF31 Planted "+n+" "+c.name)}};
 $("buyPlot").onclick=function(){
  if(S.np>=S.max){infoDlg("\uD83D\uDFEB","Maximum plots reached","You already have the most plots your land allows. Expand your land for more.",["Plots "+S.np+"/"+S.max]);return}
  if(S.coins<S.plotCost){toast("A new plot costs "+S.plotCost+" coins. You have "+S.coins+".");return}
