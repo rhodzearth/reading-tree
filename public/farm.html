@@ -304,7 +304,7 @@ function boostDlg(){
  function upd(){var v=cur();
   $("bfH").textContent="\u26A1 Boost: "+(v?dur(v):"0m");
   $("bfL").textContent="Left: \u26AA "+(w-v);
-  $("bfS").textContent=v?"Every crop, tree and animal that is still growing jumps ahead by "+dur(v)+". All your \u26AA "+w+" = "+dur(w)+".":"";
+$("bfS").textContent=v?"Every crop, tree, animal and baby animal in your sheds that is still growing jumps ahead by "+dur(v)+". All your \u26AA "+w+" = "+dur(w)+".":"";
   $("dYes").disabled=!v;$("dYes").textContent=v?"\u26A1 Boost "+dur(v):"Boost"}
  function set(v){v=Math.max(1,Math.min(w,v));inp.value=v;upd()}
  function hold(id,d){var el=$(id),t=0,iv=0;
