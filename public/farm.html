@@ -1945,6 +1945,8 @@ function tapPlot(i){var p=S.plots[i];
  else toast(c2.name+" is ready in "+fmtDur(c2.ms-(nowT()-p.t))+". Read a chapter in the Reading Tree to speed it up by 6 hours!")}
 $("hAll").onclick=function(){var n=0,co=0,xp=0;S.plots.forEach(function(p,i){if(isRipe(p)){co+=priceOf(p);xp+=cr(p.c).xp;n++;S.plots[i]=null}});
  (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&!it.s&&nowT()-it.t>=f.ms){co+=f.sell;xp+=f.xp;n++;it.t=nowT()}});
+  (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&it.s&&inShed(it)&&nowT()-(it.t||0)>=f.ms){co+=f.sell;xp+=f.xp;n++;it.t=nowT();send("farmTreeHarvest",[TOKEN,it.id])}});
+ shedList().forEach(function(sd){var c=sd.cc,now=nowT();if(!c)return;(sd.cf||[]).forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m)){co+=c.y;xp+=c.x;n++;q.m=now;send("farmCalfMilk",[TOKEN,sd.id,q.i])}})});
  if(!n){toast("Nothing is ripe yet. Wait for the timer, or read a chapter to speed things up by 6 hours!");return}
  S.coins+=co;S.xp+=xp;lvlUp();paint();toast("Collected "+n+" things! +"+co+"\uD83E\uDE99");send("farmHarvest",[TOKEN,-1])};
 // plant the selected seed in every empty plot
@@ -4664,7 +4666,7 @@ function upd(dt,t){sheep.forEach(function(c){var dx,dy,d,r;c.t-=dt;if(c.hop>0)c.
  function woolKid(q){var c=SH().cc,now=nowT(),k=kid(q);
   if(now-q.b<c.g){toast("\uD83D\uDC11 Still growing: grown-up in "+fmtDur(c.g-(now-q.b)));return}
   if(q.m&&now-q.m<c.m){toast("Next wool in "+fmtDur(c.m-(now-q.m)));return}
-  S.coins+=c.y;S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDDF6 Wool collected! +"+c.y+"\uD83E\uDE99 +"+c.x+" XP");fx.push({x:k.x+rm*W,y:k.y-100,txt:"+"+c.y+"\uD83E\uDE99",a:1.2});send("farmCalfWool",[TOKEN,sd.id,q.i]);tm()}
+  S.coins+=c.y;S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDDF6 Wool collected! +"+c.y+"\uD83E\uDE99 +"+c.x+" XP");fx.push({x:k.x+rm*W,y:k.y-100,txt:"+"+c.y+"\uD83E\uDE99",a:1.2});send("farmCalfMilk",[TOKEN,sd.id,q.i]);tm()}
  function kidTap(px,py){var best=null,bd=1e9;lambList(rm).forEach(function(q){var k=kid(q),sc=Math.max(.75,.42+.58*kidGrow(q)),kk=1.25+(k.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-k.x)+Math.abs(py-(k.y-30*kk));
    if(Math.abs(px-k.x)<58*kk*sc&&py>k.y-70*kk*sc&&py<k.y+10&&d<bd){bd=d;best=q}});
   if(best)woolKid(best)}
