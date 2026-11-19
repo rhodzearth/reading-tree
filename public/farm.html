@@ -194,6 +194,10 @@ body.paint-top #editbar #edTxt{flex:0 0 100%;max-width:100%;box-sizing:border-bo
 #barnInv .ivc img{width:56px;height:56px;display:block;margin:0 auto 2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
 #barnInv .ivc b{display:block;font-size:13px}
 #barnInv .ivc .btn{padding:6px 8px;font-size:12px;margin:3px 2px 0}
+#barnInv .ivt{display:flex;gap:6px;overflow-x:auto;white-space:nowrap;margin:0 0 8px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+#barnInv .ivt .btn{flex:none;padding:7px 14px;font-size:13px}
+#barnInv .ivt .btn.on{background:rgba(76,175,80,.92)!important;border-color:#fff}
+#barnInv .ivc .pl{background:rgba(47,125,50,.85)}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -2107,7 +2111,7 @@ function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[];box.innerHTML
  $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none";
  if(!l.length){box.textContent="Barn is empty.";return}
  l.forEach(function(s){var k=gkey(s);if(!G2[k]){G2[k]=[];ks.push(k)}G2[k].push(s)});
- ks.forEach(function(k){var g=G2[k],ic=k==="p"?"\uD83D\uDFEB":(KN[k]||["?",k])[0],nm=k==="p"?"Plot":(KN[k]||["?",k])[1],b=document.createElement("button");
+ ks.forEach(function(k){if(invIsAni(k))return;var g=G2[k],ic=k==="p"?"\uD83D\uDFEB":(KN[k]||["?",k])[0],nm=k==="p"?"Plot":(KN[k]||["?",k])[1],b=document.createElement("button");
   b.className="btn alt";b.textContent=ic+" "+nm+" \u00D7"+g.length;
   b.onclick=function(){PLACING=g[0];SEL=null;$("barnP").style.display="none";editUI();drawAll()};box.appendChild(b)})}
 function doStore(list){var b=[];list.forEach(function(s){
@@ -5645,19 +5649,37 @@ function invSell(key,n){var have=(S.inv&&S.inv[key])|0,u=invUP(key),g,nm=invInfo
  n=n==="all"?have:Math.min(+n||1,have);g=n*u;S.coins+=g;S.inv[key]=have-n;if(S.inv[key]<=0)delete S.inv[key];
  send("farmInvSell",[TOKEN,key,n]);paint();renderInv();try{FarmAudio.play("sell")}catch(e){}
  toast("\uD83D\uDCB0 Sold "+n+" "+nm.n+" for +"+g+"\uD83E\uDE99")}
+ var INVTAB="c";
+function invTab(k){var p=k.split(":"),it;if(p[0]==="c"||p[0]==="cb")return"c";if(p[0]==="y")return"p";it=fiDef(p[1]);return(it&&it.animal)?"p":"f"}
+function invIsAni(k){var d=fiDef(k);return!!d&&!!d.animal}
+function invAnimals(){var G={},ks=[];stored().forEach(function(s){var o=s.t==="d"&&dcById(s.id);if(!o||!invIsAni(o.k))return;if(!G[o.k]){G[o.k]=[];ks.push(o.k)}G[o.k].push(s)});return{G:G,ks:ks}}
+function invAniURL(id){var key="a:"+id,src,c;if(INVC[key])return INVC[key];
+ try{src=mThumb(fiDef(id),Math.min(1.5,window.devicePixelRatio||1));c=document.createElement("canvas");c.width=c.height=96;c.getContext("2d").drawImage(src,0,0,96,96);return INVC[key]=c.toDataURL()}catch(e){return invIconURL("i:"+id)}}
 function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
  if(!p||!S)return;
  if(!box){box=document.createElement("div");box.id="barnInv";p.insertBefore(box,$("barnList"));
   box.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button"),d,t,n;if(!b)return;
    if(b.id==="invSellAll"){t=invTotal();n=0;Object.keys(S.inv||{}).forEach(function(k){n+=S.inv[k]|0});if(!n)return;
     infoDlg("\uD83D\uDCB0","Sell all harvest?","Everything in your harvest storage is sold at its price.",["Items: "+n,"You get: +"+t+"\uD83E\uDE99"],function(){S.coins+=invTotal();S.inv={};send("farmInvSellAll",[TOKEN]);paint();renderInv();try{FarmAudio.play("sell")}catch(e){}toast("\uD83D\uDCB0 Sold all harvest for +"+t+"\uD83E\uDE99")},"Sell all");return}
+   if(b.dataset.t){INVTAB=b.dataset.t;renderInv();return}
+   if(b.dataset.pl){var z=invAnimals().G[b.dataset.pl];if(z&&z.length){PLACING=z[0];SEL=null;$("barnP").style.display="none";editUI();drawAll()}return}
+   if(b.dataset.sa){var z2=invAnimals().G[b.dataset.sa];z2=z2&&z2.filter(sellable);if(z2&&z2.length)sellStoredDlg(b.dataset.sa,z2);return}
    d=b.dataset.s;if(d){d=d.split("|");invSell(d[0],d[1])}}}
  ks=Object.keys(S.inv||{}).filter(function(k){return(S.inv[k]|0)>0&&invInfo(k)});
- if(!ks.length){box.innerHTML="<div class='small' style='color:#fff'>\uD83E\uDDFA Harvest storage is empty. Harvested crops, fruits and animal products are kept here.</div>";return}
+ var an=invAnimals(),cn={c:0,f:0,p:0,a:0};
+ ks.forEach(function(k){cn[invTab(k)]+=S.inv[k]|0});an.ks.forEach(function(k){cn.a+=an.G[k].length});
+ ks=ks.filter(function(k){return invTab(k)===INVTAB});
  ks.sort(function(a,b){var x=invInfo(a),y=invInfo(b);return x.g-y.g||x.n.localeCompare(y.n)});
- h="<div class='ivh'><b>\uD83E\uDDFA Harvest storage</b><span>Total \uD83E\uDE99 "+invTotal()+"</span><button class='btn bsell' id='invSellAll'>\uD83D\uDCB0 Sell all harvest</button></div><div class='ivg'>";
- ks.forEach(function(k){var i=invInfo(k);
-  h+="<div class='ivc'><img src='"+invIconURL(k)+"'><b>"+esc(i.n)+"</b>\u00D7"+S.inv[k]+" &middot; \uD83E\uDE99 "+invUP(k)+" each<br><button class='btn' data-s='"+k+"|1'>Sell 1</button><button class='btn bsell' data-s='"+k+"|all'>Sell all</button></div>"});
+ h="<div class='ivt'>"+[["c","Crops"],["f","Fruits"],["p","Products"],["a","Animals"]].map(function(t){return"<button class='btn "+(INVTAB===t[0]?"on":"alt")+"' data-t='"+t[0]+"'>"+t[1]+" ("+cn[t[0]]+")</button>"}).join("")+"</div>"+
+  "<div class='ivh'><b>\uD83E\uDDFA Harvest storage</b><span>Total \uD83E\uDE99 "+invTotal()+"</span><button class='btn bsell' id='invSellAll'>\uD83D\uDCB0 Sell all harvest</button></div><div class='ivg'>";
+ if(INVTAB==="a"){
+  an.ks.forEach(function(k){var d=fiDef(k),n=an.G[k].length,sl=an.G[k].filter(sellable);
+   h+="<div class='ivc'><img src='"+invAniURL(k)+"'><b>"+esc(d.name)+"</b>\u00D7"+n+"<br><button class='btn pl' data-pl='"+k+"'>Place</button>"+(sl.length?"<button class='btn bsell' data-sa='"+k+"'>Sell</button>":"")+"</div>"});
+  if(!an.ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>No grown animals in the barn yet. Use Harvest &gt; Move animals to barn.</div>"}
+ else{
+  ks.forEach(function(k){var i=invInfo(k);
+   h+="<div class='ivc'><img src='"+invIconURL(k)+"'><b>"+esc(i.n)+"</b>\u00D7"+S.inv[k]+" &middot; \uD83E\uDE99 "+invUP(k)+" each<br><button class='btn' data-s='"+k+"|1'>Sell 1</button><button class='btn bsell' data-s='"+k+"|all'>Sell all</button></div>"});
+  if(!ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>Nothing here yet. Harvested items are kept here.</div>"}
  box.innerHTML=h+"</div>"}
 var _rb0=renderBarn;
 renderBarn=function(){_rb0.apply(this,arguments);try{renderInv()}catch(e){}};
@@ -6485,9 +6507,9 @@ $("hAll").onclick=openHv;
 $("hAll").title="Harvest";
 
 /* baby rooms: hide the + and - buttons (they stay in the main shed room) */
-setInterval(function(){[["shSub","shPlus","shMinus"],["ckSub","ckPlus","ckMinus"]].forEach(function(a){var s=$(a[0]),side;if(!s)return;
+setInterval(function(){[["shSub","shPlus","shMinus","shHarv"],["ckSub","ckPlus","ckMinus","ckHarv"]].forEach(function(a){var s=$(a[0]),side;if(!s)return;
  side=/room/i.test(s.textContent);
- [a[1],a[2]].forEach(function(id){var b=$(id);if(b)b.style.display=side?"none":""})})},150);
+ [a[1],a[2],a[3]].forEach(function(id){var b=$(id);if(b)b.style.display=side?"none":""})})},150);
 })();
 </script>
 </body></html>
