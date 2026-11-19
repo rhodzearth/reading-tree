@@ -187,6 +187,13 @@ body.paint-top #editbar #edTxt{flex:0 0 100%;max-width:100%;box-sizing:border-bo
 :is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox :is(.dchip,.dst){background:rgba(0,0,0,.35)!important;color:#fff}
 :is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .btn.alt{background:rgba(20,30,25,.55);color:#fff;border:1px solid rgba(255,255,255,.4)}
 :is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox input{background:rgba(255,255,255,.92);color:#222;text-shadow:none}
+#barnInv{margin-top:10px;clear:both}
+#barnInv .ivh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;margin-bottom:6px}
+#barnInv .ivg{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+#barnInv .ivc{background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:8px 6px;text-align:center;font-size:12px}
+#barnInv .ivc img{width:56px;height:56px;display:block;margin:0 auto 2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+#barnInv .ivc b{display:block;font-size:13px}
+#barnInv .ivc .btn{padding:6px 8px;font-size:12px;margin:3px 2px 0}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -1796,7 +1803,7 @@ function miniGo(e){var cv=$("mini"),r=cv.getBoundingClientRect(),M=mmap(),hh=$("
  cv.addEventListener("pointerdown",function(e){on=true;try{cv.setPointerCapture(e.pointerId)}catch(x){}miniGo(e);e.preventDefault()});
  cv.addEventListener("pointermove",function(e){if(on)miniGo(e)});
  function off(){on=false}cv.addEventListener("pointerup",off);cv.addEventListener("pointercancel",off)})();
-$("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){var bo=!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE&&!SEL;try{editTap(this,e);if(bo&&!SEL&&!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE)setEdit(false)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&t.k==="cowshed"){shedDlg(t.id);return}if(t&&t.k==="chickenshed"){chickDlg(t.id);return}if(t&&t.k==="sheepshed"){sheepDlg(t.id);return}if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
+$("field").onclick=function(e){if(CAM)return;if(this._drag){this._drag=false;return}if(EDIT){var bo=!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE&&!SEL;try{editTap(this,e);if(bo&&!SEL&&!PLACING&&!PAINT&&!PBUY&&!PEND&&!GMOVE)setEdit(false)}catch(err){toast("Decorate error: "+(err&&err.message)+" @ "+String(err&&err.stack).split("\n").slice(0,3).join(" | "))}return}var t=pickDeco(this,ptr(this,e));if(t&&t.k==="barn"){setEdit0(true);$("edBarn").onclick();return}if(t&&t.k==="cowshed"){shedDlg(t.id);return}if(t&&t.k==="chickenshed"){chickDlg(t.id);return}if(t&&t.k==="sheepshed"){sheepDlg(t.id);return}if(t&&FTD[t.k]){tapTree(t);return}var i=hit(this,e);if(i>=0)tapPlot(i)};
 $("field").onmousemove=function(e){if(EDIT){if(SEL||PLACING||PBUY){var t=toTile(this,ptr(this,e)),n=[Math.floor(t[0]),Math.floor(t[1])];if(!HOVT||HOVT[0]!==n[0]||HOVT[1]!==n[1]){HOVT=n;drawAll()}}return}var i=hit(this,e);if(i!==HV.f){HV.f=i;drawAll()}};
 $("field").onmouseleave=function(){HV.f=-1;drawAll()};
 // ===== MINI MAP IN VISIT MODE =====
@@ -1912,6 +1919,12 @@ function setState(s){S=s;$("msg").style.display="none";$("main").style.display="
 function act(fn,args,done){call(fn,args,function(s){setState(s);if(done)done(s)})}
 
 function nowT(){return Date.now()+((S&&S.off)||0)}
+function invUnit(key){var p=key.split(":"),t=p[0],id=p[1],c,it,sd;
+ if(t==="c"||t==="cb"){c=cr(id);return c?c.sell*(t==="cb"?(S.bigMult||2):1):0}
+ if(t==="i"){it=(S.items||[]).filter(function(x){return x.id===id})[0];return it?(it.sell||0):0}
+ if(t==="y"){sd=shedList(id)[0];return sd&&sd.cc?sd.cc.y:0}
+ return 0}
+function invAdd(key,n){if(!S.inv)S.inv={};if(!S.invp)S.invp={};S.inv[key]=(S.inv[key]||0)+(n||1);if(!S.invp[key])S.invp[key]=invUnit(key)}
 function fmtDur(ms){var m=Math.max(1,Math.ceil(ms/60000)),d=Math.floor(m/1440),h=Math.floor(m%1440/60),mm=m%60;return d?d+"d "+h+"h":h?h+"h "+mm+"m":mm+"m"}
 function isRipe(p){return !!p&&nowT()-p.t>=cr(p.c).ms}
 function priceOf(p){return cr(p.c).sell*(p.b?(S.bigMult||2):1)}
@@ -1941,14 +1954,14 @@ function tapPlot(i){var p=S.plots[i];
   if(S.coins<c.cost&&!free){toast("A "+c.name+" seed costs "+c.cost+" coins. You have "+S.coins+".");return}
   if(!free)S.coins-=c.cost;S.plots[i]={c:c.id,t:nowT(),b:0,hb:[]};paint();toast(free?"\uD83C\uDF81 Free seed! Ready in "+fmtDur(c.ms)+" - read a chapter to speed it up 6h!":"\uD83C\uDF31 Planted! Ready in "+fmtDur(c.ms)+" - read a chapter to speed it up 6h!");send("farmPlant",[TOKEN,i,sel]);return}
  var c2=cr(p.c);
- if(isRipe(p)){var pr=priceOf(p);S.coins+=pr;S.xp+=c2.xp;S.plots[i]=null;lvlUp();paint();toast((p.b?"BIG harvest! +":"Harvested! +")+pr+"\uD83E\uDE99 +"+c2.xp+" XP");send("farmHarvest",[TOKEN,i])}
+ if(isRipe(p)){invAdd((p.b?"cb:":"c:")+p.c,1);S.xp+=c2.xp;S.plots[i]=null;lvlUp();paint();toast((p.b?"BIG harvest! ":"Harvested! ")+c2.name+" stored in barn +"+c2.xp+" XP");send("farmHarvest",[TOKEN,i])}
  else toast(c2.name+" is ready in "+fmtDur(c2.ms-(nowT()-p.t))+". Read a chapter in the Reading Tree to speed it up by 6 hours!")}
-$("hAll").onclick=function(){var n=0,co=0,xp=0;S.plots.forEach(function(p,i){if(isRipe(p)){co+=priceOf(p);xp+=cr(p.c).xp;n++;S.plots[i]=null}});
- (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&!it.s&&nowT()-it.t>=f.ms){co+=f.sell;xp+=f.xp;n++;it.t=nowT()}});
-  (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&it.s&&inShed(it)&&nowT()-(it.t||0)>=f.ms){co+=f.sell;xp+=f.xp;n++;it.t=nowT();send("farmTreeHarvest",[TOKEN,it.id])}});
- shedList().forEach(function(sd){var c=sd.cc,now=nowT();if(!c)return;(sd.cf||[]).forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m)){co+=c.y;xp+=c.x;n++;q.m=now;send("farmCalfMilk",[TOKEN,sd.id,q.i])}})});
+$("hAll").onclick=function(){var n=0,co=0,xp=0;S.plots.forEach(function(p,i){if(isRipe(p)){invAdd((p.b?"cb:":"c:")+p.c,1);xp+=cr(p.c).xp;n++;S.plots[i]=null}});
+ (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&!it.s&&nowT()-it.t>=f.ms){invAdd("i:"+it.k,1);xp+=f.xp;n++;it.t=nowT()}});
+  (S.dc||[]).forEach(function(it){var f=FTD[it.k];if(f&&it.s&&inShed(it)&&nowT()-(it.t||0)>=f.ms){invAdd("i:"+it.k,1);xp+=f.xp;n++;it.t=nowT();send("farmTreeHarvest",[TOKEN,it.id])}});
+ shedList().forEach(function(sd){var c=sd.cc,now=nowT();if(!c)return;(sd.cf||[]).forEach(function(q){if(now-q.b>=c.g&&(!q.m||now-q.m>=c.m)){invAdd("y:"+sd.k,1);xp+=c.x;n++;q.m=now;send("farmCalfMilk",[TOKEN,sd.id,q.i])}})});
  if(!n){toast("Nothing is ripe yet. Wait for the timer, or read a chapter to speed things up by 6 hours!");return}
- S.coins+=co;S.xp+=xp;lvlUp();paint();toast("Collected "+n+" things! +"+co+"\uD83E\uDE99");send("farmHarvest",[TOKEN,-1])};
+ S.xp+=xp;lvlUp();paint();toast("Collected "+n+" things! Stored in barn");send("farmHarvest",[TOKEN,-1])};
 // plant the selected seed in every empty plot
 $("plAll").onclick=function(){var c=cr(sel),n=0,i,free,ops=[];if(!c)return;
  if(S.level<c.lvl){toast(c.name+" unlocks at level "+c.lvl);return}
@@ -2200,15 +2213,15 @@ $("edHarvG").onclick=function(){
  var n=0,co=0,xp=0,fx=[],F=window.FarmFX;
  grpOf(SEL).forEach(function(s){var p,q,v,it,f,sp;
   if(s.t==="p"){p=S.plots[s.i];q=S.pp[s.i];if(!p||!q||!isRipe(p))return;
-   v=priceOf(p);co+=v;xp+=cr(p.c).xp;n++;S.plots[s.i]=null;send("farmHarvest",[TOKEN,s.i]);
+   v=priceOf(p);invAdd((p.b?"cb:":"c:")+p.c,1);xp+=cr(p.c).xp;n++;S.plots[s.i]=null;send("farmHarvest",[TOKEN,s.i]);
    if(F){sp=F.scr(q[0],q[1],F.top);if(sp)fx.push({p:sp,v:v,big:!!p.b})}}
   else{it=dcById(s.id);f=it&&FTD[it.k];if(!f||it.s||nowT()-it.t<f.ms)return;
-   co+=f.sell;xp+=f.xp;n++;it.t=nowT();send("farmTreeHarvest",[TOKEN,it.id]);
+   invAdd("i:"+it.k,1);xp+=f.xp;n++;it.t=nowT();send("farmTreeHarvest",[TOKEN,it.id]);
    if(F){sp=F.scr(it.c,it.r,F.itemTop(it.k));if(sp)fx.push({p:sp,v:f.sell,big:false})}}});
  if(!n){toast("Nothing is ripe in this group yet.");return}
- S.coins+=co;S.xp+=xp;lvlUp();SEL=null;paint();editUI();drawAll();
+ S.xp+=xp;lvlUp();SEL=null;paint();editUI();drawAll();
  if(F&&fx.length)try{F.harvest(fx,xp)}catch(e){}
- toast("Collected "+n+" things! +"+co+"\uD83E\uDE99")};
+ toast("Collected "+n+" things! Stored in barn")};
 $("edUndo").onclick=undoStore;$("barnUndo").onclick=undoStore;
 // put the next item from the barn into your hand, one after another
 $("barnAll").onclick=function(){var l=[],i,skip=0,n;
@@ -3397,7 +3410,7 @@ function perimDlg(){var dlg=$("dlg"),P=S.pfs||[],own=S.pfo||["wood"],cur=S.pf||"
   shut();landCall("farmPerim",id,"Changing fence...",function(){toast("\uD83D\uDEA7 Perimeter fence changed")})}}
 function prepItems(){FTD={};(S.items||[]).forEach(function(i){KN[i.id]=[i.icon,i.name];if(i.fruit)FTD[i.id]=i;if(/^fl_/.test(i.id)&&!FLG[i.id]){FLG[i.id]=i.icon;DEC[i.id]=function(p){flagDraw(p,i.icon,0,0,0)};HB[i.id]=[-8,-100,54,8]}if(!HB[i.id])HB[i.id]=i.fruit?[-38,-84,38,8]:[-26,-40,26,8]})}
 function tapTree(it){var f=FTD[it.k],el=nowT()-it.t;
- if(el>=f.ms){S.coins+=f.sell;S.xp+=f.xp;it.t=nowT();lvlUp();paint();toast(f.icon+" "+(f.animal?f.prod+" collected":f.name+" harvested")+"! +"+f.sell+"\uD83E\uDE99 +"+f.xp+" XP");send("farmTreeHarvest",[TOKEN,it.id])}
+ if(el>=f.ms){invAdd("i:"+it.k,1);S.xp+=f.xp;it.t=nowT();lvlUp();paint();toast(f.icon+" "+(f.animal?f.prod+" collected":f.name+" harvested")+"! Stored in barn +"+f.xp+" XP");send("farmTreeHarvest",[TOKEN,it.id])}
  else toast(f.name+(f.animal?": next "+f.prod.toLowerCase()+" in ":": fruit is ready in ")+fmtDur(f.ms-el)+". Read a chapter in the Reading Tree to speed it up by 6 hours!")}
 function buyItem(i){if(S.level<i.lvl){toast(i.name+" unlocks at level "+i.lvl);return}
  if(S.coins<i.cost){toast(i.name+" costs "+i.cost+" coins. You have "+S.coins+".");return}
@@ -3798,6 +3811,7 @@ if(!TOKEN)showMsg("Please log in to the Reading Tree first, then open Reading Fa
 
 /* ===== FLOOR TILES: bought into the barn, placed, turned, stored back. This block replaces the old "paint" functions above (water is still painted). ===== */
 BAT.farmFloorBuy="fb";BAT.farmFloorSell="fx";BAT.farmFloorRot="fr";
+BAT.farmInvSell="is";BAT.farmInvSellAll="ia";
 function frOf(cv){return cv&&cv.id==="vCanvas"?(V&&V.fr):(S&&S.fr)}
 function ftileR(id,dpr,rot){var key="R|"+id+"|"+dpr+"|"+rot,c=FTS[key],cx,b;if(!rot)return ftile(id,dpr,0);if(c)return c;
  b=ftile(id,dpr,0);c=document.createElement("canvas");c.width=b.width;c.height=b.height;cx=c.getContext("2d");cx.setTransform(dpr,0,0,dpr,0,0);cx.translate(57,29);
@@ -4666,7 +4680,7 @@ function upd(dt,t){sheep.forEach(function(c){var dx,dy,d,r;c.t-=dt;if(c.hop>0)c.
  function woolKid(q){var c=SH().cc,now=nowT(),k=kid(q);
   if(now-q.b<c.g){toast("\uD83D\uDC11 Still growing: grown-up in "+fmtDur(c.g-(now-q.b)));return}
   if(q.m&&now-q.m<c.m){toast("Next wool in "+fmtDur(c.m-(now-q.m)));return}
-  S.coins+=c.y;S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDDF6 Wool collected! +"+c.y+"\uD83E\uDE99 +"+c.x+" XP");fx.push({x:k.x+rm*W,y:k.y-100,txt:"+"+c.y+"\uD83E\uDE99",a:1.2});send("farmCalfMilk",[TOKEN,sd.id,q.i]);tm()}
+  invAdd("y:"+sd.k,1);S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDDF6 Wool collected! +"+c.x+" XP, stored in barn");fx.push({x:k.x+rm*W,y:k.y-100,txt:"+1 \uD83D\uDCE6",a:1.2});send("farmCalfMilk",[TOKEN,sd.id,q.i]);tm()}
  function kidTap(px,py){var best=null,bd=1e9;lambList(rm).forEach(function(q){var k=kid(q),sc=Math.max(.75,.42+.58*kidGrow(q)),kk=1.25+(k.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-k.x)+Math.abs(py-(k.y-30*kk));
    if(Math.abs(px-k.x)<58*kk*sc&&py>k.y-70*kk*sc&&py<k.y+10&&d<bd){bd=d;best=q}});
   if(best)woolKid(best)}
@@ -4955,7 +4969,7 @@ function close(){alive=false;cancelAnimationFrame(raf);dlg.style.display="none";
  function milkKid(q){var c=SH().cc,now=nowT(),k=kid(q);
   if(now-q.b<c.g){toast("\uD83D\uDC04 Still growing: grown-up in "+fmtDur(c.g-(now-q.b)));return}
   if(q.m&&now-q.m<c.m){toast("Next milk in "+fmtDur(c.m-(now-q.m)));return}
-  S.coins+=c.y;S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDD5B Milk collected! +"+c.y+"\uD83E\uDE99 +"+c.x+" XP");fx.push({x:k.x+rm*W,y:k.y-100,txt:"+"+c.y+"\uD83E\uDE99",a:1.2});send("farmCalfMilk",[TOKEN,sd.id,q.i]);tm()}
+  invAdd("y:"+sd.k,1);S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDD5B Milk collected! +"+c.x+" XP, stored in barn");fx.push({x:k.x+rm*W,y:k.y-100,txt:"+1 \uD83D\uDCE6",a:1.2});send("farmCalfMilk",[TOKEN,sd.id,q.i]);tm()}
  function kidTap(px,py){var best=null,bd=1e9;calfList(rm).forEach(function(q){var k=kid(q),sc=Math.max(.75,.42+.58*kidGrow(q)),kk=1.25+(k.y-FY0)/(FY1-FY0)*.55,d=Math.abs(px-k.x)+Math.abs(py-(k.y-30*kk));
    if(Math.abs(px-k.x)<58*kk*sc&&py>k.y-70*kk*sc&&py<k.y+10&&d<bd){bd=d;best=q}});
   if(best)milkKid(best)}
@@ -5188,7 +5202,7 @@ leg(3.5,c.ph,"#e0a028");
  function milkKid(q){var c=SH().cc,now=nowT(),k=kid(q);
   if(now-q.b<c.g){toast("\uD83D\uDC25 Still growing: grown-up in "+fmtDur(c.g-(now-q.b)));return}
   if(q.m&&now-q.m<c.m){toast("Next egg in "+fmtDur(c.m-(now-q.m)));return}
-  S.coins+=c.y;S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDD5A Egg collected! +"+c.y+"\uD83E\uDE99 +"+c.x+" XP");shBurst(k,c.y,rm*W);send("farmCalfMilk",[TOKEN,shId,q.i]);tm()}
+  invAdd("y:"+sd.k,1);S.xp+=c.x;q.m=now;lvlUp();paint();toast("\uD83E\uDD5A Egg collected! +"+c.x+" XP, stored in barn");shBurst(k,c.y,rm*W);send("farmCalfMilk",[TOKEN,shId,q.i]);tm()}
  function kidTap(px,py){var best=null,bd=1e9;chickList(rm).forEach(function(q){var k=kid(q),g=kidGrow(q),kk=1.25+(k.y-FY0)/(FY1-FY0)*.55,s=g<.5?ZK*kk*(.9+g*.5):Z*kk*(.55+.45*g),w=Math.max(34,22*s),hh=Math.max(46,38*s),d=Math.abs(px-k.x)+Math.abs(py-(k.y-hh*.5));
    if(Math.abs(px-k.x)<w&&py>k.y-hh&&py<k.y+12&&d<bd){bd=d;best=q}});
   if(best)milkKid(best)}
@@ -5222,7 +5236,7 @@ $("ckPlus").style.opacity=rm?((grownKids()&&L.length<5)?"1":".35"):((L.length>=5
   for(i=0;i<9;i++){a=-Math.PI/2+(Math.random()-.5)*2.2;s=110+Math.random()*150;shPt.push({ty:"egg",x:bx,y:by,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:3.5+Math.random()*2,a:1,life:.9+Math.random()*.4})}
   for(i=0;i<10;i++){a=Math.random()*6.283;s=40+Math.random()*110;shPt.push({ty:"spark",x:bx,y:by,vx:Math.cos(a)*s,vy:Math.sin(a)*s-30,r:5+Math.random()*5,a:1,life:.7+Math.random()*.5,rot:Math.random()*3})}
   for(i=0;i<4;i++)shPt.push({ty:"coin",x:bx+(Math.random()-.5)*30,y:by-10,vx:(Math.random()-.5)*120,vy:-190-Math.random()*90,r:8,a:1,life:1.2,ph:Math.random()*6});
-  shPt.push({ty:"txt",x:bx,y:by-50,txt:"+"+sell+"\uD83E\uDE99",a:1.6,age:0})}
+  shPt.push({ty:"txt",x:bx,y:by-50,txt:"+1 \uD83D\uDCE6",a:1.6,age:0})}
  function shFx(dt){var i,j,p,rr,sc,g;cx.save();shPt=shPt.filter(function(p2){return p2.a>0});
   for(i=0;i<shPt.length;i++){p=shPt[i];cx.globalAlpha=1;
    if(p.ty==="glow"){p.a-=dt*1.8;g=cx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);g.addColorStop(0,"rgba(255,244,190,"+Math.max(0,p.a*.8)+")");g.addColorStop(1,"rgba(255,244,190,0)");cx.fillStyle=g;cx.fillRect(p.x-p.r,p.y-p.r,p.r*2,p.r*2)}
@@ -5547,6 +5561,107 @@ Object.keys(VEH).forEach(function(id){DEC[id]=function(p,st){var s=VSC[id]||1;tr
 HB.v_bike=[-34,-60,34,14];HB.v_moto=[-38,-66,38,14];HB.v_trike=[-50,-66,50,22];HB.v_cart=[-44,-62,44,18];
 HB.v_wagon=[-92,-90,92,40];HB.v_car=[-92,-70,92,42];HB.v_pickup=[-110,-80,110,44];HB.v_tractor=[-96,-92,96,42];HB.v_van=[-110,-90,110,44];HB.v_jeepney=[-120,-100,120,48];
 Object.keys(VSC).forEach(function(id){var b=HB[id],s=VSC[id];if(b)HB[id]=[b[0]*s,b[1]*s,b[2]*s,b[3]*s]});
+/* ===== BARN INVENTORY (Step 3): icons + sell ===== */
+var INVC={},SHA={cowshed:"a_cow",chickenshed:"a_chicken",sheepshed:"a_sheep"},
+PRODK={a_chicken:["egg","#f7f0e2","#d8c8a0",1],a_duck:["egg","#e4efe6","#a9c0ad",1.05],a_goose:["egg","#fffaf0","#ddd2bb",1.2],a_turkey:["egg","#f0dcb8","#a8804a",1.1,1],a_quail:["egg","#ece0c4","#6a4e2e",.7,1],a_ostrich:["egg","#f5ebd3","#cfbf92",1.45],
+ a_cow:["milk","#ffffff","#3a8ae0"],a_carabao:["milk","#f6efe2","#7a5a3a"],a_goat:["milk","#ffffff","#4aa84a"],a_donkey:["milk","#fbf8f2","#9a6ac8"],a_hcow:["cream"],
+ a_sheep:["wool","#fbfaf4","#d8d2c0"],a_llama:["wool","#f1e8d6","#cbbd9c"],a_alpaca:["wool","#efe2c8","#c9b48a"],a_yak:["wool","#5a463c","#2a1c16"],a_rabbit:["wool","#f4eee4","#cfc4b0"],
+ a_rooster:["feather","#c8602a","#1a7a5a"],a_swan:["feather","#ffffff","#d8d8d0"],a_peacock:["feather","#1f8a8a","#2a5ac8"],
+ a_pig:["truffle"],a_horse:["hair"],a_pony:["ticket"]};
+// draw with the farm's own drawing functions, then crop to the visible part and scale into the icon
+function invFit(g,fn){var K=3,c=document.createElement("canvas"),cx,oX=X,d,x,y,W=110*K,H=120*K,x0=1e9,y0=1e9,x1=-1,y1=-1,w,h,s;
+ c.width=W;c.height=H;cx=c.getContext("2d");cx.setTransform(K,0,0,K,0,0);X=cx;WOVR=0;
+ try{fn()}finally{X=oX;WOVR=null}
+ d=cx.getImageData(0,0,W,H).data;
+ for(y=0;y<H;y++)for(x=0;x<W;x++)if(d[(y*W+x)*4+3]>110){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}
+ if(x1<0)return;w=x1-x0+1;h=y1-y0+1;s=Math.min(84/w,84/h);
+ g.drawImage(c,x0,y0,w,h,(96-w*s)/2,(96-h*s)/2+2,w*s,h*s)}
+function invFruitDraw(k){var i;
+ if(k==="banana"){X.strokeStyle="#6a5a2a";X.lineWidth=5;X.lineCap="round";X.beginPath();X.moveTo(40,30);X.lineTo(70,30);X.stroke();X.lineCap="butt";for(i=-2;i<=2;i++)bananaF(55+i*6,32+Math.abs(i)*2,46,true,i<0?-1:i>0?1:.3);return}
+ if(k==="coconut"){nut(44,72,19,"#7a5226","#b8884a");nut(68,64,17,"#7a5226","#b8884a");return}
+ if(k==="papaya"){X.fillStyle="#d8691a";X.beginPath();X.ellipse(55,66,17,28,.35,0,7);X.fill();X.fillStyle="#f8b84c";X.beginPath();X.ellipse(51,62,11,21,.35,0,7);X.fill();leaf(60,38,6,3,-.6,"#5f8a2a");leaf(52,60,2.5,12,.4,"rgba(255,255,255,.5)");return}
+ fruit(k,55,68,22,true)}
+function pShadow(g,w){g.fillStyle="rgba(0,0,0,.22)";g.beginPath();g.ellipse(48,86,w,5,0,0,7);g.fill()}
+function pEgg(g,P){var s=P[3]||1,rx=17*s,ry=22*s,x=48,y=54,i,a,gr;pShadow(g,rx);
+ gr=g.createRadialGradient(x-rx*.4,y-ry*.4,2,x,y,ry*1.1);gr.addColorStop(0,"#ffffff");gr.addColorStop(.35,P[1]);gr.addColorStop(1,P[2]);
+ g.fillStyle=gr;g.beginPath();g.moveTo(x,y-ry);g.bezierCurveTo(x+rx*1.25,y-ry*.6,x+rx*1.15,y+ry*.95,x,y+ry);g.bezierCurveTo(x-rx*1.15,y+ry*.95,x-rx*1.25,y-ry*.6,x,y-ry);g.fill();
+ if(P[4]){g.fillStyle="rgba(70,45,20,.55)";for(i=0;i<18;i++){a=i*2.4;g.beginPath();g.arc(x+Math.cos(a)*rx*.7*((i*7%10)/10),y+Math.sin(a)*ry*.75*((i*3%10)/10),1.3+(i%3)*.5,0,7);g.fill()}}
+ g.fillStyle="rgba(255,255,255,.55)";g.beginPath();g.ellipse(x-rx*.4,y-ry*.4,rx*.22,ry*.34,.5,0,7);g.fill()}
+function pMilk(g,P){var gp=function(){g.beginPath();g.moveTo(32,44);g.quadraticCurveTo(32,36,40,34);g.lineTo(40,22);g.lineTo(56,22);g.lineTo(56,34);g.quadraticCurveTo(64,36,64,44);g.lineTo(64,80);g.quadraticCurveTo(64,86,58,86);g.lineTo(38,86);g.quadraticCurveTo(32,86,32,80);g.closePath()},gr;
+ pShadow(g,24);gp();g.fillStyle="rgba(225,238,247,.75)";g.fill();
+ g.save();gp();g.clip();gr=g.createLinearGradient(30,0,66,0);gr.addColorStop(0,"#dfe6ec");gr.addColorStop(.4,P[1]);gr.addColorStop(1,"#cfd8e0");g.fillStyle=gr;g.fillRect(28,38,40,52);
+ g.fillStyle="#fff";g.fillRect(36,54,24,20);g.fillStyle=P[2];g.fillRect(36,58,24,7);g.beginPath();g.arc(48,70,2.6,0,7);g.fill();g.restore();
+ gp();g.strokeStyle="#9fb6c6";g.lineWidth=2;g.stroke();
+ g.fillStyle=P[2];g.fillRect(38,13,20,9);g.fillStyle="rgba(255,255,255,.35)";g.fillRect(40,14,4,7);
+ g.fillStyle="rgba(255,255,255,.6)";g.fillRect(35,42,3,38)}
+function pCream(g){var gr;pShadow(g,26);
+ gr=g.createLinearGradient(26,0,70,0);gr.addColorStop(0,"#e7edf1");gr.addColorStop(.4,"#fff7e0");gr.addColorStop(1,"#d9e0e6");
+ g.fillStyle=gr;g.fillRect(27,42,42,42);g.strokeStyle="#9fb6c6";g.lineWidth=2;g.strokeRect(27,42,42,42);
+ g.fillStyle="#fff4d0";g.beginPath();g.ellipse(48,44,20,5,0,0,7);g.fill();
+ g.fillStyle="#c9473f";g.fillRect(25,30,46,13);g.fillStyle="rgba(255,255,255,.4)";g.fillRect(28,32,5,9);
+ g.fillStyle="#c9473f";g.fillRect(36,56,24,12);g.fillStyle="#fff";g.font="bold 9px sans-serif";g.textAlign="center";g.fillText("CREAM",48,65)}
+function pWool(g,P){var q=[[36,62,17],[60,62,17],[48,70,17],[30,46,14],[66,46,14],[48,40,18],[48,56,19],[38,34,11],[58,32,11]],i,gr;pShadow(g,28);
+ q.forEach(function(p){gr=g.createRadialGradient(p[0]-p[2]*.3,p[1]-p[2]*.35,2,p[0],p[1],p[2]);gr.addColorStop(0,cmul(P[1],1.3));gr.addColorStop(.5,P[1]);gr.addColorStop(1,P[2]);g.fillStyle=gr;g.beginPath();g.arc(p[0],p[1],p[2],0,7);g.fill()});
+ g.strokeStyle="rgba(0,0,0,.13)";g.lineWidth=1.4;for(i=0;i<8;i++){g.beginPath();g.arc(32+(i*9)%34,38+(i*13)%34,5+i%3,i,i+3);g.stroke()}}
+function pFeather(g,P,id){var i,w,y,gr;g.save();g.translate(48,50);g.rotate(-.7);
+ gr=g.createLinearGradient(0,-38,0,32);gr.addColorStop(0,P[1]);gr.addColorStop(1,P[2]);g.fillStyle=gr;
+ g.beginPath();g.moveTo(0,-38);g.bezierCurveTo(20,-30,22,10,3,30);g.lineTo(0,32);g.lineTo(-3,30);g.bezierCurveTo(-22,10,-20,-30,0,-38);g.fill();
+ g.strokeStyle="rgba(255,255,255,.25)";g.lineWidth=1;for(i=0;i<15;i++){y=-34+i*4.5;w=18*Math.sin(Math.PI*(i+1)/16);g.beginPath();g.moveTo(0,y+3);g.lineTo(w,y-3);g.moveTo(0,y+3);g.lineTo(-w,y-3);g.stroke()}
+ if(id==="a_peacock"){g.fillStyle="#2a8a6a";g.beginPath();g.ellipse(0,-18,9,12,0,0,7);g.fill();g.fillStyle="#2a5ac8";g.beginPath();g.ellipse(0,-18,6,8,0,0,7);g.fill();g.fillStyle="#1a2a5a";g.beginPath();g.ellipse(0,-18,3,4,0,0,7);g.fill()}
+ g.strokeStyle="#e8dcc0";g.lineWidth=2;g.beginPath();g.moveTo(0,-36);g.lineTo(0,42);g.stroke();g.restore()}
+function pTruffle(g){var i,a,r,gr;pShadow(g,24);
+ gr=g.createRadialGradient(40,42,3,48,52,30);gr.addColorStop(0,"#6a5846");gr.addColorStop(1,"#17100a");g.fillStyle=gr;g.beginPath();
+ for(i=0;i<=40;i++){a=i/40*6.2832;r=24+3.5*Math.sin(5*a)+2.5*Math.sin(9*a+1);g.lineTo(48+Math.cos(a)*r,52+Math.sin(a)*r*.9)}g.closePath();g.fill();
+ g.strokeStyle="rgba(235,225,195,.22)";g.lineWidth=1.2;for(i=0;i<7;i++){g.beginPath();g.arc(48,52,6+i*3,i,i+2.2);g.stroke()}
+ g.fillStyle="rgba(255,255,255,.25)";g.beginPath();g.ellipse(39,41,7,4,-.5,0,7);g.fill()}
+function pHair(g){var i,x,c=["#2a1a10","#3a2414","#4a2e18","#1a100a"];
+ pShadow(g,22);g.lineWidth=2.4;g.lineCap="round";
+ for(i=0;i<14;i++){x=30+i*3.2;g.strokeStyle=c[i%4];g.beginPath();g.moveTo(x,14);g.bezierCurveTo(x+6*Math.sin(i),34,x-6*Math.cos(i),62,x+Math.sin(i*2)*5,86);g.stroke()}
+ g.lineCap="butt";g.fillStyle="#c9473f";g.fillRect(27,42,42,9);g.fillStyle="rgba(255,255,255,.3)";g.fillRect(27,43,42,2)}
+function pTicket(g){var gr;g.save();g.translate(48,50);g.rotate(-.18);
+ gr=g.createLinearGradient(0,-22,0,22);gr.addColorStop(0,"#ffe27a");gr.addColorStop(1,"#e0a020");g.fillStyle=gr;g.fillRect(-34,-22,68,44);
+ g.strokeStyle="#8a5a10";g.lineWidth=2;g.strokeRect(-34,-22,68,44);g.setLineDash([3,3]);g.strokeRect(-30,-18,60,36);g.setLineDash([]);
+ g.fillStyle="#7bbf5a";g.beginPath();g.arc(-34,0,6,0,7);g.arc(34,0,6,0,7);g.fill();
+ g.font="26px serif";g.textAlign="center";g.fillText("\uD83C\uDFA0",0,9);g.restore()}
+var PD={egg:pEgg,milk:pMilk,cream:pCream,wool:pWool,feather:pFeather,truffle:pTruffle,hair:pHair,ticket:pTicket};
+function invStar(g){var i,a,r;g.beginPath();for(i=0;i<10;i++){a=-Math.PI/2+i*Math.PI/5;r=i%2?5:11;g.lineTo(78+Math.cos(a)*r,16+Math.sin(a)*r)}g.closePath();g.fillStyle="#ffc83a";g.fill();g.strokeStyle="#8a5a10";g.lineWidth=1.4;g.stroke()}
+function invIconURL(key){if(INVC[key])return INVC[key];
+ var p=key.split(":"),t=p[0],id=p[1],c=document.createElement("canvas"),g,a,it,P;c.width=c.height=96;g=c.getContext("2d");
+ try{
+  if(t==="c"||t==="cb"){invFit(g,function(){plant0(id,[55,95],1,true,0)});if(t==="cb")invStar(g)}
+  else{a=t==="y"?SHA[id]:id;it=fiDef(a);
+   if(it&&it.animal){P=PRODK[a];if(P)PD[P[0]](g,P,a);else throw 0}
+   else invFit(g,function(){invFruitDraw(a)})}
+ }catch(e){g.clearRect(0,0,96,96);g.font="44px serif";g.textAlign="center";g.fillText("\uD83D\uDCE6",48,62)}
+ return INVC[key]=c.toDataURL()}
+function invInfo(key){var p=key.split(":"),t=p[0],id=p[1],c,it;
+ if(t==="c"||t==="cb"){c=cr(id);return c?{n:(t==="cb"?"BIG ":"")+c.name,g:0}:null}
+ if(t==="i"){it=fiDef(id);return it?{n:it.animal?it.prod:it.name.replace(/ (Tree|Palm)$/,""),g:it.animal?2:1}:null}
+ if(t==="y"){it=fiDef(SHA[id]);return it?{n:it.prod+" (young)",g:2}:null}
+ return null}
+function invUP(k){return(S.invp&&S.invp[k])||invUnit(k)}
+function invTotal(){var t=0;Object.keys(S.inv||{}).forEach(function(k){t+=(S.inv[k]|0)*invUP(k)});return t}
+function invSell(key,n){var have=(S.inv&&S.inv[key])|0,u=invUP(key),g,nm=invInfo(key);if(!have||!nm)return;
+ n=n==="all"?have:Math.min(+n||1,have);g=n*u;S.coins+=g;S.inv[key]=have-n;if(S.inv[key]<=0)delete S.inv[key];
+ send("farmInvSell",[TOKEN,key,n]);paint();renderInv();try{FarmAudio.play("sell")}catch(e){}
+ toast("\uD83D\uDCB0 Sold "+n+" "+nm.n+" for +"+g+"\uD83E\uDE99")}
+function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
+ if(!p||!S)return;
+ if(!box){box=document.createElement("div");box.id="barnInv";p.insertBefore(box,$("barnList"));
+  box.onclick=function(ev){var b=ev.target.closest&&ev.target.closest("button"),d,t,n;if(!b)return;
+   if(b.id==="invSellAll"){t=invTotal();n=0;Object.keys(S.inv||{}).forEach(function(k){n+=S.inv[k]|0});if(!n)return;
+    infoDlg("\uD83D\uDCB0","Sell all harvest?","Everything in your harvest storage is sold at its price.",["Items: "+n,"You get: +"+t+"\uD83E\uDE99"],function(){S.coins+=invTotal();S.inv={};send("farmInvSellAll",[TOKEN]);paint();renderInv();try{FarmAudio.play("sell")}catch(e){}toast("\uD83D\uDCB0 Sold all harvest for +"+t+"\uD83E\uDE99")},"Sell all");return}
+   d=b.dataset.s;if(d){d=d.split("|");invSell(d[0],d[1])}}}
+ ks=Object.keys(S.inv||{}).filter(function(k){return(S.inv[k]|0)>0&&invInfo(k)});
+ if(!ks.length){box.innerHTML="<div class='small' style='color:#fff'>\uD83E\uDDFA Harvest storage is empty. Harvested crops, fruits and animal products are kept here.</div>";return}
+ ks.sort(function(a,b){var x=invInfo(a),y=invInfo(b);return x.g-y.g||x.n.localeCompare(y.n)});
+ h="<div class='ivh'><b>\uD83E\uDDFA Harvest storage</b><span>Total \uD83E\uDE99 "+invTotal()+"</span><button class='btn bsell' id='invSellAll'>\uD83D\uDCB0 Sell all harvest</button></div><div class='ivg'>";
+ ks.forEach(function(k){var i=invInfo(k);
+  h+="<div class='ivc'><img src='"+invIconURL(k)+"'><b>"+esc(i.n)+"</b>\u00D7"+S.inv[k]+" &middot; \uD83E\uDE99 "+invUP(k)+" each<br><button class='btn' data-s='"+k+"|1'>Sell 1</button><button class='btn bsell' data-s='"+k+"|all'>Sell all</button></div>"});
+ box.innerHTML=h+"</div>"}
+var _rb0=renderBarn;
+renderBarn=function(){_rb0.apply(this,arguments);try{renderInv()}catch(e){}};
+$("edBarn").addEventListener("click",function(){try{renderInv()}catch(e){}});
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
