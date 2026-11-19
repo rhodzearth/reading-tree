@@ -4619,7 +4619,7 @@ $("ckPlus").style.opacity=rm?((grownKids()&&L.length<5)?"1":".35"):((L.length>=5
  dots.style.cssText="position:absolute;top:68px;left:0;right:0;display:flex;justify-content:center;gap:8px;pointer-events:none";dots.innerHTML="<i></i><i></i><i></i>";
  wrap.appendChild(aL);wrap.appendChild(aR);wrap.appendChild(dots);ctl.style.transition="opacity .2s";
  function roomUI(){aL.style.opacity=rm>-1?"1":"0";aL.style.pointerEvents=rm>-1?"auto":"none";aR.style.opacity=rm<1?"1":"0";aR.style.pointerEvents=rm<1?"auto":"none";
-  ctl.style.opacity=rm?"0":"1";ctl.style.pointerEvents=rm?"none":"auto";
+  ctl.style.opacity="1";ctl.style.pointerEvents="auto";
   [].forEach.call(dots.children,function(d,i){d.style.cssText="width:9px;height:9px;border-radius:50%;box-shadow:0 1px 4px #000;background:"+(i===rm+1?"#fff":"rgba(255,255,255,.4)")})}
  function goRoom(d){var n=Math.max(-1,Math.min(1,rm+d));if(n===rm)return;rm=n;roomUI();rows()}
  aL.onclick=function(){goRoom(-1)};aR.onclick=function(){goRoom(1)};
