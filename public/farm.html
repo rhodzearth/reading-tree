@@ -163,6 +163,30 @@ body.night #zoomNote{color:#111}
 body.cam #zoomNote{visibility:hidden!important}
 #mini{width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5)}
 #vmini{position:absolute;left:8px;top:60px;z-index:6;width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5);display:none;touch-action:none;cursor:pointer}
+/* ===== EDIT BAR + BARN + DIALOGS: fully transparent, modern layout ===== */
+#editbar,body.paint-top #editbar,#barnP,:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;box-shadow:none!important;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.9)!important}
+body.paint-top #editbar{width:min(560px,96vw)!important;max-width:96vw!important;gap:8px!important;padding:4px 6px!important}
+body.paint-top #editbar #edTxt{flex:0 0 100%;max-width:100%;box-sizing:border-box;text-align:center;font-size:13px;font-weight:700;padding:5px 12px;border-radius:12px;background:rgba(0,0,0,.32)}
+#editbar .btn,#barnP .btn{border:1px solid rgba(255,255,255,.4);border-radius:12px;background:rgba(20,30,25,.5);color:#fff;font-size:13px;font-weight:600;line-height:1.15;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.25);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+#editbar .btn{flex:1 1 104px;max-width:150px;min-height:40px;padding:8px 10px;white-space:normal}
+#editbar #edStop{background:rgba(198,40,40,.72);order:1}
+#editbar #edBrush{order:2}#editbar #edFRot{order:3}#editbar #edAll{order:4}#editbar #edRot{order:5}#editbar #edUp{order:6}
+#editbar #edSell{background:rgba(224,82,60,.78);order:10}#editbar #edSellG{background:rgba(224,82,60,.78);order:11}
+#editbar #edStore{background:rgba(33,118,210,.75);order:12}#editbar #edGrp{background:rgba(33,118,210,.75);order:13}
+#editbar #edMoveG{background:rgba(123,97,214,.75);order:14}#editbar #edMoveS{background:rgba(123,97,214,.75);order:15}
+#editbar #edPlantG{background:rgba(46,125,50,.78);order:16}#editbar #edHarvG{background:rgba(46,125,50,.78);order:17}
+#editbar #edUndo{order:20}#editbar #edBarn{background:rgba(214,140,30,.8);order:21}
+#editbar #edDone{background:linear-gradient(180deg,#4caf50,#2f7d32);font-weight:700;flex-grow:1.4;order:30}
+#barnP{padding:6px 4px!important}
+#barnP>b{font-size:15px}
+#barnP #barnList{gap:8px;margin-top:10px}
+#barnP .btn{padding:8px 12px}
+#barnP #barnSellAll,#barnP .bsell{background:rgba(224,82,60,.8)}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .dtitle{color:#fff}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .dsub{opacity:1;color:#fff}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox :is(.dchip,.dst){background:rgba(0,0,0,.35)!important;color:#fff}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .btn.alt{background:rgba(20,30,25,.55);color:#fff;border:1px solid rgba(255,255,255,.4)}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox input{background:rgba(255,255,255,.92);color:#222;text-shadow:none}
 </style></head><body>
 <div id="msg" style="display:none"></div>
 <div id="main" style="display:none">
@@ -3877,7 +3901,7 @@ function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.key
   b.onclick=function(){PLACING=g[0];SEL=null;$("barnP").style.display="none";editUI();drawAll()};box.appendChild(b);addSellBtn(k,g,box)});
  tl.forEach(function(id){var f=floorDef(id)||{id:id,name:id},b=document.createElement("button");b.className="btn alt";b.textContent="\uD83E\uDDF1 "+f.name+" tile \u00D7"+S.ft[id];
   b.onclick=function(){$("barnP").style.display="none";startPaint(f)};box.appendChild(b);
-  var sb=document.createElement("button");sb.className="btn alt";sb.textContent="\uD83D\uDCB0 Sell";sb.onclick=function(){sellFloorDlg(f)};box.appendChild(sb)})}
+  var sb=document.createElement("button");sb.className="btn alt bsell";sb.textContent="\uD83D\uDCB0 Sell";sb.onclick=function(){sellFloorDlg(f)};box.appendChild(sb)})}
 function sellFloorDlg(f){var dlg=$("dlg"),inp,tot,have=haveTiles(f.id),rate=S.sellRate||.5;
  function shut(){dlg.style.display="none"}
  $("dlgBody").innerHTML="<div id='fsThumb' style='width:84px;height:84px;margin:0 auto'></div><div class='dtitle'>Sell "+esc(f.name)+" tiles</div><div class='dsub'>In your barn: <b>"+have+"</b><br>You get half the price back.</div><div style='margin:8px 0'><input id='fsN' type='number' min='1' max='"+have+"' value='"+have+"' style='width:120px;font-size:16px;padding:6px;border-radius:8px;text-align:center'></div><div class='small' id='fsTot'></div><div class='dbtns'><button class='btn alt' id='dNo'>Close</button><button class='btn ok' id='fsSell'>Sell</button></div>";
