@@ -6624,11 +6624,19 @@ var SRC="temple.png",   // the picture file, next to farm.html
  FP=6,                  // tiles wide and deep. Must equal FARM_FOOT.temple on the server
  BS=2.7,                // drawing scale. Use about 0.44 x FP (FP 5 = 2.3, FP 4 = 1.85)
  AX=.5,AY=.83,          // where the middle of the ground sits in the picture (AY: raise = smaller, lower = bigger)
- img=new Image(),ok=false;
+ SH=.3,FADE=.12,SIDE=.05,   // ground shadow strength, bottom-edge fade, left/right-edge fade
+ img=new Image(),ok=false,TC=null;
 FOOT.temple=FP;BSC.temple=BS;HB.temple=[-300,-360,300,60];
-DEC.temple=function(p){var k,w,h;if(!ok)return;
+DEC.temple=function(p){var k,w,h,hw=FP*56/BS,hh=FP*28/BS,g,im=TC||img;if(!ok)return;
+ g=X.createRadialGradient(p[0],p[1],hw*.15,p[0],p[1],hw*1.05);g.addColorStop(0,"rgba(10,25,5,"+SH+")");g.addColorStop(1,"rgba(10,25,5,0)");
+ X.save();X.translate(0,p[1]);X.scale(1,.5);X.translate(0,-p[1]);X.fillStyle=g;X.beginPath();X.ellipse(p[0]+hw*.12,p[1]+hh*.1,hw*1.05,hw*.9,0,0,7);X.fill();X.restore();
  k=FP*112/(BS*img.naturalWidth);w=img.naturalWidth*k;h=img.naturalHeight*k;
- X.drawImage(img,p[0]-w*AX,p[1]-h*AY,w,h)};
+ X.drawImage(im,p[0]-w*AX,p[1]-h*AY,w,h)};
+ function soft(){var c=document.createElement("canvas"),g,gr,w=img.naturalWidth,h=img.naturalHeight;
+ c.width=w;c.height=h;g=c.getContext("2d");g.drawImage(img,0,0);g.globalCompositeOperation="destination-in";
+ gr=g.createLinearGradient(0,h*(1-FADE),0,h);gr.addColorStop(0,"#000");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(0,0,w,h);
+ gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,"rgba(0,0,0,0)");gr.addColorStop(SIDE,"#000");gr.addColorStop(1-SIDE,"#000");gr.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=gr;g.fillRect(0,0,w,h);
+ return c}
 // market picture
 var _mt=mThumb;
 mThumb=function(i,dpr){if(i.id!=="temple")return _mt.apply(this,arguments);
@@ -6638,7 +6646,7 @@ mThumb=function(i,dpr){if(i.id!=="temple")return _mt.apply(this,arguments);
  g=c.getContext("2d");sp=sprite("temple",dpr,0,1);
  g.drawImage(sp,6*dpr,34*dpr,248*dpr,165*dpr,0,14*dpr,84*dpr,56*dpr);
  return MTH[key]=c};
-img.onload=function(){ok=true;
+img.onload=function(){ok=true;TC=soft();
  Object.keys(SPR).forEach(function(k){if(k.indexOf("temple@")===0)delete SPR[k]});
  Object.keys(MTH).forEach(function(k){if(k.indexOf("temple@")===0)delete MTH[k]});
  try{if($("mkt").style.display!=="none")renderMkt()}catch(e){}
