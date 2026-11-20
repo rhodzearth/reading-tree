@@ -1,0 +1,135 @@
+/* ---- gear menu: seeds + actions live in a bottom sheet so the farm fills the whole screen ---- */
+#dock{z-index:20;transform:translateY(105%);visibility:hidden;transition:transform .22s,visibility .22s;flex-direction:column;align-items:stretch;gap:8px;max-height:62vh;overflow-y:auto;border-radius:16px 16px 0 0}
+#dock.open{transform:none;visibility:visible}
+#dock .seeds{flex:none;flex-wrap:wrap;overflow:visible;justify-content:center}
+#dock .acts{max-width:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#dock .acts .btn{padding:9px 4px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#seedChip img{width:20px;height:20px;display:block}
+.stabs{display:flex;gap:8px;justify-content:center}.stabs .btn{flex:1;max-width:180px}
+#mkt{animation:mup .18s ease-out}
+@keyframes mup{from{transform:translateX(-50%) translateY(22px);opacity:0}to{transform:translateX(-50%);opacity:1}}
+#buyBar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));z-index:12;display:none;gap:28px;align-items:center}
+.bb{width:58px;height:58px;border-radius:50%;border:0;font-size:28px;line-height:1;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.45)}
+.bb.no{background:#d9534f}.bb.yes{background:#2f9e44}
+body.cam #hud,body.cam #botBar,body.cam #mini,body.cam #toast,body.cam #hint,body.cam #dock,body.cam #editbar,body.cam #buyBar,body.cam #barnP{visibility:hidden!important}
+#camOff{position:fixed;left:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:13;display:none;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.28);color:#fff;font-size:16px;opacity:.35}
+body.cam #camOff{display:block}
+/* ---- glass panels: transparent + blurred so text stays readable ---- */
+:root{--gl:rgba(255,255,255,.58);--gl2:rgba(255,255,255,.45)}
+body.night{--gl:rgba(18,26,30,.6);--gl2:rgba(40,52,58,.5)}
+#dock,#mkt,#barnP,#editbar,.dbox{background:var(--gl)!important;-webkit-backdrop-filter:blur(12px) saturate(1.2);backdrop-filter:blur(12px) saturate(1.2);border:1px solid rgba(255,255,255,.35);color:var(--tx);text-shadow:0 0 3px var(--gl)}
+#dlg{background:rgba(10,20,8,.18)!important}
+.mc,.dst,.dchip,#mkt .pill,#dock .seed{background:var(--gl2)!important}
+#dock .seed.on{background:rgba(150,215,110,.65)!important;color:#1b2a12;text-shadow:none}
+#dock .seed.on b{color:#1b2a12}
+#dock .small,#mkt .small,#barnP .small,.dbox .dsub{opacity:.92}
+#lay{position:fixed;inset:0;z-index:42;background:var(--scene);flex-direction:column}
+#lBg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:-1}
+#lHead{display:flex;align-items:center;gap:8px;background:var(--hud);padding:calc(6px + env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 6px max(10px,env(safe-area-inset-left));box-shadow:0 1px 6px rgba(0,0,0,.2)}
+#lHead b{color:var(--dk);white-space:nowrap}#lInfo{flex:1;min-width:0;text-align:center}
+#lScene{flex:1;position:relative;overflow:hidden}
+#lScene canvas{position:absolute;left:0;top:0}
+#lBar{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;background:var(--hud);padding:6px 8px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -1px 6px rgba(0,0,0,.2)}
+#lBar .btn{padding:8px 11px}
+#lStoreP{position:fixed;left:50%;transform:translateX(-50%);z-index:43;width:min(520px,94vw);display:none;flex-wrap:wrap;gap:6px;background:var(--hud);border-radius:14px;padding:10px;box-shadow:0 4px 18px rgba(0,0,0,.35);max-height:40vh;overflow-y:auto;font-size:12px}
+/* ---- visit bar: transparent, glass icons ---- */
+#vHead{position:absolute;top:0;left:0;right:0;z-index:5;background:transparent;box-shadow:none;pointer-events:none}
+#vHead>*{pointer-events:auto}
+#vName{min-width:0;max-width:52vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--dk);
+ background:var(--gl);-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);
+ border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 12px;text-shadow:0 0 3px var(--gl)}
+#vHead .btn.alt{width:34px;height:34px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1;flex:none;
+ background:var(--gl);color:var(--tx);border:1px solid rgba(255,255,255,.35);
+ -webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);box-shadow:0 2px 6px rgba(0,0,0,.18)}
+#vHead .btn.alt:active{transform:scale(.92)}
+#vCoins{background:var(--gl)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.35);font-size:13px}
+html,body{touch-action:pan-x pan-y;overscroll-behavior:none}
+/* top bar: keep all icon buttons on one row, whatever the name length */
+#idBar{flex-wrap:nowrap;gap:4px}
+#idBar .btn,#idBar #iTok{flex:0 0 auto}
+#idBar .pill{min-width:0;flex:0 1 auto;padding:3px 6px;font-size:min(11px,3vw)}
+#idBar #iUser{max-width:32vw}
+#idBar #iId{max-width:34vw}
+.hr{gap:5px}
+.hr .btn{padding:5px 8px}
+:root{--gt:rgba(255,255,255,.2)}body.night{--gt:rgba(18,26,30,.4)}
+#barnP{background:var(--gt)!important;-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);text-shadow:0 0 3px var(--gl)}
+body:has(#barnP[style*="block"]) #hud{visibility:hidden}
+body.edit-top #dlg{align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
+body.edit-top #dlg .dbox{background:var(--gt)!important;-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);text-shadow:0 0 3px var(--gl);max-height:85vh;overflow-y:auto}
+body.edit-top:has(#dlg[style*="flex"]) #hud{visibility:hidden}
+body.paint-top #editbar{top:calc(6px + env(safe-area-inset-top));bottom:auto!important;z-index:20;background:var(--gt)!important;-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);text-shadow:0 0 3px var(--gl);flex-direction:row!important;flex-wrap:wrap!important;justify-content:center!important;align-items:center;width:96vw;max-width:96vw;overflow:visible;border-radius:14px;padding:6px 8px;gap:6px}
+body.paint-top #editbar #edTxt{flex:0 0 100%;text-align:center}
+body.paint-top #hud{visibility:hidden}
+#dlg:has(#fbN){align-items:flex-start;padding-top:calc(8px + env(safe-area-inset-top))}
+#dlg:has(#fbN) .dbox{background:var(--gt)!important;-webkit-backdrop-filter:blur(10px) saturate(1.2);backdrop-filter:blur(10px) saturate(1.2);text-shadow:0 0 3px var(--gl);max-height:85vh;overflow-y:auto}
+body:has(#dlg[style*="flex"] #fbN) #hud{visibility:hidden}
+#barnAll{display:none!important}
+#zoomNote{position:fixed;left:50%;top:100px;transform:translateX(-50%);z-index:60;display:none;background:var(--dk);color:#fff;padding:6px 14px;border-radius:99px;font-weight:700;font-size:14px;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+body.night #zoomNote{color:#111}
+body.cam #zoomNote{visibility:hidden!important}
+#mini{width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5)}
+#vmini{position:absolute;left:8px;top:60px;z-index:6;width:173.6px;height:91px;border-radius:14px;background:linear-gradient(160deg,#3aa6d0,#2a7db4);box-shadow:0 0 0 2px rgba(255,255,255,.92),0 4px 12px rgba(0,0,0,.5);display:none;touch-action:none;cursor:pointer}
+/* ===== EDIT BAR + BARN + DIALOGS: fully transparent, modern layout ===== */
+#editbar,body.paint-top #editbar,#barnP,:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border:0!important;box-shadow:none!important;color:#fff!important;text-shadow:0 1px 3px rgba(0,0,0,.95),0 0 2px rgba(0,0,0,.9)!important}
+body.paint-top #editbar{width:min(560px,96vw)!important;max-width:96vw!important;gap:8px!important;padding:4px 6px!important}
+body.paint-top #editbar #edTxt{flex:0 0 100%;max-width:100%;box-sizing:border-box;text-align:center;font-size:13px;font-weight:700;padding:5px 12px;border-radius:12px;background:rgba(0,0,0,.32)}
+#editbar .btn,#barnP .btn{border:1px solid rgba(255,255,255,.4);border-radius:12px;background:rgba(20,30,25,.5);color:#fff;font-size:13px;font-weight:600;line-height:1.15;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.25);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+#editbar .btn{flex:1 1 104px;max-width:150px;min-height:40px;padding:8px 10px;white-space:normal}
+#editbar #edStop{background:rgba(198,40,40,.72);order:1}
+#editbar #edBrush{order:2}#editbar #edFRot{order:3}#editbar #edAll{order:4}#editbar #edRot{order:5}#editbar #edUp{order:6}
+#editbar #edSell{background:rgba(224,82,60,.78);order:10}#editbar #edSellG{background:rgba(224,82,60,.78);order:11}
+#editbar #edStore{background:rgba(33,118,210,.75);order:12}#editbar #edGrp{background:rgba(33,118,210,.75);order:13}
+#editbar #edMoveG{background:rgba(123,97,214,.75);order:14}#editbar #edMoveS{background:rgba(123,97,214,.75);order:15}
+#editbar #edPlantG{background:rgba(46,125,50,.78);order:16}#editbar #edHarvG{background:rgba(46,125,50,.78);order:17}
+#editbar #edUndo{order:20}#editbar #edBarn{background:rgba(214,140,30,.8);order:21}
+#editbar #edDone{background:linear-gradient(180deg,#4caf50,#2f7d32);font-weight:700;flex-grow:1.4;order:30}
+#barnP{padding:6px 4px!important}
+#barnP>b{font-size:15px}
+#barnP #barnList{gap:8px;margin-top:10px}
+#barnP .btn{padding:8px 12px}
+#barnP #barnSellAll,#barnP .bsell{background:rgba(224,82,60,.8)}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .dtitle{color:#fff}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .dsub{opacity:1;color:#fff}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox :is(.dchip,.dst){background:rgba(0,0,0,.35)!important;color:#fff}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .btn.alt{background:rgba(20,30,25,.55);color:#fff;border:1px solid rgba(255,255,255,.4)}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox input{background:rgba(255,255,255,.92);color:#222;text-shadow:none}
+body.edit-top #dlg,#dlg:has(#fbN){align-items:center;padding:16px;background:rgba(10,20,8,.45)!important;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox{background:rgba(24,32,26,.9)!important;-webkit-backdrop-filter:blur(14px)!important;backdrop-filter:blur(14px)!important;border:1px solid rgba(255,255,255,.35)!important;box-shadow:0 14px 44px rgba(0,0,0,.55)!important}
+:is(body.edit-top #dlg,#dlg:has(#fbN)) .dbox .btn.ok{box-shadow:0 3px 0 #1b5e20!important}
+#barnInv{margin-top:10px;clear:both}
+#barnInv .ivh{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px;margin-bottom:6px}
+#barnInv .ivg{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+#barnInv .ivc{background:rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.3);border-radius:14px;padding:8px 6px;text-align:center;font-size:12px}
+#barnInv .ivc img{width:56px;height:56px;display:block;margin:0 auto 2px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+#barnInv .ivc b{display:block;font-size:13px}
+#barnInv .ivc .btn{padding:6px 8px;font-size:12px;margin:3px 2px 0}
+#barnInv .ivt{display:flex;gap:6px;overflow-x:auto;white-space:nowrap;margin:0 0 8px;padding-bottom:4px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+#barnInv .ivt .btn{flex:none;padding:7px 14px;font-size:13px}
+#barnInv .ivt .btn.on{background:rgba(76,175,80,.92)!important;border-color:#fff}
+#barnInv .ivc .pl{background:rgba(47,125,50,.85)}
+/* ---- modern visit / neighbors panel ---- */
+#side{width:min(360px,94vw);border-radius:26px 0 0 26px;padding:calc(16px + env(safe-area-inset-top)) 14px 14px;box-shadow:-12px 0 40px rgba(0,0,0,.35)}
+#side>.nb:first-child{background:none!important;padding:0 2px 2px;margin:0}
+#side>.nb:first-child>span::before{content:"\1F33E  Farm Friends";font-size:20px;font-weight:800;color:var(--dk)}
+#side #sideClose{width:34px;height:34px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px}
+#side div:has(>#tabV){background:rgba(0,0,0,.07);padding:4px!important;border-radius:18px;gap:4px!important;margin:10px 0 12px!important}
+body.night #side div:has(>#tabV){background:rgba(255,255,255,.09)}
+#side #tabV,#side #tabN{border-radius:14px;padding:10px 6px;font-weight:700;font-size:14px;background:transparent;color:var(--tx);box-shadow:none}
+#side #tabV:not(.alt),#side #tabN:not(.alt){background:linear-gradient(180deg,#4caf50,#2f7d32);color:#fff;box-shadow:0 3px 10px rgba(47,125,50,.45)}
+#side #nbId{border:0;background:rgba(0,0,0,.06);color:var(--tx);border-radius:14px;padding:12px 14px;margin:0 0 8px}
+#side #nbId:focus{outline:2px solid #4caf50}
+body.night #side #nbId{background:rgba(255,255,255,.09)}
+#side #nbAdd{width:100%;border-radius:14px;padding:11px;font-weight:700;margin-bottom:6px}
+#side .nb{background:rgba(0,0,0,.045);border:0;border-radius:16px;padding:10px 12px;margin:7px 0;transition:transform .12s}
+#side .nb:active{transform:scale(.985)}
+body.night #side .nb{background:rgba(255,255,255,.07)}
+#side .nb>span:first-child{min-width:0;font-weight:700;line-height:1.3;overflow:hidden}
+#side .nb>span:first-child .small{display:block;font-weight:400;font-size:11px;opacity:.6;overflow:hidden;text-overflow:ellipsis}
+#side .nb>span:last-child:not(:first-child){display:flex;gap:6px;flex:none}
+#side .nb .btn{border-radius:12px;padding:8px 11px;font-weight:600}
+#side span[title="Active"]{box-shadow:0 0 0 3px rgba(46,204,64,.25),0 0 8px #2ecc40}
+#nbList>b{font-size:15px;color:var(--dk)}
+#myId{background:var(--bg);padding:2px 8px;border-radius:8px}
+#chIn{border:0;background:rgba(0,0,0,.07);border-radius:999px;padding:11px 14px;margin:0;color:var(--tx)}
+#chSend{border-radius:999px;padding:0 18px}
