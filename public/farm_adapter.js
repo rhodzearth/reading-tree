@@ -43,6 +43,7 @@ var FARM_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     farmAddNeighbor:    function (a) { return { op: "addnb", who: a[1] }; },
     farmRemoveNeighbor: function (a) { return { op: "removenb", nid: a[1] }; },
     farmVisit:          function (a) { return { op: "visit", nid: a[1] }; },
+    farmAllUsers:       function (a) { return { op: "allusers" }; },
     farmHelp:           function (a) { return { op: "help", nid: a[1], i: a[2] }; }
   };
 
