@@ -229,6 +229,7 @@ body.edit-top #dlg,#dlg:has(#fbN){align-items:center;padding:16px;background:rgb
  </div>
  <div id="side">
   <div class="nb" style="border:0"><span></span><button class="btn alt" id="sideClose">&#10005;</button></div>
+    <div style="display:flex;gap:6px;margin:6px 0"><button class="btn" id="tabV" style="flex:1">&#127758; Visit</button><button class="btn alt" id="tabN" style="flex:1">&#128101; Neighbors</button></div>
   <input id="nbId" placeholder="Search username or reader ID" autocapitalize="none" spellcheck="false">
   <button class="btn" id="nbAdd">Visit</button>
   <div id="allList"></div>
@@ -2041,7 +2042,7 @@ $("nbAdd").onclick=function(){busyShow("Loading readers...");
 $("nbId").oninput=function(){renderAll()};
 function renderAll(){var box=$("allList"),q=$("nbId").value.trim().toLowerCase();
  if(!ALLU){box.innerHTML="";return}
- var rows=ALLU.filter(function(u){return !q||u.username.toLowerCase().indexOf(q)>=0||u.id.indexOf(q)>=0});
+ var rows=ALLU.filter(function(u){return !u.nb&&(!q||u.username.toLowerCase().indexOf(q)>=0||u.id.indexOf(q)>=0)});
  box.innerHTML="<div class='small' style='margin:8px 0 4px'>"+rows.length+" reader(s) with accounts</div>";
  if(!rows.length)box.innerHTML+="<p class='small'>No readers match.</p>";
  rows.forEach(function(u){var r=document.createElement("div");r.className="nb";
@@ -2094,6 +2095,8 @@ function visitMenu(){if(!V)return;
 $("vClose").onclick=visitMenu;
 function side(on){$("side").classList.toggle("open",on)}
 $("nbBtn").onclick=function(){if(PEND)return;dock(false);side(!$("side").classList.contains("open"))};$("sideClose").onclick=function(){side(false)};
+function nbTab(t){var v=t==="v";$("nbId").style.display=v?"":"none";$("nbAdd").style.display=v?"":"none";$("allList").style.display=v?"":"none";$("nbList").style.display=v?"none":"";$("tabV").className=v?"btn":"btn alt";$("tabN").className=v?"btn alt":"btn"}
+$("tabV").onclick=function(){nbTab("v");$("nbAdd").onclick()};$("tabN").onclick=function(){nbTab("n")};nbTab("v");
 
 // ===================== DECORATE MODE =====================
 var EDIT=false,SEL=null,PLACING=null,DRAG=null,BUYING=0,SELL1=0;
