@@ -1908,11 +1908,11 @@ function paint(){FW=FH=S.sz||8;prepItems();if(S._n!==S.now){S._n=S.now;S.off=S.n
   b.onclick=function(){if(lock){toast(c.name+" unlocks at level "+c.lvl);return}sel=c.id;chip();[].forEach.call($("seeds").children,function(x){x.classList.toggle("on",x._id===c.id)})};b._id=c.id;sd.appendChild(b)});
  }
  chip();
- var nk=S.nb.map(function(n){return n.id+n.username}).join()+"|"+S.helpLeft,nl=$("nbList");
+ var nk=S.nb.map(function(n){return n.id+n.username+(n.on?1:0)}).join()+"|"+S.helpLeft,nl=$("nbList");
  if(paint._nk!==nk){paint._nk=nk;
  nl.innerHTML="<b>My neighbors ("+S.nb.length+")</b><div class='small'>Helps left today: "+S.helpLeft+" (+"+(S.helpCoins||3)+"\uD83E\uDE99 each)</div>";
  if(!S.nb.length)nl.innerHTML+="<p class='small'>No neighbors yet. Add a reader by their ID.</p>";
- S.nb.forEach(function(n){var r=document.createElement("div");r.className="nb";r.innerHTML="<span>&#128104;&#8205;&#127806; "+esc(n.username)+" <span class='small'>"+esc(n.id)+"</span></span>";
+ S.nb.forEach(function(n){var r=document.createElement("div");r.className="nb";r.innerHTML="<span><span title='"+(n.on?"Active":"Not active")+"' style='display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:"+(n.on?"#2ecc40":"#9e9e9e")+"'></span>&#128104;&#8205;&#127806; "+esc(n.username)+" <span class='small'>"+esc(n.id)+"</span></span>";
   var v=document.createElement("button");v.className="btn";v.textContent="Visit";v.onclick=function(){visit(n.id)};
   var x=document.createElement("button");x.className="btn alt";x.textContent="\u2715";x.onclick=function(){if(confirm("Remove "+n.username+"?"))act("farmRemoveNeighbor",[TOKEN,n.id])};
   var w=document.createElement("span");w.appendChild(v);w.appendChild(document.createTextNode(" "));w.appendChild(x);r.appendChild(w);nl.appendChild(r)});
