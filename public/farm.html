@@ -6617,5 +6617,34 @@ setInterval(function(){[["shSub","shPlus","shMinus","shHarv"],["ckSub","ckPlus",
  [a[1],a[2],a[3]].forEach(function(id){var b=$(id);if(b)b.style.display=side?"none":""})})},150);
 })();
 </script>
+<script>
+/* ===== TEMPLE (picture item) ===== */
+(function(){
+var SRC="temple.png",   // the picture file, next to farm.html
+ FP=6,                  // tiles wide and deep. Must equal FARM_FOOT.temple on the server
+ BS=2.7,                // drawing scale. Use about 0.44 x FP (FP 5 = 2.3, FP 4 = 1.85)
+ AX=.5,AY=.83,          // where the middle of the ground sits in the picture (AY: raise = smaller, lower = bigger)
+ img=new Image(),ok=false;
+FOOT.temple=FP;BSC.temple=BS;HB.temple=[-300,-360,300,60];
+DEC.temple=function(p){var k,w,h;if(!ok)return;
+ k=FP*112/(BS*img.naturalWidth);w=img.naturalWidth*k;h=img.naturalHeight*k;
+ X.drawImage(img,p[0]-w*AX,p[1]-h*AY,w,h)};
+// market picture
+var _mt=mThumb;
+mThumb=function(i,dpr){if(i.id!=="temple")return _mt.apply(this,arguments);
+ var key="temple@"+dpr,c=MTH[key],g,sp;if(c)return c;
+ c=document.createElement("canvas");c.width=c.height=Math.round(84*dpr);c.style.cssText="width:84px;height:84px";
+ if(!ok)return c;
+ g=c.getContext("2d");sp=sprite("temple",dpr,0,1);
+ g.drawImage(sp,6*dpr,34*dpr,248*dpr,165*dpr,0,14*dpr,84*dpr,56*dpr);
+ return MTH[key]=c};
+img.onload=function(){ok=true;
+ Object.keys(SPR).forEach(function(k){if(k.indexOf("temple@")===0)delete SPR[k]});
+ Object.keys(MTH).forEach(function(k){if(k.indexOf("temple@")===0)delete MTH[k]});
+ try{if($("mkt").style.display!=="none")renderMkt()}catch(e){}
+ drawAll()};
+img.src=SRC;
+})();
+</script>
 </body></html>
 </body></html>
