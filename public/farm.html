@@ -2037,7 +2037,7 @@ $("expBtn").onclick=function(){var e=S.exp;if(!e){landDlg();return}
   $("field")._pan=[0,0];$("field")._z=1;$("field")._kabs=0;fitAll();toast("\uD83C\uDF3E Land expanded to "+e.sz+" x "+e.sz+"! New land grows toward the back.")},function(m){busyHide();toast(m)})})})};
 var ALLU=null;
 $("nbAdd").onclick=function(){busyShow("Loading readers...");
- flush(function(){call("farmAllUsers",[TOKEN],function(s){busyHide();ALLU=s.out||[];renderAll()},function(m){busyHide();toast(m)})})};
+ FARM_CALL("farmAllUsers",[TOKEN]).then(function(s){busyHide();ALLU=(s&&s.out)||[];renderAll()}).catch(function(e){busyHide();toast(e.message||String(e))})};
 $("nbId").oninput=function(){renderAll()};
 function renderAll(){var box=$("allList"),q=$("nbId").value.trim().toLowerCase();
  if(!ALLU){box.innerHTML="";return}
