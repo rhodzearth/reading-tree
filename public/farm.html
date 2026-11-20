@@ -228,9 +228,10 @@ body.edit-top #dlg,#dlg:has(#fbN){align-items:center;padding:16px;background:rgb
   <div id="mList"></div>
  </div>
  <div id="side">
-  <div class="nb" style="border:0"><h3>&#128101; Neighbors</h3><button class="btn alt" id="sideClose">&#10005;</button></div>
-  <b>Add a neighbor</b><input id="nbId" placeholder="Username or Reader ID" autocapitalize="none" spellcheck="false">
-  <button class="btn" id="nbAdd">Add neighbor</button>
+  <div class="nb" style="border:0"><span></span><button class="btn alt" id="sideClose">&#10005;</button></div>
+  <input id="nbId" placeholder="Search username or reader ID" autocapitalize="none" spellcheck="false">
+  <button class="btn" id="nbAdd">Visit</button>
+  <div id="allList"></div>
   <div class="small" style="margin:8px 0 12px">Your ID: <b id="myId" style="user-select:all"></b> &middot; share it so others can add you.</div>
   <div id="nbList"></div>
  </div>
@@ -2034,9 +2035,21 @@ $("expBtn").onclick=function(){var e=S.exp;if(!e){landDlg();return}
  if(S.level<e.lvl||S.coins<e.cost){infoDlg("\uD83C\uDFDE\uFE0F","Expand to "+e.sz+" x "+e.sz,"Requirements to expand:",["Level "+e.lvl+(S.level>=e.lvl?" \u2713":" (you: "+S.level+")"),"\uD83E\uDE99 "+e.cost+(S.coins>=e.cost?" \u2713":" (you: "+S.coins+")")]);return}
  askExpand(e,function(){busyShow("Expanding your land...");flush(function(){call("farmExpand",[TOKEN],function(s){setState(s);busyHide();
   $("field")._pan=[0,0];$("field")._z=1;$("field")._kabs=0;fitAll();toast("\uD83C\uDF3E Land expanded to "+e.sz+" x "+e.sz+"! New land grows toward the back.")},function(m){busyHide();toast(m)})})})};
-$("nbAdd").onclick=function(){var v=$("nbId").value.trim();if(!v){toast("Type a username or Reader ID");return}
- busyShow("Adding neighbor...");
- flush(function(){call("farmAddNeighbor",[TOKEN,v],function(s){setState(s);busyHide();$("nbId").value="";toast("Added "+s.out.added+" as a neighbor")},function(m){busyHide();toast(m)})})};
+var ALLU=null;
+$("nbAdd").onclick=function(){busyShow("Loading readers...");
+ flush(function(){call("farmAllUsers",[TOKEN],function(s){busyHide();ALLU=s.out||[];renderAll()},function(m){busyHide();toast(m)})})};
+$("nbId").oninput=function(){renderAll()};
+function renderAll(){var box=$("allList"),q=$("nbId").value.trim().toLowerCase();
+ if(!ALLU){box.innerHTML="";return}
+ var rows=ALLU.filter(function(u){return !q||u.username.toLowerCase().indexOf(q)>=0||u.id.indexOf(q)>=0});
+ box.innerHTML="<div class='small' style='margin:8px 0 4px'>"+rows.length+" reader(s) with accounts</div>";
+ if(!rows.length)box.innerHTML+="<p class='small'>No readers match.</p>";
+ rows.forEach(function(u){var r=document.createElement("div");r.className="nb";
+  r.innerHTML="<span>&#128104;&#8205;&#127806; "+esc(u.username)+" <span class='small'>"+esc(u.id)+"</span></span>";
+  var b=document.createElement("button");b.className=u.nb?"btn alt":"btn";b.textContent=u.nb?"Added":"Add";b.disabled=!!u.nb;
+  b.onclick=function(){busyShow("Adding neighbor...");
+   flush(function(){call("farmAddNeighbor",[TOKEN,u.id],function(s){setState(s);busyHide();u.nb=true;toast("Added "+s.out.added+" as a neighbor");renderAll()},function(m){busyHide();toast(m)})})};
+  r.appendChild(b);box.appendChild(r)})}
 
 function visit(id){var n=S.nb.filter(function(x){return x.id===id})[0];busyShow("Visiting "+(n?n.username:"your neighbor")+"'s farm...");side(false);dock(false);
  flush(function(){call("farmVisit",[TOKEN,id],function(s){V=s.out;if(!Q.length&&!busy)S=s;$("vCanvas")._pan=[0,0];$("vCanvas")._z=1;$("vCanvas")._kabs=0;$("vCanvas")._box=null;$("visit").style.display="flex";paint();busyHide();
