@@ -44,7 +44,9 @@ var FARM_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     farmRemoveNeighbor: function (a) { return { op: "removenb", nid: a[1] }; },
     farmVisit:          function (a) { return { op: "visit", nid: a[1] }; },
     farmAllUsers:       function (a) { return { op: "allusers" }; },
-    farmHelp:           function (a) { return { op: "help", nid: a[1], i: a[2] }; }
+    farmHelp:           function (a) { return { op: "help", nid: a[1], i: a[2] }; },
+    farmChatGet:        function (a) { return { op: "chatget", nid: a[1] }; },
+    farmChatSend:       function (a) { return { op: "chatsend", nid: a[1], msg: a[2] }; }
   };
 
   window.FARM_CALL = async function (name, args) {
