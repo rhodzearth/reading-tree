@@ -57,89 +57,11 @@
 <script>
 window.onerror=function(m,u,l,c){var d=document.createElement("div");d.style.cssText="position:fixed;left:0;right:0;top:0;z-index:9999;background:#fff;color:#c00;padding:10px;font:13px monospace;word-break:break-all";d.textContent="ERROR: "+m+" (line "+l+")";document.body.appendChild(d)};
 </script>
+<script src="farm/js/core/01-globals.js"></script>
+<script src="farm/js/core/02-helpers-api.js"></script>
+<script src="farm/js/core/03-boost-dialog.js"></script>
+<script src="farm/js/core/04-menu-buttons.js"></script>
 <script>
-var $=function(i){return document.getElementById(i)},TOKEN="",S=null,sel="strawberry",V=null,lastLvl=0,HV={f:-1,v:-1},ANIM=false;
-var FW=8,FH=8,STAB="c";
-var MOVING=false,MVT=0,MMT=0,MHT=0,PERF=false,LSDP=0,PWC={},PWN=0,CRM={},CRA=null,SOILC={},QL=false,DRAG_KEEP=.3;
-function evict(C){var k=Object.keys(C),m=Math.ceil(k.length/3),i;for(i=0;i<m;i++)delete C[k[i]];return k.length-m} // drop the oldest third instead of everything
-// while you drag or pinch: cheap drawing + only the geometry is recalculated
-function fitMove(cv){var f=cv._fp;if(!f){fitAll();return}
- MOVING=true;clearTimeout(MVT);MVT=setTimeout(function(){MOVING=false;fitAll();saveView()},170);
- fit(cv,f[0],f[1],f[2],f[3],f[4]);if(f[5])grassBg($(f[5]),cv,f[6]);drawAll()}
- var ZOUT=1.5; // how far you can zoom out on big farms: .4 = about 40% on the notifier, .6 = 60%, 1 = the old max
- var MIRCR=[0,1,0,1]; // which rotations (0,90,180,270) mirror the items. [0,1,1,0] makes 180 look different too
- var DEFP=60; // default zoom on the notifier (1 = max in, 100 = max out). It can't go past the ZOUT cap.
- var SHOWTOK=false;var CAM=false,MULTI=false,UNDO=[],PBUY=0;
-var SHOWMINI=true;try{SHOWMINI=localStorage.getItem("miniHide")!=="1"}catch(e){}
-try{if(localStorage.getItem("treeNight")==="1")document.body.classList.add("night")}catch(e){}
-TOKEN=window.FARM_TOKEN||"";
-function call(n,a,ok,bad){FARM_CALL(n,a).then(function(s){if(s&&s.me&&!s.crops&&S){s.crops=S.crops;s.items=S.items;s.fls=S.fls;s.pfs=S.pfs;if(!s.fl)s.fl=S.fl;if(!s.fr)s.fr=S.fr;if(!s.ft)s.ft=S.ft;if(!s.lo)s.lo=S.lo}try{ok(s)}catch(e){busy=false;toast("Page problem: "+(e&&e.message?e.message:e))}},function(e){var m=e&&e.message?e.message:String(e);if(/log in/i.test(m)){showMsg("Please log in to the Reading Tree first, then open Reading Farm again.")}else if(bad)bad(m);else toast(m)})}
-function toast(m){var t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){t.style.display="none"},3000)}
-function showMsg(m){$("msg").style.display="";$("msg").textContent=m;$("main").style.display="none"}
-function esc(s){var d=document.createElement("div");d.textContent=s;return d.innerHTML}
-function cr(id){if(S.crops!==CRA){CRA=S.crops;CRM={};S.crops.forEach(function(c){CRM[c.id]=c})}return CRM[id]||null}
-function goBack(p){var ref=document.referrer||"",base=ref.split("#")[0].split("?")[0],
- ok=!p&&ref.indexOf(location.origin)===0&&/(index\.html|\/)$/.test(base)&&history.length>1;
- if(ok){var n=HARM?2:1;HARM=false;HSKIP=true;history.go(-n);setTimeout(function(){window.location.href="index.html"},1800)}
- else window.location.href="index.html"+(p||"")}
-function openTree(){$("goTitle").textContent="Opening Reading Tree...";$("goLoading").style.display="flex";setTimeout(function(){goBack("")},120)}
-window.addEventListener("pageshow",function(){$("goLoading").style.display="none"});
-var BT=0;
-function busyShow(t){BT=Date.now();$("goTitle").textContent=t;$("goLoading").style.display="flex"}
-function busyHide(){setTimeout(function(){$("goLoading").style.display="none"},Math.max(0,550-(Date.now()-BT)))}
-function paintNight(){$("nightBtn").textContent=document.body.classList.contains("night")?"\u2600\uFE0F":"\uD83C\uDF19"}
-$("nightBtn").onclick=function(){var on=!document.body.classList.contains("night");document.body.classList.toggle("night",on);try{localStorage.setItem("treeNight",on?"1":"0")}catch(e){}paintNight();fitAll();drawAll()};
-paintNight();
-function paintMiniBtn(){$("miniBtn").style.opacity=SHOWMINI?"1":".45"}
-$("miniBtn").onclick=function(){SHOWMINI=!SHOWMINI;try{localStorage.setItem("miniHide",SHOWMINI?"0":"1")}catch(e){}paintMiniBtn();drawAll()};paintMiniBtn();
-function flush(cb){kick();var n=0;(function w(){if((Q.length||busy)&&n++<80){setTimeout(w,150);return}cb()})()} // send everything you did to the server first
-$("goRead").onclick=function(){flush(openTree)};
-$("camBtn").onclick=function(){CAM=true;document.body.classList.add("cam");dock(false);side(false);drawAll()};
-$("camOff").onclick=function(e){e.stopPropagation();CAM=false;document.body.classList.remove("cam");drawAll()};
-$("wfBtn").onclick=function(){boostDlg()};
-function boostDlg(){
- var w=S.wf||0,dlg=$("dlg"),PER=30,HRS=6;
- function shut(){dlg.style.display="none"}
- function dur(n){var m=Math.round(n*HRS*60/PER),h=Math.floor(m/60),mm=m%60;return h?h+"h"+(mm?" "+mm+"m":""):mm+"m"}
- if(w<1){infoDlg("\u26AA","No white fruits yet","Read the Book of Mormon and grow your tree to earn white fruits. 30 \u26AA = 6 hours of boost, so 1 \u26AA = 12 minutes.",["You have \u26AA 0"],function(){flush(openTree)},"\uD83D\uDCD6 Read now");return}
- var BS="width:46px;height:46px;font-size:26px;padding:0;line-height:1";
- $("dlgBody").innerHTML="<div style='font-size:38px;line-height:1'>\u26AA</div><div class='dtitle'>Boost crops</div>"+
-  "<div class='dsub'>30 \u26AA = 6 hours, so 1 \u26AA = 12 minutes. Choose how many white fruits to use.</div>"+
-  "<div style='display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 8px'>"+
-   "<button class='btn alt' id='bfM' style='"+BS+"'>\u2212</button>"+
-   "<input id='bfN' type='number' inputmode='numeric' min='1' max='"+w+"' value='"+Math.min(w,PER)+"' style='width:96px;text-align:center;font-size:22px;font-weight:700;margin:0;-webkit-user-select:text;user-select:text'>"+
-   "<button class='btn alt' id='bfP' style='"+BS+"'>+</button></div>"+
-  "<div style='display:flex;justify-content:center;gap:6px;margin-bottom:6px'>"+
-   "<button class='btn alt' data-q='5'>5</button><button class='btn alt' data-q='10'>10</button><button class='btn alt' data-q='30'>30</button><button class='btn alt' data-q='max'>Max</button></div>"+
-  "<div class='drow'><span class='dchip' id='bfH'></span><span class='dchip' id='bfL'></span></div>"+
-  "<div class='dsub' id='bfS'></div>"+
-  "<div class='dbtns'><button class='btn alt' id='dNo'>Cancel</button><button class='btn ok' id='dYes'>Boost</button></div>";
- var inp=$("bfN");
- function cur(){var v=parseInt(inp.value,10);return isFinite(v)?Math.max(0,Math.min(w,v)):0}
- function upd(){var v=cur();
-  $("bfH").textContent="\u26A1 Boost: "+(v?dur(v):"0m");
-  $("bfL").textContent="Left: \u26AA "+(w-v);
-$("bfS").textContent=v?"Every crop, tree, animal and baby animal in your sheds that is still growing jumps ahead by "+dur(v)+". All your \u26AA "+w+" = "+dur(w)+".":"";
-  $("dYes").disabled=!v;$("dYes").textContent=v?"\u26A1 Boost "+dur(v):"Boost"}
- function set(v){v=Math.max(1,Math.min(w,v));inp.value=v;upd()}
- function hold(id,d){var el=$(id),t=0,iv=0;
-  function step(){set(cur()+d)}
-  function stop(){clearTimeout(t);clearInterval(iv)}
-  el.onpointerdown=function(e){e.preventDefault();step();t=setTimeout(function(){iv=setInterval(step,70)},350)};
-  el.onpointerup=el.onpointerleave=el.onpointercancel=stop}
- hold("bfM",-1);hold("bfP",1);
- [].forEach.call(dlg.querySelectorAll("[data-q]"),function(b){b.onclick=function(){set(b.dataset.q==="max"?w:Number(b.dataset.q))}});
- inp.oninput=upd;inp.onblur=function(){set(cur()||1)};
- upd();
- dlg.style.display="flex";
- $("dNo").onclick=shut;
- $("dYes").onclick=function(){var v=cur();if(v<1)return;shut();busyShow("Boosting crops...");
-  flush(function(){call("farmBoost",[TOKEN,v],function(s){setState(s);busyHide();toast("\u26A1 Crops boosted by "+dur(v)+"!")},function(m){busyHide();toast(m)})})};
- dlg.onclick=function(ev){if(ev.target===dlg)shut()}}
-$("mMulti").onclick=function(){MULTI=!MULTI;this.innerHTML="&#129530; Multi-buy: "+(MULTI?"ON":"OFF");toast(MULTI?"Multi-buy ON: items go straight to your barn, market stays open":"Multi-buy OFF: you place each item")};
-$("saveBtn").onclick=function(){busyShow("Saving your farm...");
- flush(function(){call("farmState",[TOKEN],function(s){setState(s);busyHide();toast("\u2705 Progress saved")},function(m){busyHide();toast("Could not save: "+m)})})};
-
 // ===================== ISOMETRIC RENDERER =====================
 var X,G,NIGHT=false;
 function mk(s){return function(){s=(s*16807)%2147483647;return s/2147483647}}
