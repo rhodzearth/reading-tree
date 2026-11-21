@@ -21,7 +21,5 @@ setInterval(histPoll,150);
 function stabPaint(){$("stC").className="btn stab"+(STAB==="c"?"":" alt");$("stF").className="btn stab"+(STAB==="f"?"":" alt")}
 $("stC").onclick=function(){STAB="c";stabPaint();paint()};
 $("stF").onclick=function(){STAB="f";stabPaint();paint()};
-if(!TOKEN)showMsg("Please log in to the Reading Tree first, then open Reading Farm from Settings > Games.");else{try{var cs=JSON.parse(localStorage.getItem("farmS2_"+TOKEN.slice(-12))||"null");if(cs&&cs.plots&&cs.pp){cs.out=null;cs.now=0;S=cs;$("main").style.display="";paint()}}catch(e){}
- try{Q=JSON.parse(localStorage.getItem(QK)||"[]")||[]}catch(e){Q=[]}
- if(Q.length){kick();flush(load)}else load()}
+
 
