@@ -6191,6 +6191,7 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
 var _rb0=renderBarn;
 renderBarn=function(){_rb0.apply(this,arguments);try{renderInv()}catch(e){}};
 $("edBarn").addEventListener("click",function(){try{renderInv()}catch(e){}});
+setTimeout(function(){var t=performance.now();stored();toast("Draw "+LASTMS+"ms | stored() "+Math.round(performance.now()-t)+"ms | items "+(S.dc||[]).length)},6000);
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
