@@ -2196,7 +2196,7 @@ function freeTile(){var sx=0,sy=0,n=0,i,q,mc,mr,best=null,bd=1e18,c,r,v,occ={},B
 function getPos(s){if(s.t==="p")return S.pp[s.i]?S.pp[s.i].slice():null;var it=dcById(s.id);return it?[it.c,it.r]:null}
 function setPos(s,c,r){if(s.t==="p")S.pp[s.i]=[c,r];else{var it=dcById(s.id);it.c=c;it.r=r;it.s=0}}
 function nameOf(s){return s.t==="p"?"plot":KN[dcById(s.id).k][1]}
-function stored(){var l=[],i;for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});(S.dc||[]).forEach(function(x){if(x.s&&!inShed(x))l.push({t:"d",id:x.id})});return l}
+function stored(){var l=[],i,H={};for(i=0;i<S.np;i++)if(!S.pp[i])l.push({t:"p",i:i});shedList().forEach(function(sd){(sd.cw||[]).forEach(function(id){H[id]=1})});(S.dc||[]).forEach(function(x){if(x.s&&!H[x.id])l.push({t:"d",id:x.id})});return l}
 function ptr(cv,ev){var g=cv._g,rc=cv.getBoundingClientRect();return[(ev.clientX-rc.left-g.L)/g.k,(ev.clientY-rc.top-g.T)/g.k]}
 function toTile(cv,p){var g=cv._g,dx=(p[0]-g.ox)/(g.TW/2),dy=(p[1]-g.oy)/(g.TH/2);return[(dx+dy)/2,(dy-dx)/2]}
 function pickDeco(cv,p){var g=cv._g,best=null,bd=-1e9,arr=g.cr?g.items:(S.dc||[]),ta=(p[0]-g.ox)/(g.TW/2),tb=(p[1]-g.oy)/(g.TH/2),tc=(ta+tb)/2,tr=(tb-ta)/2;arr.forEach(function(it){var b=HB[it.k];if(it.s||!b)return;var fw=iw(it),fh=ih(it),x=g.ox+(it.c-it.r)*g.TW/2,y=g.oy+(it.c+it.r+(fw+fh)/2)*g.TH/2,f=isF(it.k),m=f?0:it.rot,fo=f?fOff(it):[0,0],k=it.c+it.r+(fw+fh)/2-1+(f?fKey(it):0),hit;x+=fo[0];y+=fo[1];
