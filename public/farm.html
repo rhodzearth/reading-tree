@@ -6201,7 +6201,13 @@ renderBarn=function(){
  _rb0.apply(this,arguments);try{renderInv()}catch(e){}};
 var _ebO=$("edBarn").onclick;
 $("edBarn").onclick=function(){_ebO.apply(this,arguments);if($("barnP").style.display!=="none")renderBarn()};
-setTimeout(function(){var t=performance.now(),a,b;renderBarn();a=performance.now()-t;t=performance.now();sellAllInfo();b=performance.now()-t;toast("renderBarn "+Math.round(a)+"ms | sellAllInfo "+Math.round(b)+"ms")},6000);
+setTimeout(function(){
+ var t=performance.now();
+ $("barnP").style.display="";
+ renderBarn();
+ var a=performance.now()-t;
+ toast("Barn opening render: "+Math.round(a)+"ms");
+},6000);
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
