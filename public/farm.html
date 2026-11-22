@@ -6191,6 +6191,7 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
   if(!ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>Nothing here yet. Harvested items are kept here.</div>"}
  box.innerHTML=h+"</div>"}
  var _t0=window.performance.now();setTimeout(function(){var t=performance.now();stored();var a=performance.now()-t;t=performance.now();sellAllInfo();var b=performance.now()-t;t=performance.now();renderInv();var c=performance.now()-t;toast("stored "+Math.round(a)+" | sellAllInfo "+Math.round(b)+" | renderInv "+Math.round(c))},7000);
+setTimeout(function(){var t=performance.now(),a,b,c;stored();a=performance.now()-t;t=performance.now();sellAllInfo();b=performance.now()-t;t=performance.now();renderInv();c=performance.now()-t;toast("stored "+Math.round(a)+" | sellAllInfo "+Math.round(b)+" | renderInv "+Math.round(c))},7000);
 var _rb0=renderBarn;
 renderBarn=function(){
  var p=$("barnP"),n,tl=0;
