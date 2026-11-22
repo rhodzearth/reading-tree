@@ -6191,8 +6191,16 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
   if(!ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>Nothing here yet. Harvested items are kept here.</div>"}
  box.innerHTML=h+"</div>"}
 var _rb0=renderBarn;
-renderBarn=function(){_rb0.apply(this,arguments);try{renderInv()}catch(e){}};
-$("edBarn").addEventListener("click",function(){try{renderInv()}catch(e){}});
+renderBarn=function(){
+ var p=$("barnP"),n,tl=0;
+ if(!p||p.style.display==="none"){
+  try{n=stored().length;Object.keys(S.ft||{}).forEach(function(id){tl+=(S.ft[id]|0)});
+   $("edBarn").textContent="\uD83C\uDFE1 Barn ("+(n+tl)+")";
+   $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none"}catch(e){}
+  return}
+ _rb0.apply(this,arguments);try{renderInv()}catch(e){}};
+var _ebO=$("edBarn").onclick;
+$("edBarn").onclick=function(){_ebO.apply(this,arguments);if($("barnP").style.display!=="none")renderBarn()};
 setTimeout(function(){var t=performance.now(),a,b;renderBarn();a=performance.now()-t;t=performance.now();sellAllInfo();b=performance.now()-t;toast("renderBarn "+Math.round(a)+"ms | sellAllInfo "+Math.round(b)+"ms")},6000);
 </script>
 
