@@ -54,7 +54,7 @@ var FARM_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     if (!MAP[name]) throw new Error("Unknown farm action.");
     var s = await sb.auth.getSession();
     if (!s.data.session) throw new Error("Please log in again.");
-    var r = await sb.functions.invoke("farm-test", { body: MAP[name](args || []), headers: { Authorization: "Bearer " + s.data.session.access_token } });
+    var r = await sb.functions.invoke("farm", { body: MAP[name](args || []), headers: { Authorization: "Bearer " + s.data.session.access_token } });
     if (r.error) {
       var m = r.error.message || "Something went wrong.";
       try { var j = await r.error.context.json(); if (j && j.error) m = j.error; } catch (e) {}
