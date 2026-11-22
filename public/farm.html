@@ -2222,7 +2222,7 @@ function undoStore(){var b=UNDO.pop(),n=0;if(!b){toast("Nothing to undo");return
 function infoDlg(ic,title,sub,chips,yes,yesTxt){var dlg=$("dlg");function shut(){dlg.style.display="none"}
  $("dlgBody").innerHTML="<div style='font-size:38px;line-height:1'>"+ic+"</div><div class='dtitle'>"+title+"</div><div class='dsub'>"+sub+"</div><div class='drow'>"+chips.map(function(c){return"<span class='dchip'>"+c+"</span>"}).join("")+"</div><div class='dbtns'>"+(yes?"<button class='btn alt' id='dNo'>Cancel</button><button class='btn ok' id='dYes'>"+yesTxt+"</button>":"<button class='btn ok' id='dYes'>OK</button>")+"</div>";
  dlg.style.display="flex";$("dYes").onclick=function(){shut();if(yes)yes()};if(yes)$("dNo").onclick=shut;dlg.onclick=function(ev){if(ev.target===dlg)shut()}}
-function sellVal(it){var d=(S.items||[]).filter(function(x){return x.id===it.k})[0];return d?Math.floor((d.rf!=null?d.rf:d.cost)*(S.sellRate||.5)):0}
+function sellVal(it){var d=itemDef(it.k);return d?Math.floor((d.rf!=null?d.rf:d.cost)*(S.sellRate||.5)):0}
 function editUI(){if(PEND)return;if(SEL&&SEL.t==="d"&&!dcById(SEL.id))SEL=null;
  var barnSel=SEL&&SEL.t==="d"&&dcById(SEL.id).k==="barn",seeded=SEL&&SEL.t==="p"&&S.plots[SEL.i],isD=SEL&&SEL.t==="d",itx=isD&&dcById(SEL.id);
  $("edBarn").textContent="\uD83C\uDFE1 Barn ("+stored().length+")";
@@ -2431,7 +2431,7 @@ function editTap(cv,e){var p=ptr(cv,e),t=toTile(cv,p),tc=Math.floor(t[0]),tr=Mat
 var FSN=[["base","Basic Fence"],["rope","Rope Fence"],["bamboo","Bamboo Fence"],["picket","Picket Fence"],["log","Log Fence"],["hedge","Hedge Fence"],["chain","Chain-link Fence"],["iron","Iron Fence"],["stone","Stone Wall"],["brick","Brick Wall"],["concrete","Concrete Wall"]];
 function fenceInfo(k){var m;if(k==="f_fence")return{s:"base",t:""};if(k==="f_corner")return{s:"base",t:"_c"};if(k==="f_gate")return{s:"base",t:"_g"};m=/^f_([a-z]+)(_c|_g)?$/.exec(k);return m?{s:m[1],t:m[2]||""}:null}
 function fenceKey(k,to){var i=fenceInfo(k);if(!i)return null;if(to==="base")return i.t===""?"f_fence":i.t==="_c"?"f_corner":"f_gate";return"f_"+to+i.t}
-function fiDef(id){return(S.items||[]).filter(function(x){return x.id===id})[0]}
+function fiDef(id){return itemDef(id)}
 $("edUp").onclick=function(){upgDlg()};
 function upgDlg(){
  var sel=SEL&&SEL.t==="d"?dcById(SEL.id):null;
@@ -4036,7 +4036,9 @@ function sellFloorDlg(f){var dlg=$("dlg"),inp,tot,have=haveTiles(f.id),rate=S.se
   try{FarmAudio.play("sell")}catch(e){}
   toast("\uD83D\uDCB0 Sold "+n+" "+f.name+" tiles for +"+g+"\uD83E\uDE99");shut()}}
   // ===== SELL FROM THE BARN: one kind of item, or everything =====
-function sellable(s){var it=s.t==="d"&&dcById(s.id);return !!it&&it.k!=="barn"&&(S.items||[]).some(function(x){return x.id===it.k})}
+  var ITMM={a:null,n:-1,m:null};
+function itemDef(id){var a=S.items||[],i;if(ITMM.a!==a||ITMM.n!==a.length){ITMM.a=a;ITMM.n=a.length;ITMM.m={};for(i=0;i<a.length;i++)ITMM.m[a[i].id]=a[i]}return ITMM.m[id]}
+function sellable(s){var it=s.t==="d"&&dcById(s.id);return !!it&&it.k!=="barn"&&!!itemDef(it.k)}
 function addSellBtn(k,g,box){var l=g.filter(sellable),sb;if(!l.length)return;sb=document.createElement("button");sb.className="btn alt";sb.textContent="\uD83D\uDCB0 Sell";sb.onclick=function(){sellStoredDlg(k,l)};box.appendChild(sb)}
 function sellStoredDo(l){var tot=0,ids={},BL=[];
  l.forEach(function(s){var it=dcById(s.id);if(!it||ids[it.id])return;tot+=sellVal(it);ids[it.id]=1;BL.push(["farmSell",[TOKEN,it.id]])});
@@ -6191,7 +6193,7 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
 var _rb0=renderBarn;
 renderBarn=function(){_rb0.apply(this,arguments);try{renderInv()}catch(e){}};
 $("edBarn").addEventListener("click",function(){try{renderInv()}catch(e){}});
-setTimeout(function(){var t=performance.now();stored();toast("Draw "+LASTMS+"ms | stored() "+Math.round(performance.now()-t)+"ms | items "+(S.dc||[]).length)},6000);
+setTimeout(function(){var t=performance.now(),a,b;renderBarn();a=performance.now()-t;t=performance.now();sellAllInfo();b=performance.now()-t;toast("renderBarn "+Math.round(a)+"ms | sellAllInfo "+Math.round(b)+"ms")},6000);
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
