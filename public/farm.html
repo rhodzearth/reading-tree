@@ -6190,6 +6190,7 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
    h+="<div class='ivc'><img src='"+invIconURL(k)+"'><b>"+esc(i.n)+"</b>\u00D7"+S.inv[k]+" &middot; \uD83E\uDE99 "+invUP(k)+" each<br><button class='btn' data-s='"+k+"|1'>Sell 1</button><button class='btn bsell' data-s='"+k+"|all'>Sell all</button></div>"});
   if(!ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>Nothing here yet. Harvested items are kept here.</div>"}
  box.innerHTML=h+"</div>"}
+ var _t0=window.performance.now();setTimeout(function(){var t=performance.now();stored();var a=performance.now()-t;t=performance.now();sellAllInfo();var b=performance.now()-t;t=performance.now();renderInv();var c=performance.now()-t;toast("stored "+Math.round(a)+" | sellAllInfo "+Math.round(b)+" | renderInv "+Math.round(c))},7000);
 var _rb0=renderBarn;
 renderBarn=function(){
  var p=$("barnP"),n,tl=0;
