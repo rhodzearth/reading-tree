@@ -4013,7 +4013,7 @@ function renderFloors(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRa
  box.appendChild(frag)}
 function renderBarn(){var box=$("barnList"),l=stored(),G2={},ks=[],tl=Object.keys(S.ft||{}).filter(function(id){return (S.ft[id]|0)>0});box.innerHTML="";$("edBarn").textContent="\uD83C\uDFE1 Barn ("+(l.length+tl.reduce(function(a,id){return a+(S.ft[id]|0)},0))+")";
  $("barnUndo").style.display=UNDO.length?"":"none";$("edUndo").style.display=UNDO.length?"":"none";
- $("barnSellAll").style.display=(sellAllInfo().n||tl.length)?"":"none";if(!l.length&&!tl.length){box.textContent="Barn is empty.";return}
+ $("barnSellAll").style.display=(l.some(sellable)||tl.length)?"":"none";if(!l.length&&!tl.length){box.textContent="Barn is empty.";return}
  l.forEach(function(s){var k=gkey(s);if(!G2[k]){G2[k]=[];ks.push(k)}G2[k].push(s)});
  ks.forEach(function(k){if(invIsAni(k))return;var g=G2[k],ic=k==="p"?"\uD83D\uDFEB":(KN[k]||["?",k])[0],nm=k==="p"?"Plot":(KN[k]||["?",k])[1],b=document.createElement("button");
   b.className="btn alt";b.textContent=ic+" "+nm+" \u00D7"+g.length;
