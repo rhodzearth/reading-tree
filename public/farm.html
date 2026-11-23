@@ -2180,7 +2180,11 @@ HB.d_butterfly=[-30,-52,30,12];
 HB.d_statue=[-22,-58,22,12];
 HB.d_gate=[-30,-52,30,12];
 HB.d_rockgarden=[-30,-25,30,12];
-function dcById(id){return(S.dc||[]).filter(function(x){return x.id===id})[0]}
+var DCM={a:null,n:-1,m:null};
+function dcById(id){var a=S.dc||[],i,x;
+ if(DCM.a!==a||DCM.n!==a.length){DCM.a=a;DCM.n=a.length;DCM.m={};for(i=0;i<a.length;i++)DCM.m[a[i].id]=a[i]}
+ x=DCM.m[id];if(x&&x.id===id)return x;
+ for(i=0;i<a.length;i++)if(a[i].id===id)return a[i]}
 function same(a,b){return a&&b&&a.t===b.t&&(a.t==="p"?a.i===b.i:a.id===b.id)}
 function tileFree(c,r,ig){
  if(!inLandP(parS(),c,r))return false;
@@ -4037,6 +4041,8 @@ function sellFloorDlg(f){var dlg=$("dlg"),inp,tot,have=haveTiles(f.id),rate=S.se
   toast("\uD83D\uDCB0 Sold "+n+" "+f.name+" tiles for +"+g+"\uD83E\uDE99");shut()}}
   // ===== SELL FROM THE BARN: one kind of item, or everything =====
   var ITMM={a:null,n:-1,m:null};
+function itemDef(id){var a=S.items||[],i;if(ITMM.a!==a||ITMM.n!==a.length){ITMM.a=a;ITMM.n=a.length;ITMM.m={};for(i=0;i<a.length;i++)ITMM.m[a[i].id]=a[i]}return ITMM.m[id]}
+var ITMM={a:null,n:-1,m:null};
 function itemDef(id){var a=S.items||[],i;if(ITMM.a!==a||ITMM.n!==a.length){ITMM.a=a;ITMM.n=a.length;ITMM.m={};for(i=0;i<a.length;i++)ITMM.m[a[i].id]=a[i]}return ITMM.m[id]}
 function sellable(s){var it=s.t==="d"&&dcById(s.id);return !!it&&it.k!=="barn"&&!!itemDef(it.k)}
 function addSellBtn(k,g,box){var l=g.filter(sellable),sb;if(!l.length)return;sb=document.createElement("button");sb.className="btn alt";sb.textContent="\uD83D\uDCB0 Sell";sb.onclick=function(){sellStoredDlg(k,l)};box.appendChild(sb)}
