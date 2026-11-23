@@ -3880,7 +3880,7 @@ DEC.o_lifeguard=function(p){var x=p[0],y=p[1];shade(p,26,9,.3);
 // ===================== GEAR MENU (seeds + actions) =====================
 function dock(on){$("dock").classList.toggle("open",on);if(on)side(false)}
 $("gearBtn").onclick=$("seedChip").onclick=function(e){e.stopPropagation();if(PEND)return;dock(!$("dock").classList.contains("open"))};
-$("dock").addEventListener("click",function(e){var b=e.target.closest("button");if(b&&!b.classList.contains("lock")&&!b.classList.contains("stab"))
+$("dock").addEventListener("click",function(e){var b=e.target.closest("button");if(b&&!b.classList.contains("lock")&&!b.classList.contains("stab"))setTimeout(function(){dock(false)},0)});
 document.addEventListener("click",function(e){if($("dock").classList.contains("open")&&!e.target.closest("#dock,#gearBtn,#seedChip")){dock(false);e.stopPropagation();e.preventDefault()}},true);
 function chip(){var c=S&&cr(sel);$("seedChip").innerHTML=c?iconOf(c):"\uD83C\uDF31"}
 function load(){call("farmState",[TOKEN],setState)}
