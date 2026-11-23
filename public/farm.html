@@ -3880,7 +3880,7 @@ DEC.o_lifeguard=function(p){var x=p[0],y=p[1];shade(p,26,9,.3);
 // ===================== GEAR MENU (seeds + actions) =====================
 function dock(on){$("dock").classList.toggle("open",on);if(on)side(false)}
 $("gearBtn").onclick=$("seedChip").onclick=function(e){e.stopPropagation();if(PEND)return;dock(!$("dock").classList.contains("open"))};
-$("dock").addEventListener("click",function(e){var b=e.target.closest("button");if(b&&!b.classList.contains("lock")&&!b.classList.contains("stab"))setTimeout(function(){dock(false)},0)});
+$("dock").addEventListener("click",function(e){var b=e.target.closest("button");if(b&&!b.classList.contains("lock")&&!b.classList.contains("stab"))
 document.addEventListener("click",function(e){if($("dock").classList.contains("open")&&!e.target.closest("#dock,#gearBtn,#seedChip")){dock(false);e.stopPropagation();e.preventDefault()}},true);
 function chip(){var c=S&&cr(sel);$("seedChip").innerHTML=c?iconOf(c):"\uD83C\uDF31"}
 function load(){call("farmState",[TOKEN],setState)}
@@ -6196,8 +6196,6 @@ function renderInv(){var p=$("barnP"),box=$("barnInv"),ks,tot,h="",g;
    h+="<div class='ivc'><img src='"+invIconURL(k)+"'><b>"+esc(i.n)+"</b>\u00D7"+S.inv[k]+" &middot; \uD83E\uDE99 "+invUP(k)+" each<br><button class='btn' data-s='"+k+"|1'>Sell 1</button><button class='btn bsell' data-s='"+k+"|all'>Sell all</button></div>"});
   if(!ks.length)h+="<div class='small' style='color:#fff;grid-column:1/-1'>Nothing here yet. Harvested items are kept here.</div>"}
  box.innerHTML=h+"</div>"}
- var _t0=window.performance.now();setTimeout(function(){var t=performance.now();stored();var a=performance.now()-t;t=performance.now();sellAllInfo();var b=performance.now()-t;t=performance.now();renderInv();var c=performance.now()-t;toast("stored "+Math.round(a)+" | sellAllInfo "+Math.round(b)+" | renderInv "+Math.round(c))},7000);
-setTimeout(function(){var t=performance.now(),a,b,c;stored();a=performance.now()-t;t=performance.now();sellAllInfo();b=performance.now()-t;t=performance.now();renderInv();c=performance.now()-t;toast("stored "+Math.round(a)+" | sellAllInfo "+Math.round(b)+" | renderInv "+Math.round(c))},7000);
 var _rb0=renderBarn;
 renderBarn=function(){
  var p=$("barnP"),n,tl=0;
@@ -6209,13 +6207,6 @@ renderBarn=function(){
  _rb0.apply(this,arguments);try{renderInv()}catch(e){}};
 var _ebO=$("edBarn").onclick;
 $("edBarn").onclick=function(){_ebO.apply(this,arguments);if($("barnP").style.display!=="none")renderBarn()};
-setTimeout(function(){
- var t=performance.now();
- $("barnP").style.display="";
- renderBarn();
- var a=performance.now()-t;
- toast("Barn opening render: "+Math.round(a)+"ms");
-},6000);
 </script>
 
 <!-- ======== FARM AUDIO START (added) ======== -->
