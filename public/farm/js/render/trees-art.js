@@ -291,8 +291,8 @@ function ih(it){return it.fh||footH(it.k)}
   if(DRAWV[it.k]){drawCourt(it,fw,fh)}else if(qd){drawQuad(it,p,t,fl,sdp)}
     else if(OUTI[it.k]==="w"){var bb=(LOD===1&&!edit)?Math.sin(t/950+aph(it.id)*6.283):0,osz=OSC[it.k]||1;X.save();X.translate(p[0],p[1]+bb*osz*1.2);X.rotate(bb*.018);X.scale(fl?-osz:osz,osz);DEC[it.k]([0,0]);X.restore()}
   else if(an){X.save();X.translate(p[0],p[1]);X.rotate(fl?-an.r:an.r);X.scale(fl?-an.sx:an.sx,an.sy);X.drawImage(im,-130,-170+an.dy,260,220);X.restore()}
-  else if(SWY&&LOD===1&&!edit&&FLG[it.k]){X.save();X.translate(p[0],0);if(fl)X.scale(-1,1);flagDraw([0,p[1]],FLG[it.k],t,2.2+1.8*Math.max(0,wnd(t)),aph(it.id)*6.283);X.restore()}
-  else if(SWY&&LOD===1&&!edit&&swayOk(it.k)){var sk=swayK(it,t),s1=sk*.3;X.save();X.translate(p[0],p[1]);if(fl)X.scale(-1,1);
+  else if(SWY&&!MOVING&&LOD===1&&!edit&&FLG[it.k]){X.save();X.translate(p[0],0);if(fl)X.scale(-1,1);flagDraw([0,p[1]],FLG[it.k],t,2.2+1.8*Math.max(0,wnd(t)),aph(it.id)*6.283);X.restore()}
+  else if(SWY&&!MOVING&&LOD===1&&!edit&&swayOk(it.k)){var sk=swayK(it,t),s1=sk*.3;X.save();X.translate(p[0],p[1]);if(fl)X.scale(-1,1);
    X.save();X.transform(1,0,s1,1,0,0);X.drawImage(im,0,120*sdp,260*sdp,100*sdp,-130,-50,260,100);X.restore();
    X.transform(1,0,sk,1,(sk-s1)*50,0);X.drawImage(im,0,0,260*sdp,121*sdp,-130,-170,260,121);X.restore()}
   else if(fl){X.save();X.translate(p[0],0);X.scale(-1,1);X.drawImage(im,-130*bs,p[1]-170*bs+lf,260*bs,220*bs);X.restore()}else X.drawImage(im,p[0]-130*bs,p[1]-170*bs+lf,260*bs,220*bs);
