@@ -33,6 +33,7 @@ var FARM_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     farmFloorBuy:       function (a) { return { op: "floorbuy", id: a[1], n: a[2] }; },
     farmFloorRot:       function (a) { return { op: "floorrot", keys: a[1] }; },
     farmPerim:          function (a) { return { op: "perim", id: a[1] }; },
+    farmScenery:        function (a) { return { op: "scenery", id: a[1] }; },
     farmLayoutSave:     function (a) { return { op: "layoutsave", slot: a[1], data: a[2] }; },
     farmLayoutClear:    function (a) { return { op: "layoutclear", slot: a[1] }; },
     farmLayoutApply:    function (a) { return { op: "layoutapply", slot: a[1] }; },

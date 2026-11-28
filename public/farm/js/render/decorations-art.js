@@ -305,16 +305,16 @@ function isleRaw(q,o){var P=[],cs=[[q.c0,q.r0,Math.PI],[q.c1,q.r0,Math.PI*1.5],[
  return P}
  function parVis(r,m){var a=Pp(r.c0-m,r.r0-m),b=Pp(r.c1+m,r.r0-m),c=Pp(r.c1+m,r.r1+m),d=Pp(r.c0-m,r.r1+m);
  return Math.max(a[0],b[0],c[0],d[0])>VW.x0&&Math.min(a[0],b[0],c[0],d[0])<VW.x1&&Math.max(a[1],b[1],c[1],d[1])>VW.y0&&Math.min(a[1],b[1],c[1],d[1])<VW.y1}
-function drawSea(){var t=Date.now()/1000,i,s,q,pd=220,
+function drawSea(){var jungSea=(X.canvas.id==="vCanvas"?(V&&V.sc):(S&&S.sc))==="jungle",t=Date.now()/1000,i,s,q,pd=220,
  LY=[[0,"#efdba8"],[.64,"#efdba8"],[3.4,"#ead298"],[6,"#dfc58c"],[7.8,"#ffffff"],[8.04,"#b4f6ee"],[9.2,"#86eede"],[10.6,"#5cdcd4"],[12,"#44c8d4"],[13.4,"#33acd2"],[14.6,"#2b92c8"],[15.6,"#2a7db4"]];
  function vis(p){return p[0]>VW.x0-40&&p[0]<VW.x1+40&&p[1]>VW.y0-60&&p[1]<VW.y1+60}
  function path(a){X.beginPath();a.forEach(function(p,j){var z=Pp(p[0],p[1]);j?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])});X.closePath()}
  function fillP(a,c){path(a);X.fillStyle=c;X.fill()}
  function strokeP(a,c,lw){path(a);X.strokeStyle=c;X.lineWidth=lw;X.stroke()}
- X.fillStyle=LY[LY.length-1][1];X.fillRect(VW.x0-pd,VW.y0-pd,VW.x1-VW.x0+2*pd,VW.y1-VW.y0+2*pd);
+ X.fillStyle=jungSea?jungleFill():LY[LY.length-1][1];X.fillRect(VW.x0-pd,VW.y0-pd,VW.x1-VW.x0+2*pd,VW.y1-VW.y0+2*pd);
  var LL=LOD>1?[LY[0],LY[2],LY[4],LY[6],LY[8],LY[11]]:LY;
- for(i=LL.length-1;i>0;i--)G.P.forEach(function(r){if(!parVis(r,LL[i][0]+1))return;fillP(isleShape(r,LL[i][0]),LL[i-1][1])});
- if(LOD===1)G.P.forEach(function(r){if(!parVis(r,14))return;
+ if(!jungSea)for(i=LL.length-1;i>0;i--)G.P.forEach(function(r){if(!parVis(r,LL[i][0]+1))return;fillP(isleShape(r,LL[i][0]),LL[i-1][1])});
+ if(LOD===1&&!jungSea)G.P.forEach(function(r){if(!parVis(r,14))return;
   strokeP(isleRaw(r,7.9+.6*Math.sin(t*.9)),"rgba(255,255,255,"+(.5+.2*Math.sin(t*.9+1)).toFixed(2)+")",2.2);
 strokeP(isleRaw(r,9.8+.8*Math.sin(t*.7+1.6)),"rgba(255,255,255,.28)",1.6);
 X.setLineDash([16,12]);X.lineDashOffset=-t*9;

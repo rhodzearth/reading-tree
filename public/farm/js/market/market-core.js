@@ -78,6 +78,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
  box.innerHTML="";MKL=S.level;$("mCoins").textContent="\uD83E\uDE99 "+S.coins;
  $("mtG").className="btn"+(MK==="flag"?"":" alt");$("mtG").className="btn"+(MK==="flag"?"":" alt");$("mtT").className="btn"+(MK==="tree"?"":" alt");$("mtA").className="btn"+(MK==="animal"?"":" alt");$("mtH").className="btn"+(MK==="house"?"":" alt");$("mtD").className="btn"+(MK==="decor"?"":" alt");$("mtN").className="btn"+(MK==="fence"?"":" alt");$("mtF").className="btn"+(MK==="floor"?"":" alt");
  if(MK==="floor"){renderFloors();return}
+ if(MK==="scenery"){renderScenery();return}
 (S.items||[]).filter(function(i){
   if(i.out)return MK==="out";
   if(MK==="out")return false;
