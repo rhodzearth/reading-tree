@@ -17,7 +17,7 @@ st.textContent=
 ".hvA:disabled{opacity:.45;box-shadow:none!important}";
 document.head.appendChild(st);
 
-var MV={cowshed:["a_cow","\uD83D\uDC04"],sheepshed:["a_sheep","\uD83D\uDC11"],pigshed:["a_pig","\uD83D\uDC37"],chickenshed:["a_chicken","\uD83D\uDC14"]};
+var MV={cowshed:["a_cow","\uD83D\uDC04"],sheepshed:["a_sheep","\uD83D\uDC11"],pigshed:["a_pig","\uD83D\uDC37"],horseshed:["a_horse","\uD83D\uDC0E"],chickenshed:["a_chicken","\uD83D\uDC14"]};
 function rawAdd(key){if(!S.inv)S.inv={};if(!S.invp)S.invp={};S.inv[key]=(S.inv[key]||0)+1;if(!S.invp[key])S.invp[key]=invUnit(key)}
 function pos(c,r,dy){return(window.FarmFX&&FarmFX.scr)?FarmFX.scr(c,r,dy):null}
 function mid(it,dy){return pos(it.c+(footW(it.k)-1)/2,it.r+(footH(it.k)-1)/2,dy)}

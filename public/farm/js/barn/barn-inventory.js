@@ -1,5 +1,5 @@
 /* ===== BARN INVENTORY (Step 3): icons + sell ===== */
-var INVC={},SHA={cowshed:"a_cow",chickenshed:"a_chicken",sheepshed:"a_sheep",pigshed:"a_pig"},
+var INVC={},SHA={cowshed:"a_cow",chickenshed:"a_chicken",sheepshed:"a_sheep",pigshed:"a_pig",horseshed:"a_horse"},
 PRODK={a_chicken:["egg","#f7f0e2","#d8c8a0",1],a_duck:["egg","#e4efe6","#a9c0ad",1.05],a_goose:["egg","#fffaf0","#ddd2bb",1.2],a_turkey:["egg","#f0dcb8","#a8804a",1.1,1],a_quail:["egg","#ece0c4","#6a4e2e",.7,1],a_ostrich:["egg","#f5ebd3","#cfbf92",1.45],
  a_cow:["milk","#ffffff","#3a8ae0"],a_carabao:["milk","#f6efe2","#7a5a3a"],a_goat:["milk","#ffffff","#4aa84a"],a_donkey:["milk","#fbf8f2","#9a6ac8"],a_hcow:["cream"],
  a_sheep:["wool","#fbfaf4","#d8d2c0"],a_llama:["wool","#f1e8d6","#cbbd9c"],a_alpaca:["wool","#efe2c8","#c9b48a"],a_yak:["wool","#5a463c","#2a1c16"],a_rabbit:["wool","#f4eee4","#cfc4b0"],

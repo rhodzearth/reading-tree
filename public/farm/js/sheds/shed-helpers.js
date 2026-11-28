@@ -1,4 +1,4 @@
-function shedList(k){return(S.dc||[]).filter(function(x){return(k?x.k===k:(x.k==="cowshed"||x.k==="chickenshed"||x.k==="sheepshed"||x.k==="pigshed"))&&!x.s})}
+function shedList(k){return(S.dc||[]).filter(function(x){return(k?x.k===k:(x.k==="cowshed"||x.k==="chickenshed"||x.k==="sheepshed"||x.k==="pigshed"||x.k==="horseshed"))&&!x.s})}
 function inShed(x){var L=shedList(),i;if(!x.s)return false;for(i=0;i<L.length;i++)if(L[i].cw&&L[i].cw.indexOf(x.id)>=0)return true;return false}
 function shedCows(sd){var o=[];(sd.cw||[]).forEach(function(id){var c=dcById(id);if(c&&c.s&&o.length<5)o.push(c)});return o}
 function shedWithRoom(k){var L=shedList(k||"cowshed"),i;for(i=0;i<L.length;i++)if(shedCows(L[i]).length<5)return L[i];return null}

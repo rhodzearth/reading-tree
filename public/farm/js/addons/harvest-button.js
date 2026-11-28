@@ -1,6 +1,6 @@
 /* ===== HARVEST BUTTON: also move fully grown baby animals out of the baby rooms into the barn ===== */
 (function(){
-var h1=$("hAll").onclick,ANI={cowshed:["a_cow","\uD83D\uDC04"],sheepshed:["a_sheep","\uD83D\uDC11"],pigshed:["a_pig","\uD83D\uDC37"],chickenshed:["a_chicken","\uD83D\uDC14"]};
+var h1=$("hAll").onclick,ANI={cowshed:["a_cow","\uD83D\uDC04"],sheepshed:["a_sheep","\uD83D\uDC11"],pigshed:["a_pig","\uD83D\uDC37"],horseshed:["a_horse","\uD83D\uDC0E"],chickenshed:["a_chicken","\uD83D\uDC14"]};
 $("hAll").onclick=function(){
  var r=h1.apply(this,arguments),now=nowT(),moved=0,cnt={};
  try{

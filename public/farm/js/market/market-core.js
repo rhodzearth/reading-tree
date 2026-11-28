@@ -56,6 +56,8 @@ function buyItem(i){if(S.level<i.lvl){toast(i.name+" unlocks at level "+i.lvl);r
   if(i.id==="a_chicken"&&buyChickShed(i))return;
 if(i.id==="a_sheep"&&buySheepShed(i))return;
  if(i.id==="a_pig"&&buyPigShed(i))return;
+  if(i.id==="a_pig"&&buyPigShed(i))return;
+ if(i.id==="a_horse"&&buyHorseShed(i))return; /* HORSE SHED: a bought horse goes straight into a horse shed with room */
  var tl=i.out?outFreeTile(i):freeTile(i.id);if(!tl&&isF(i.id))tl=[0,0];if(!tl){toast("No free tile in your field. Make some space first.");return}
   if(MULTI){var id2="d"+Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36),o2={id:id2,k:i.id,c:tl[0],r:tl[1],s:1};if(i.fruit)o2.t=nowT();
   S.coins-=i.cost;S.dc.push(o2);send("farmBuyAt",[TOKEN,id2,i.id,tl[0],tl[1]]);send("farmDecor",[TOKEN,id2,0,0,1]);paint();toast("\u2705 "+i.name+" added to barn ("+stored().length+" in barn)");return}
@@ -83,7 +85,7 @@ function renderMkt(){var box=$("mList"),dpr=Math.min(1.5,window.devicePixelRatio
   if(MK==="flag")return false;
   if(/^v_/.test(i.id))return MK==="veh";
   if(MK==="veh")return false;
-  if(i.id==="cowshed"||i.id==="chickenshed"||i.id==="sheepshed"||i.id==="pigshed")return MK==="shed";
+  if(i.id==="cowshed"||i.id==="chickenshed"||i.id==="sheepshed"||i.id==="pigshed"||i.id==="horseshed")return MK==="shed";
   if(MK==="shed")return false;
   if(MK==="tree")return !!i.fruit&&!i.animal;
   if(MK==="animal")return !!i.animal;
