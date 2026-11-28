@@ -1,8 +1,16 @@
-// ===== PURE-CODE JUNGLE SEA (no picture) =====
-// The top-left and top-right sea is drawn with canvas shapes only, so it stays sharp at any zoom.
+// ===== PURE-CODE JUNGLE SEA =====
+// The top-left and top-right sea is covered by a jungle with a ragged edge.
+// Plants hang out over the water, and a soft shadow falls on the sea.
+// The jungle is drawn before the land, so the land covers any jungle behind it.
 // Called from drawSea() in decorations-art.js as jungleOverlay(G.P).
 
-var JG=null; // cached plant list, rebuilt only when the land layout changes
+var JG=null;            // cached plant list and edge lines, rebuilt only when the land layout changes
+var JS0=-160,JS1=200;   // how far along the coast the jungle is planned (tile numbers)
+
+// how far the back-left jungle reaches into the sea, for each row (in tiles)
+function jgDL(s){return 11+2.6*Math.sin(s*.19)+1.8*Math.sin(s*.53+1.3)+.9*Math.sin(s*1.1+.4)}
+// how far the back-right jungle reaches into the sea, for each column (in tiles)
+function jgDR(s){return 11+2.6*Math.sin(s*.17+2.1)+1.8*Math.sin(s*.61+.7)+.9*Math.sin(s*1.3+2.2)}
 
 // bounding box of all your land (tile numbers)
 function jgLayout(P){
@@ -10,21 +18,31 @@ function jgLayout(P){
  for(i=0;i<P.length;i++){L.c0=Math.min(L.c0,P[i].c0);L.c1=Math.max(L.c1,P[i].c1);L.r0=Math.min(L.r0,P[i].r0);L.r1=Math.max(L.r1,P[i].r1)}
  return L}
 
-// make the plant list once per land layout: same random spots every time
-function jgBuild(P,L){
- var rn=mk(77),list=[],i,c,r,k,inside,t,
-  types=["palm","palm","tree","banana","fern","bush","bush","bamboo","flower","flower","patch","patch","patch","patch"],
-  span=L.c1-L.c0+30,spanR=L.r1-L.r0+30;
- for(i=0;i<520;i++){
-  c=L.c0-24+rn()*span;r=L.r0-24+rn()*spanR;
-  if(!(c<L.c0||r<L.r0))continue;            // only the back sea (top-left and top-right)
-  inside=false;
-  for(k=0;k<P.length;k++){if(c>=P[k].c0-1&&c<P[k].c1+1&&r>=P[k].r0-1&&r<P[k].r1+1){inside=true;break}}
-  if(inside)continue;
+// build the coast edges and the plant list once per land layout (same random spots every time)
+function jgBuild(L){
+ var rn=mk(77),list=[],EL=[],ER=[],s,k,dd,base,i,t,
+  types=["palm","palm","tree","tree","banana","fern","bush","bush","bamboo","flower","flower","patch","patch","patch","patch"];
+ for(s=JS0;s<=JS1;s+=1){EL.push([L.c0-jgDL(s),s]);ER.push([s,L.r0-jgDR(s)])}
+ for(i=0;i<700;i++){
+  k=rn()<.5?0:1;
+  s=JS0+rn()*(JS1-JS0);
+  dd=-2.5+28.5*Math.pow(rn(),1.8);        // a few plants reach over the water, most sit further back
+  base=k===0?[L.c0-jgDL(s)-dd,s]:[s,L.r0-jgDR(s)-dd];
   t=types[Math.floor(rn()*types.length)];
-  list.push({t:t,c:c,r:r,s:.75+rn()*.5,a:(rn()-.5)*1.2,ph:rn()*6.28,k:Math.floor(rn()*4)})}
+  list.push({t:t,c:base[0],r:base[1],s:.8+rn()*.6,a:(rn()-.5)*1.2,ph:rn()*6.28,k:Math.floor(rn()*4)})}
  list.sort(function(a,b){return(a.c+a.r)-(b.c+b.r)}); // back to front
- return list}
+ return{list:list,EL:EL,ER:ER}}
+
+// draw a closed polygon given in tile numbers
+function jgPathClosed(arr){
+ var j,z;X.beginPath();
+ for(j=0;j<arr.length;j++){z=Pp(arr[j][0],arr[j][1]);j?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])}
+ X.closePath()}
+
+// draw an open line given in tile numbers
+function jgPathOpen(arr){
+ var j,z;X.beginPath();
+ for(j=0;j<arr.length;j++){z=Pp(arr[j][0],arr[j][1]);j?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])}}
 
 // one leaf (frond): base -> control point -> tip, with a midrib
 function jgFrond(x0,y0,cx,cy,ex,ey,w,col){
@@ -116,31 +134,32 @@ function jgDraw(it){
   case "flower": jgFlower(x,y,s,it.k);break;
  }}
 
-// dirt trail that follows the edge of each land
-function jgRing(q,o,col,lw){
- var R=isleRaw(q,o),i,z;
- X.strokeStyle=col;X.lineWidth=lw;X.beginPath();
- for(i=0;i<R.length;i++){z=Pp(R[i][0],R[i][1]);i?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])}
- X.closePath();X.stroke()}
-
-// Paint the top-left sea (beyond the c = c0 side) and the top-right sea (beyond the r = r0 side)
+// Paint the back jungle: first the shadow and ground, then the plants (back to front)
 function jungleOverlay(P){
- var L=jgLayout(P),key=L.c0+","+L.c1+","+L.r0+","+L.r1+","+P.length,Z=900,
-  x0,x1,y0,y1,k,i,it,p,lod=LOD>1,
-  regs=[[[L.c0,-Z],[L.c0,Z],[-Z,Z],[-Z,-Z]],[[-Z,L.r0],[Z,L.r0],[Z,-Z],[-Z,-Z]]];
- if(!JG||JG.key!==key)JG={key:key,list:jgBuild(P,L)};
- x0=VW.x0-260;x1=VW.x1+260;y0=VW.y0-260;y1=VW.y1+260;
+ var L=jgLayout(P),key=L.c0+","+L.c1+","+L.r0+","+L.r1+","+P.length,
+  x0=VW.x0-260,x1=VW.x1+260,y0=VW.y0-260,y1=VW.y1+260,i,it,p,lod=LOD>1,k,
+  regs,far=-400;
+ if(!JG||JG.key!==key){var B=jgBuild(L);JG={key:key,list:B.list,EL:B.EL,ER:B.ER}}
+ // each region is the sea beyond a wavy coast line, closed off at the far corners
+ regs=[
+  JG.EL.concat([[far,JS1],[far,JS0]]),        // back-left jungle: left of the coast line
+  JG.ER.concat([[JS1,far],[JS0,far]])         // back-right jungle: above the coast line
+ ];
+ // 1. soft shadow on the sea just outside the jungle edge
+ X.save();X.lineJoin="round";X.lineCap="round";
+ X.strokeStyle="rgba(4,30,36,.45)";X.lineWidth=12;
+ jgPathOpen(JG.EL);X.stroke();
+ jgPathOpen(JG.ER);X.stroke();
+ X.restore();
+ // 2. jungle ground, clipped to each region so it stops at the wavy edge
  for(k=0;k<2;k++){
-  X.save();X.beginPath();
-  regs[k].forEach(function(q,j){var z=Pp(q[0],q[1]);j?X.lineTo(z[0],z[1]):X.moveTo(z[0],z[1])});
-  X.closePath();X.clip();
+  X.save();jgPathClosed(regs[k]);X.clip();
   X.fillStyle="#245c26";X.fillRect(x0,y0,x1-x0,y1-y0);
-  if(!lod)P.forEach(function(q){jgRing(q,1.3,"#6b4a2a",10);jgRing(q,1.3,"#a88a5a",3)});
-  for(i=0;i<JG.list.length;i++){
-   it=JG.list[i];
-   if(k===0?!(it.c<L.c0):(it.c<L.c0||!(it.r<L.r0)))continue; // each plant is drawn in one region only
-   p=Pp(it.c,it.r);
-   if(p[0]<x0||p[0]>x1||p[1]<y0||p[1]>y1)continue;   // skip what is off screen
-   if(lod&&it.t!=="patch")continue;                  // zoomed far out: ground only
-   jgDraw(it)}
-  X.restore()}}
+  X.restore()}
+ // 3. plants, not clipped, so they can hang out over the water. Land is drawn later, so it covers them.
+ for(i=0;i<JG.list.length;i++){
+  it=JG.list[i];
+  p=Pp(it.c,it.r);
+  if(p[0]<x0||p[0]>x1||p[1]<y0||p[1]>y1)continue;   // skip what is off screen
+  if(lod&&it.t!=="patch")continue;                  // zoomed far out: ground only
+  jgDraw(it)}}
